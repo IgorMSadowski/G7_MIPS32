@@ -1,0 +1,15 @@
+# Vivado temporary and generated folders
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+.Xil/
+
+# Vivado log and journal files
+*.log
+*.jou
+*.pb
+*.str
+*.wdf
+*.wdb

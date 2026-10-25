@@ -1,0 +1,23 @@
+`timescale 1ns / 1ps
+
+module bdu(
+    input wire        i_branch,         // 1 = branch instruction
+    input wire [3:0]  i_branch_cond,    // Condition code from CU
+    input wire [31:0] i_rs,             // rs value (for sign test in bltz/bgez)
+    input wire        i_zero,           // ALU zero flag
+    output reg        o_branch_taken    // 1 = take the branch
+    );
+    always @(*) begin
+        if (i_branch) begin
+            case (i_branch_cond)
+                4'b0000: o_branch_taken = i_zero;       // beq
+                4'b0001: o_branch_taken = ~i_zero;      // bne
+                4'b0010: o_branch_taken = i_rs[31];     // bltz
+                4'b0011: o_branch_taken = ~i_rs[31];    // bgez
+                default: o_branch_taken = 1'b0;         // default: not a branch instruction
+            endcase
+        end else begin
+            o_branch_taken = 1'b0;
+        end
+    end
+endmodule

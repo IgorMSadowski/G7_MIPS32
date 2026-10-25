@@ -1,0 +1,19 @@
+# Address  Instruction       	Raw machine code 	Meaning
+# 0x00     addi $t0,$zero,3  	20080003		$t0 = 3
+# 0x04     addi $t1,$zero,5  	20090005		$t1 = 5
+# 0x08     add  $t2,$t0,$t1  	01095020		$t2 = $t0 + $t1 = 8
+# 0x0C     sw   $t2,0($t0)   	AC0A0000		Mem[3] = 8
+# 0x10     lw   $t3,0($t0)   	8C0B0000		$t3 = Mem[3] = 8
+# 0x14     beq  $t2,$t3,-6   	114BFFFA		if $t2 == $t3, branch back to 0x00 (0x18 - (6 << 2) = 0x00)
+# 0x18     nop               	00000000		no operation
+# 0x1C     nop               	00000000		no operation
+
+
+
+if(addi) bits 32 at+é 26 = opcode do addi
+enum Temp_Registers(T0 = 8, T1, T2)
+
+a = b + c;
+
+
+0001100#addi 0101010#9 
