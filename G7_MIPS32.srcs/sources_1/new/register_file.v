@@ -1,4 +1,19 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: Igor Sadowski
+// 
+// Create Date:
+// Design Name: 
+// Module Name: control_unit
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description:
+// 
+// Dependencies: 
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
 // 32-register × 32-bit register file with 2 read ports and 1 write port
 module register_file(

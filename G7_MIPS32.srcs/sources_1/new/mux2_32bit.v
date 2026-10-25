@@ -1,4 +1,19 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: Igor Sadowski
+// 
+// Create Date:
+// Design Name: 
+// Module Name: control_unit
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description:
+// 
+// Dependencies: 
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
 module mux2_32bit(
     input  wire [31:0] i_a,     // Selected when i_sel = 0

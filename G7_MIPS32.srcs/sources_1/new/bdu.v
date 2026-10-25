@@ -1,4 +1,19 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: Igor Sadowski
+// 
+// Create Date:
+// Design Name: 
+// Module Name: control_unit
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description:
+// 
+// Dependencies: 
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
 module bdu(
     input wire        i_branch,         // 1 = branch instruction
