@@ -98,7 +98,7 @@ module datapath(
 
     // Register write address
     // i_reg_dst 0 = write rt, 1 = write rd
-    // Where the 
+    // WHERE to write
     mux2_5bit reg_dst_mux(      
         .i_a(i_instr[20:16]),   // I-Type rt field
         .i_b(i_instr[15:11]),   // R-Type rd field
@@ -129,9 +129,14 @@ module datapath(
 
     // -------------------------------------------------------------------------
     // FSM-aware register-file write enable
-    //   S_EXEC : write non-load insns only
-    //   S_LOAD : write the load result
-    //   S_FETCH: never write
+    //   S_EXEC : write non-load instructions only.
+    //            For a load, the loaded data is not available yet
+    //            (_wb would carry the load address, not the value),
+    //            so the write must wait for S_LOAD.
+    //   S_LOAD : write the load result.  The write address comes from
+    //            _wa_hold because i_instr already points at the next
+    //            instruction, whose rt/rd fields are wrong for this load.
+    //   S_FETCH: never write.
     // -------------------------------------------------------------------------
     // Do Register File Write Enable
     // 0 dont change, 1 take _wb and overwrite the register chosen by _wa_use
@@ -148,31 +153,36 @@ module datapath(
         .i_ra2(i_instr[20:16]),   // rt field
         .i_wa(_wa_use),           // held address during S_LOAD
         .i_wdata(_wb),            // write-back value
-        .o_rd1(_rd1_v),             // rs value wired to the ALU
-        .o_rd2(_rd2_v)              // rt value
+        .o_rd1(_rd1_v),           // rs value wired to the ALU
+        .o_rd2(_rd2_v)            // rt value
     );
 
     assign o_wdata = _rd2_v;        // store data path (rt value for sw)
 
     // -------------------------------------------------------------------------
     // ALU operand select
+    // if i_alu_src = 0, ALU operand B = rt value (from RF)
+    // if i_alu_src = 1, ALU operand B = sign-extended immediate (from instruction)
+    // sign
     // -------------------------------------------------------------------------
     mux2_32bit alu_src_mux(
-        .i_a(_rd2_v),         // rt value
-        .i_b(_imm_ext),     // sign-extended immediate
+        .i_a(_rd2_v),         
+        .i_b(_imm_ext),     
         .i_sel(i_alu_src),
-        .o_y(_srcb)         // ALU operand B
+        .o_y(_srcb)         // Source B to ALU (rt or immediate)
     );
 
     // -------------------------------------------------------------------------
     // ALU
+    // Performs arithmetic and logic operations on two 32-bit operands, producing a 32-bit result and a zero flag.
+    // The operation is determined by the 4-bit control signal i_alu_ctrl.
     // -------------------------------------------------------------------------
     alu execution_unit(
         .i_a(_rd1_v),         // ALU operand A (rs value)
-        .i_b(_srcb),        // ALU operand B
-        .i_ctrl(i_alu_ctrl),
-        .o_y(o_alu_out),
-        .o_zero(o_zero)
+        .i_b(_srcb),          // ALU operand B, takes the alu_src_mux output (rt or immediate)
+        .i_ctrl(i_alu_ctrl),  // ALU control signals from CU
+        .o_y(o_alu_out),      // ALU result (to DMEM address and/or WB )
+        .o_zero(o_zero)       // ALU zero flag (used by branch unit)
     );
 
     // -------------------------------------------------------------------------
@@ -188,6 +198,7 @@ module datapath(
 
     // -------------------------------------------------------------------------
     // Write-back mux
+    // WHAT to write back to the register file: ALU result, memory read data
     // -------------------------------------------------------------------------
     mux2_32bit mem_to_reg_mux(
         .i_a(o_alu_out),        // ALU result

@@ -7,13 +7,3 @@
 # 0x14     beq  $t2,$t3,-6   	114BFFFA		if $t2 == $t3, branch back to 0x00 (0x18 - (6 << 2) = 0x00)
 # 0x18     nop               	00000000		no operation
 # 0x1C     nop               	00000000		no operation
-
-
-
-if(addi) bits 32 at+é 26 = opcode do addi
-enum Temp_Registers(T0 = 8, T1, T2)
-
-a = b + c;
-
-
-0001100#addi 0101010#9 

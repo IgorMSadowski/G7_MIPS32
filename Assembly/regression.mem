@@ -1,0 +1,22 @@
+# Test 1: addi
+20080005          # addi $t0, $zero, 5
+20090003          # addi $t1, $zero, 3
+
+# Test 2: add
+01095020          # add $t2, $t0, $t1        → $t2 = 8
+200B0008          # addi $t3, $zero, 8
+114B0002          # beq $t2, $t3, +2         → skip fail block
+200800FF          # addi $t0, $zero, 0xFF     (marker for fail)
+08100000          # j 0x4000 (halt)
+01095022          # sub $t2, $t0, $t1        → $t2 = 2
+200B0002          # addi $t3, $zero, 2
+114B0002          # beq $t2, $t3, +2
+200800FF          # addi $t0, $zero, 0xFF
+08100000          # j 0x4000 (halt)
+...                (continue for and, or, slt, lw, sw)
+
+# On success: write pass marker
+200A0001          # addi $t2, $zero, 1
+AC0A0004          # sw $t2, 4($zero)         → Mem[1] = 1
+08000000          # halt: j 0x0000
+00000000          # nop

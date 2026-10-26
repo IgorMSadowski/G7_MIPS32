@@ -1,49 +1,100 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// University of Minho
-// Engineer: Igor Sadowski
-//
-// Testbench Name: tb_soc
-// Description:
-//   This testbench exercises the System on Chip (SoC) design by generating the
-//   clock, applying an initial reset, and then letting the processor run using
-//   the instruction memory contents loaded from the imem initialization source.
-//   It is intended to validate basic SoC functionality and simulation control.
-//////////////////////////////////////////////////////////////////////////////////
 
 module tb_soc;
 
-    reg         i_clk;
-    reg         i_rst;
-    wire [0:0] o_led;
+    reg         clk, rst;
+    wire [0:0]  led;
 
-    // 50 MHz clock generation:
-    // The clock signal toggles every 10ns, resulting in a full clock period of 20ns
-    // period = 20 ns  ->  frequency = 1 / 20 ns = 50 MHz
-    always #10 i_clk = ~i_clk;
+    soc dut(.i_clk(clk), .i_rst(rst), .o_led(led));
 
-    // DUT (Device Under Test): Instantiation of the SoC module in the testbench
-    soc dut (
-        .i_clk(i_clk),
-        .i_rst(i_rst),
-        .o_led(o_led)
-    );
+    always #5 clk = ~clk;
 
-    initial begin
-        // Start with a known state
-        i_clk = 1'b0;
-        i_rst = 1'b1;
-        
+    integer    cycles;
+    integer    errors = 0;
+    integer    i;
+    reg [31:0] pc_prev;
 
-        // Hold reset for a few cycles
-        repeat (5) @(posedge i_clk);
-        // Reset goes down after 5 clock cycles
-        i_rst = 1'b0;
+    initial begin : wait_for_halt
+        rst = 1;
+        #20;
+        rst = 0;
 
-        // Let the CPU run for a while using the instruction memory contents
-        repeat (50) @(posedge i_clk);
+        // ---- run until PC stabilizes (halt) ----
+        // test.asm ends with "j end" (jump to itself) -> PC stops advancing.
+        cycles  = 0;
+        pc_prev = 32'hFFFFFFFF;   // impossible value, forces first iteration
+        while (dut._pc !== pc_prev) begin
+            @(posedge clk);
+            cycles  = cycles + 1;
+            pc_prev = dut._pc;
 
-        $display("Simulation finished.");
+            if (cycles > 10000) begin
+                $display("TIMEOUT after %0d cycles (PC=%h) - program did not halt",
+                         cycles, dut._pc);
+                $finish;
+            end
+        end
+        $display("Halt detected at cycle %0d (PC=%h)", cycles, dut._pc);
+
+        // ---- dump the register file ----
+        $display("\n=== Register File ===");
+        for (i = 0; i < 32; i = i + 1)
+            $display("r%0d = %h", i, dut.u_cpu.u_dp.registers._rf[i]);
+
+        // ---- automated checks ----
+        // Each check covers one instruction family from test.asm.
+
+        // addiu: $t0 = 5
+        if (dut.u_cpu.u_dp.registers._rf[8] !== 32'h5) begin
+            $display("FAIL: $t0 = %h, expected 5 (addiu)",
+                     dut.u_cpu.u_dp.registers._rf[8]);
+            errors = errors + 1;
+        end
+        // addiu: $t1 = 3
+        if (dut.u_cpu.u_dp.registers._rf[9] !== 32'h3) begin
+            $display("FAIL: $t1 = %h, expected 3 (addiu)",
+                     dut.u_cpu.u_dp.registers._rf[9]);
+            errors = errors + 1;
+        end
+        // add: $t2 = 8
+        if (dut.u_cpu.u_dp.registers._rf[10] !== 32'h8) begin
+            $display("FAIL: $t2 = %h, expected 8 (add)",
+                     dut.u_cpu.u_dp.registers._rf[10]);
+            errors = errors + 1;
+        end
+        // slt: $s4 = 1 (3 < 5)
+        if (dut.u_cpu.u_dp.registers._rf[20] !== 32'h1) begin
+            $display("FAIL: $s4 = %h, expected 1 (slt)",
+                     dut.u_cpu.u_dp.registers._rf[20]);
+            errors = errors + 1;
+        end
+        // lw/sw roundtrip: $s5 = 8 (Mem[0] written by sw, read by lw)
+        if (dut.u_cpu.u_dp.registers._rf[21] !== 32'h8) begin
+            $display("FAIL: $s5 = %h, expected 8 (lw after sw)",
+                     dut.u_cpu.u_dp.registers._rf[21]);
+            errors = errors + 1;
+        end
+        // blez not taken + addiu executed: $s6 = 100
+        if (dut.u_cpu.u_dp.registers._rf[22] !== 32'h64) begin
+            $display("FAIL: $s6 = %h, expected 0x64 (blez fallthrough)",
+                     dut.u_cpu.u_dp.registers._rf[22]);
+            errors = errors + 1;
+        end
+        // jal + jr: $s7 = 42 (runs only if jal jumped and jr returned)
+        if (dut.u_cpu.u_dp.registers._rf[23] !== 32'h2A) begin
+            $display("FAIL: $s7 = %h, expected 0x2A (jal/jr)",
+                     dut.u_cpu.u_dp.registers._rf[23]);
+            errors = errors + 1;
+        end
+        // function body executed: $a0 = 7 (written inside func)
+        if (dut.u_cpu.u_dp.registers._rf[4] !== 32'h7) begin
+            $display("FAIL: $a0 = %h, expected 7 (function body)",
+                     dut.u_cpu.u_dp.registers._rf[4]);
+            errors = errors + 1;
+        end
+
+        $display("\n--- %0d errors ---", errors);
+        if (errors == 0) $display("PASS"); else $display("FAILED");
         $finish;
     end
 
