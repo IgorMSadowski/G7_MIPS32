@@ -1,18 +1,10 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
+// University of Minho 
 // Engineer: Igor Sadowski
 // 
-// Create Date:
-// Design Name: 
-// Module Name: control_unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description:
-// 
-// Dependencies: 
-// 
+// Module Name: Shift Left by 2 (shift_left_two)
+// Description: Shifts input value left by 2 positions
 //////////////////////////////////////////////////////////////////////////////////
 
 module shift_left_two(

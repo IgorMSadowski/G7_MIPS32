@@ -1,19 +1,12 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
+// University of Minho 
 // Engineer: Igor Sadowski
 // 
-// Create Date:
-// Design Name: 
-// Module Name: control_unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description:
-// 
-// Dependencies: 
-// 
+// Module Name: Control Unit (CU)
+// Description: Control Unit for MIPS processor
 //////////////////////////////////////////////////////////////////////////////////
+
 // -----------------------------------------------------------------------------
 // Instruction set decoded by this control unit
 // -----------------------------------------------------------------------------

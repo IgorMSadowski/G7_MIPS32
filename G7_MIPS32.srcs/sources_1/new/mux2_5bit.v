@@ -1,18 +1,10 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
+// University of Minho 
 // Engineer: Igor Sadowski
 // 
-// Create Date:
-// Design Name: 
-// Module Name: control_unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description:
-// 
-// Dependencies: 
-// 
+// Module Name: Multiplexer 2-to-1, 5-bit wide (mux2_5bit)
+// Description: Multiplexer for selecting between two 5-bit inputs
 //////////////////////////////////////////////////////////////////////////////////
 
 module mux2_5bit(

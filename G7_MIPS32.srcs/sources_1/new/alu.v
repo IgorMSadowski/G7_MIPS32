@@ -5,11 +5,11 @@
 // 
 // Create Date:
 // Design Name: 
-// Module Name: control_unit
+// Module Name: Arithmetic Logic Unit (ALU)
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
-// Description:
+// Description: Arithmetic Logic Unit for MIPS processor
 // 
 // Dependencies: 
 // 

@@ -1,4 +1,15 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// University of Minho
+// Engineer: Igor Sadowski
+//
+// Testbench Name: tb_soc
+// Description:
+//   This testbench exercises the System on Chip (SoC) design by generating the
+//   clock, applying an initial reset, and then letting the processor run using
+//   the instruction memory contents loaded from the imem initialization source.
+//   It is intended to validate basic SoC functionality and simulation control.
+//////////////////////////////////////////////////////////////////////////////////
 
 module tb_soc;
 

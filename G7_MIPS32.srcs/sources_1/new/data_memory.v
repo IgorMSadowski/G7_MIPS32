@@ -1,18 +1,10 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
+// University of Minho 
 // Engineer: Igor Sadowski
 // 
-// Create Date:
-// Design Name: 
-// Module Name: control_unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description:
-// 
-// Dependencies: 
-// 
+// Module Name: Data Memory (DMEM)
+// Description: Data memory for MIPS processor
 //////////////////////////////////////////////////////////////////////////////////
 
 // Data memory (RAM) - BRAM, latency 1

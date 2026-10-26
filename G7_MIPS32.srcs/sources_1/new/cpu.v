@@ -1,20 +1,12 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
+// University of Minho 
 // Engineer: Igor Sadowski
 // 
-// Create Date: 
-// Design Name: 
-// Module Name: cpu
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: Core Processing unit module - connects control_unit + datapath.
-//              Adds one external gate on o_mem_write to prevent stale writes
-//              during the datapath's FSM states.
-// 
-// Dependencies: 
-//
+// Module Name: Core Processing Unit (CPU)
+// Description: CPU core module that connects the control unit and datapath.
+//              Includes an external write-enable gate on o_mem_write to prevent
+//              stale memory writes during non-execution datapath FSM states.
 //////////////////////////////////////////////////////////////////////////////////
 
 module cpu(

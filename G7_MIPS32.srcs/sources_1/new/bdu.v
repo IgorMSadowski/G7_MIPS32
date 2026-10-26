@@ -5,11 +5,11 @@
 // 
 // Create Date:
 // Design Name: 
-// Module Name: control_unit
+// Module Name: Branch Decision Unit (BDU)
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
-// Description:
+// Description: Branch Decision Unit for MIPS processor
 // 
 // Dependencies: 
 // 

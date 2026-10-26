@@ -1,18 +1,11 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
+// University of Minho 
 // Engineer: Igor Sadowski
 // 
-// Create Date:
-// Design Name: 
-// Module Name: control_unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description:
-// 
-// Dependencies: 
-// 
+// Module Name: System on Chip (SoC)
+// Description: SoC for MIPS processor
+//              Instantiates CPU, IMEM, DMEM, and LED output.
 //////////////////////////////////////////////////////////////////////////////////
 
 module soc(
@@ -40,8 +33,8 @@ module soc(
         .i_clk(i_clk),
         .i_rst(i_rst),
         .i_en(_en),
-        .i_addr(_pc),
-        .o_instr(_instr)
+        .i_addr(_pc),           // Instruction Memory address (current PC)
+        .o_instr(_instr)        // Instruction word returned (valid one cycle later)
     );
 
     data_memory u_dmem(

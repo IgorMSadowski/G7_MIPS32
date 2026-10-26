@@ -1,18 +1,10 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
+// University of Minho 
 // Engineer: Igor Sadowski
 // 
-// Create Date:
-// Design Name: 
-// Module Name: control_unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description:
-// 
-// Dependencies: 
-// 
+// Module Name: Sign Extend (sign_extend)
+// Description: Extends a 16-bit signed immediate to 32-bit
 //////////////////////////////////////////////////////////////////////////////////
 
 module sign_extend(

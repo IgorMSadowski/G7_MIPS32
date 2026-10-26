@@ -1,18 +1,10 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
+// University of Minho 
 // Engineer: Igor Sadowski
 // 
-// Create Date:
-// Design Name: 
-// Module Name: control_unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description:
-// 
-// Dependencies: 
-// 
+// Module Name: Datapath (DP)
+// Description: Datapath for MIPS processor
 //////////////////////////////////////////////////////////////////////////////////
 
 module datapath(
@@ -106,17 +98,19 @@ module datapath(
 
     // Register write address
     // i_reg_dst 0 = write rt, 1 = write rd
-    mux2_5bit reg_dst_mux(
-        .i_a(i_instr[20:16]),   // rt field
-        .i_b(i_instr[15:11]),   // rd field
+    // Where the 
+    mux2_5bit reg_dst_mux(      
+        .i_a(i_instr[20:16]),   // I-Type rt field
+        .i_b(i_instr[15:11]),   // R-Type rd field
         .i_sel(i_reg_dst),
         .o_y(_wa)
     );
-
     // Write Address: If its a JAL the link forces the write address to be the reg 31 all '1's 
     assign _wa_final = i_link ? 5'd31 : _wa;   // jal forces $ra (reg 31)
 
-    // The return is PC + 4 
+
+
+    // Used to hold the return address for jal (PC+4) to write into $ra
     assign _ret_addr = _pc4;
 
     // hold write address across S_LOAD.
