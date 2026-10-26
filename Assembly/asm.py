@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # python3 asm.py FILE.asm -l
 """
-MIPS assembler for the G7 single-cycle CPU (Vivado project).
+MIPS assembler for the G7 single-instruction CPU (Vivado project).
 
 Supports the 24-instruction G7_ISA:
   R-type: add addu sub subu and or xor nor slt sll srl jr
