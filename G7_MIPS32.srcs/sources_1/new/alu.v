@@ -10,9 +10,6 @@
 // Target Devices: 
 // Tool Versions: 
 // Description: Arithmetic Logic Unit for MIPS processor
-// 
-// Dependencies: 
-// 
 //////////////////////////////////////////////////////////////////////////////////
 
 // ALU - arithmetic and logic

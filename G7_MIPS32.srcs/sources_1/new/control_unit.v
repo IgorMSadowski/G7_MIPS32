@@ -7,23 +7,20 @@
 // Description: Control Unit for MIPS processor
 //////////////////////////////////////////////////////////////////////////////////
 
-// -----------------------------------------------------------------------------
-// Instruction set decoded by this control unit
-// -----------------------------------------------------------------------------
+// ============================================================================
+// COMMON ISA (17 Instructions) - Mandatory for all groups
+// ============================================================================
 // R-type:  [opcode = 0x00, ALU op selected by funct]
-//   and      -> opcode 0x00, funct 0x24   [DONE]
-//   or       -> opcode 0x00, funct 0x25   [DONE]
 //   add      -> opcode 0x00, funct 0x20   [DONE]
 //   sub      -> opcode 0x00, funct 0x22   [DONE]
+//   and      -> opcode 0x00, funct 0x24   [DONE]
+//   or       -> opcode 0x00, funct 0x25   [DONE]
 //   slt      -> opcode 0x00, funct 0x2A   [DONE]
-//
-//   addu     -> opcode 0x00, funct 0x21   [TODO]  (same ALU ctrl as add)
-//   subu     -> opcode 0x00, funct 0x23   [TODO]  (same ALU ctrl as sub)
-//   xor      -> opcode 0x00, funct 0x26   [TODO]  (needs ALU XOR op)
-//   nor      -> opcode 0x00, funct 0x27   [TODO]  (needs ALU NOR op)
-//   sll      -> opcode 0x00, funct 0x00   [TODO]  (shift: shamt = instr[10:6])
-//   srl      -> opcode 0x00, funct 0x02   [TODO]  (shift: shamt = instr[10:6])
-//   jr       -> opcode 0x00, funct 0x08   [TODO]  (PC = rs; does NOT reg_write)
+
+//   xor      -> opcode 0x00, funct 0x26   [TODO]
+//   sll      -> opcode 0x00, funct 0x00   [TODO]
+//   srl      -> opcode 0x00, funct 0x02   [TODO]
+//   jr       -> opcode 0x00, funct 0x08   [TODO]
 //
 // I-type:  [opcode selects instruction, rs/rt/imm = instr fields]
 //   addi     -> opcode 0x08               [DONE]
@@ -31,17 +28,27 @@
 //   sw       -> opcode 0x2B               [DONE]
 //   beq      -> opcode 0x04               [DONE]
 //   bne      -> opcode 0x05               [DONE]
-//   bltz     -> opcode 0x01, rt = 0x00    [DONE]
-//   bgez     -> opcode 0x01, rt = 0x01    [DONE]
-//
-//   addiu    -> opcode 0x09               [TODO]  (same ALU ctrl as addi)
-//   bgtz     -> opcode 0x07, rt = 0x00    [TODO]  (needs BDU condition)
-//   blez     -> opcode 0x06, rt = 0x00    [TODO]  (needs BDU condition)
+
+//   lui      -> opcode 0x0F               [TODO]
 //
 // J-type:  [opcode selects instruction, target = instr[25:0]]
 //   j        -> opcode 0x02               [DONE]
 //   jal      -> opcode 0x03               [DONE]
 //
+// ============================================================================
+// GROUP 7 ISA (7 Instructions) - Our custom subset
+// ============================================================================
+// I-type:  [opcode selects instruction, rs/rt/imm = instr fields]
+//   bltz     -> opcode 0x01, rt = 0x00    [DONE]
+//   bgez     -> opcode 0x01, rt = 0x01    [DONE]
+
+//   bgtz     -> opcode 0x07, rt = 0x00    [TODO]  (needs BDU condition)
+//   blez     -> opcode 0x06, rt = 0x00    [TODO]  (needs BDU condition)
+//
+// R-type:  [opcode = 0x00, ALU op selected by funct]
+//   jalr     -> opcode 0x00, funct 0x09   [TODO]  (PC = rs; writes rd = PC+4)
+//   wsbh     -> opcode 0x1F, funct 0x20   [TODO]  (SPECIAL3 format: rd = swap_bytes(rt))
+//   rotr     -> opcode 0x00, funct 0x02   [TODO]  (SPECIAL format: rs = 1, rd = rotate(rt))
 // -----------------------------------------------------------------------------
 
 
