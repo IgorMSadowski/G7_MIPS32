@@ -42,7 +42,7 @@
 //   bltz     -> opcode 0x01, rt = 0x00    [DONE]
 //   bgez     -> opcode 0x01, rt = 0x01    [DONE]
 
-//   bgtz     -> opcode 0x07, rt = 0x00    [TODO]  (needs BDU condition)
+//   bgtz     -> opcode 0x07, rt = 0x00    [TODO]  (needs BDU conditionDONE
 //   blez     -> opcode 0x06, rt = 0x00    [TODO]  (needs BDU condition)
 //
 // R-type:  [opcode = 0x00, ALU op selected by funct]
