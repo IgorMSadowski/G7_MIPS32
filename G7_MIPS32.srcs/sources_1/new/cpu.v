@@ -28,6 +28,7 @@ module cpu(
 
     // Instruction fields and decoded control signals
     wire [5:0]  _op;                    // instruction[31:26] - opcode
+    wire [4:0]  _rs;                    // instruction[25:21] - rs register number
     wire [5:0]  _funct;                 // instruction[5:0]   - R-type funct
     wire [4:0]  _rt;                    // instruction[20:16] - rt register number
     wire        _reg_dst;               // 0 = write rt, 1 = write rd
@@ -47,11 +48,13 @@ module cpu(
 
     // Instruction field extraction
     assign _op    = i_instr[31:26];
+    assign _rs    = i_instr[25:21];
     assign _funct = i_instr[5:0];
     assign _rt    = i_instr[20:16];
 
     control_unit u_cu(
         .i_op(_op),
+        .i_rs(_rs),
         .i_rt(_rt),
         .i_funct(_funct),
         .o_reg_dst(_reg_dst),

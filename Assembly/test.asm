@@ -7,7 +7,7 @@ _start:
 
         add     $t3, $t1, $t2        # $t3 = 2
         sub     $t4, $t1, $t2        # $t4 = 8
-        and     $t5, $t1, $t2        # $t5 = 5 & -3 = 1
+        and     $t5, $t1, $t2        # $t5 = 5 & -3 = 5
         or      $t6, $t1, $t2        # $t6 = 5 | -3 = -3
         xor     $t7, $t1, $t2        # $t7 = 5 ^ -3 = -4
         slt     $s0, $t2, $t1        # $s0 = 1 (-3 < 5)
@@ -26,28 +26,28 @@ _start:
 
         # branches
         beq     $s3, $t3, beq_ok     # taken
-        addi    $s6, $zero, 99
+        addi    $k0, $zero, 99
 beq_ok:
         bne     $s3, $t1, bne_ok     # taken
-        addi    $s6, $zero, 99
+        addi    $k0, $zero, 99
 bne_ok:
         bltz    $t2, bltz_ok         # taken
-        addi    $s6, $zero, 99
+        addi    $k0, $zero, 99
 bltz_ok:
         bgez    $t1, bgez_ok         # taken
-        addi    $s6, $zero, 99
+        addi    $k0, $zero, 99
 bgez_ok:
         bgtz    $t1, bgtz_ok         # taken
-        addi    $s6, $zero, 99
+        addi    $k0, $zero, 99
 bgtz_ok:
         blez    $t2, blez_ok         # taken
-        addi    $s6, $zero, 99
+        addi    $k0, $zero, 99
 blez_ok:
         addi    $s6, $zero, 1        # $s6 = 1 (all branches passed)
 
         # --- 3. Test Jumps and JALR ---
         # Load a small address into $t8 to test jalr
-        addi    $t8, $zero, 0x60     # hardcoded address of func_jalr
+        addi    $t8, $zero, 0x8C     # address of func_jalr
         jalr    $ra, $t8             # jump to func_jalr
         addi    $s7, $zero, 42       # runs after return
 

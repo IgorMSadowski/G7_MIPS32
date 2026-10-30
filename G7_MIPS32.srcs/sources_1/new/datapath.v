@@ -53,7 +53,8 @@ module datapath(
     wire [31:0] _imm_sl2;        // Immediate shifted left by 2 (×4)
     wire [31:0] _rd1_v;            // RF read port 1 (rs value)
     wire [31:0] _rd2_v;            // RF read port 2 (rt value)
-    wire [31:0] _srcb;           // ALU operand B (rt or immediate)
+    wire [31:0] _src_a;            // ALU operand A (shift amount for shifts, otherwise rs)
+    wire [31:0] _src_b;            // ALU operand B (rt or immediate)
     wire [31:0] _alu_mem;        // Mux output: ALU result or memory data
     wire [31:0] _wb;             // Final write-back value to RF
     wire [31:0] _wb_exec;        // Write-back during S_EXEC (non-load)
@@ -83,6 +84,10 @@ module datapath(
     assign o_pc       = _imem_addr;
 
     assign _is_load = i_mem_read;   // mem_read comes from CU; 1 only for lw/lb
+    assign _src_a = (i_alu_ctrl == 4'b1001 ||
+                     i_alu_ctrl == 4'b1010 ||
+                     i_alu_ctrl == 4'b1101)
+                    ? {27'b0, i_instr[10:6]} : _rd1_v;
 
     // Immediate / branch target
     sign_extend immediate_extend(
@@ -171,7 +176,7 @@ module datapath(
         .i_a(_rd2_v),         
         .i_b(_imm_ext),     
         .i_sel(i_alu_src),
-        .o_y(_srcb)         // Source B to ALU (rt or immediate)
+        .o_y(_src_b)        // Source B to ALU (rt or immediate)
     );
 
     // -------------------------------------------------------------------------
@@ -180,8 +185,8 @@ module datapath(
     // The operation is determined by the 4-bit control signal i_alu_ctrl.
     // -------------------------------------------------------------------------
     alu execution_unit(
-        .i_a(_rd1_v),         // ALU operand A (rs value)
-        .i_b(_srcb),          // ALU operand B, takes the alu_src_mux output (rt or immediate)
+        .i_a(_src_a),
+        .i_b(_src_b),        // ALU operand B, takes the alu_src_mux output (rt or immediate)
         .i_ctrl(i_alu_ctrl),  // ALU control signals from CU
         .o_y(o_alu_out),      // ALU result (to DMEM address and/or WB )
         .o_zero(o_zero)       // ALU zero flag (used by branch unit)

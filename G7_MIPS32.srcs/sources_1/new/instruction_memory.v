@@ -27,7 +27,7 @@ module instruction_memory(
         .ECC_MODE("no_ecc"),        
         .ECC_TYPE("none"),          
         .IGNORE_INIT_SYNTH(0),      
-        .MEMORY_INIT_FILE("/home/igor/Documents/Vivado_Projects/Assembly/imem_init.mem"),
+        .MEMORY_INIT_FILE("Assembly/test.mem"),
         .MEMORY_INIT_PARAM("0"),    
         .MEMORY_OPTIMIZATION("true"),
         .MEMORY_PRIMITIVE("block"), // BRAM

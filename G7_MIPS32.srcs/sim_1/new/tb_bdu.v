@@ -53,6 +53,18 @@ module tb_bdu;
         rs=32'h7FFF_FFFF; check(1, "bgez positive");
         rs=32'h0000_0000; check(1, "bgez zero");
 
+        // blez (cond=6): taken for negative and zero, not positive
+        cond=4'b0110;
+        rs=32'h8000_0000; check(1, "blez negative");
+        rs=32'h0000_0000; check(1, "blez zero");
+        rs=32'h0000_0001; check(0, "blez positive");
+
+        // bgtz (cond=7): taken only for positive
+        cond=4'b0111;
+        rs=32'h8000_0000; check(0, "bgtz negative");
+        rs=32'h0000_0000; check(0, "bgtz zero");
+        rs=32'h0000_0001; check(1, "bgtz positive");
+
         $display("--- %0d errors ---", errors);
         if (errors==0) $display("PASS"); else $display("FAILED");
         $finish;

@@ -54,6 +54,7 @@
 
 module control_unit(
     input  wire [5:0] i_op,
+    input  wire [4:0] i_rs,
     input  wire [4:0] i_rt,
     input  wire [5:0] i_funct,
 
@@ -114,7 +115,7 @@ module control_unit(
                     6'h2A: o_alu_ctrl = 4'b0111;    // slt
                     6'h26: o_alu_ctrl = 4'b0011;    // xor
                     6'h00: o_alu_ctrl = 4'b1001;    // sll
-                    6'h02: o_alu_ctrl = 4'b1010;    // srl
+                    6'h02: o_alu_ctrl = (i_rs == 5'd1) ? 4'b1101 : 4'b1010; // rotr / srl
                     6'h08: begin                       // jr
                         o_jump = 1'b1;              // jump to address in rs
                         o_jump_reg = 1'b1;
@@ -122,14 +123,20 @@ module control_unit(
                     end
                     6'h09: begin                       // jalr
                         o_jump = 1'b1;              // jump to address in rs
-                        o_jump_reg = 1'b1;
+                        o_jump_reg = 1'b1;          // jump target comes from register rs
                         o_link = 1'b1;              // link: write return address to rd
                         o_reg_write = 1'b1;         // write return address to rd
                     end
-                    6'h20: o_alu_ctrl = 4'b1100;    // wsbh: word swap byte halfword
-                    6'h02: o_alu_ctrl = 4'b1101;    // rotr: rotate right
                     default: o_alu_ctrl = 4'b0010;  // default to add for unsupported funct
                 endcase
+            end
+
+            6'h1F: begin // SPECIAL3
+                if (i_funct == 6'h20) begin
+                    o_reg_dst   = 1'b1;
+                    o_reg_write = 1'b1;
+                    o_alu_ctrl  = 4'b1100; // wsbh
+                end
             end
 
             // -----------------------------------------------------------------
@@ -162,13 +169,13 @@ module control_unit(
             6'h07: begin    // bgtz  rs, offset
                 o_branch    = 1'b1;
                 o_alu_ctrl  = 4'b0110;  // subtract to compare rs - 0
-                o_branch_cond = 4'b0100; // branch if greater than zero
+                o_branch_cond = 4'b0111; // branch if greater than zero
             end
 
             6'h06: begin    // blez  rs, offset
                 o_branch    = 1'b1;
                 o_alu_ctrl  = 4'b0110;  // subtract to compare rs - 0
-                o_branch_cond = 4'b0101; // branch if less than or equal to zero
+                o_branch_cond = 4'b0110; // branch if less than or equal to zero
             end
 
             6'h08: begin    // addi  rt, rs, imm

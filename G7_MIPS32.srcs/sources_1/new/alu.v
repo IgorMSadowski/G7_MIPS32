@@ -30,8 +30,8 @@ module alu(
             4'b0011: o_y = i_a ^ i_b;       // xor
             4'b1001: o_y = i_b << i_a;      // sll: shift left logical
             4'b1010: o_y = i_b >> i_a;      // srl: shift right logical
-            4'b1100: o_y = {i_b[7:0], i_b[15:8], i_b[23:16], i_b[31:24]}; // wsbh: word swap byte halfword
-            4'b1101: o_y = (i_a >> i_b) | (i_a << (32 - i_b)); // rotr: rotate right
+            4'b1100: o_y = {i_b[23:16], i_b[31:24], i_b[7:0], i_b[15:8]}; // wsbh: swap bytes within each halfword
+            4'b1101: o_y = (i_b >> i_a) | (i_b << (32 - i_a)); // rotr: rotate right
             4'b1000: o_y = {i_b[15:0], 16'b0}; // lui: immediate in upper 16 bits
             default: o_y = 32'b0;
         endcase
