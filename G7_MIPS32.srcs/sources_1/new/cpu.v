@@ -31,6 +31,7 @@ module cpu(
     wire [4:0]  _rs;                    // instruction[25:21] - rs register number
     wire [5:0]  _funct;                 // instruction[5:0]   - R-type funct
     wire [4:0]  _rt;                    // instruction[20:16] - rt register number
+    wire [4:0]  _shamt;                 // instruction[10:6]  - R-type shift amount
     wire        _reg_dst;               // 0 = write rt, 1 = write rd
     wire        _alu_src;               // 0 = ALU B = rt, 1 = ALU B = immediate
     wire        _mem_to_reg;            // 0 = WB = ALU, 1 = WB = memory
@@ -51,10 +52,12 @@ module cpu(
     assign _rs    = i_instr[25:21];
     assign _funct = i_instr[5:0];
     assign _rt    = i_instr[20:16];
+    assign _shamt = i_instr[10:6];
 
     control_unit u_cu(
         .i_op(_op),
         .i_rs(_rs),
+        .i_shamt(_shamt),
         .i_rt(_rt),
         .i_funct(_funct),
         .o_reg_dst(_reg_dst),

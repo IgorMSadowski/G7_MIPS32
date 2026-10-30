@@ -55,6 +55,7 @@
 module control_unit(
     input  wire [5:0] i_op,
     input  wire [4:0] i_rs,
+    input  wire [4:0] i_shamt,
     input  wire [4:0] i_rt,
     input  wire [5:0] i_funct,
 
@@ -115,7 +116,7 @@ module control_unit(
                     6'h2A: o_alu_ctrl = 4'b0111;    // slt
                     6'h26: o_alu_ctrl = 4'b0011;    // xor
                     6'h00: o_alu_ctrl = 4'b1001;    // sll
-                    6'h02: o_alu_ctrl = (i_rs == 5'd1) ? 4'b1101 : 4'b1010; // rotr / srl
+                    6'h02: o_alu_ctrl = (i_rs[0] == 1'b1) ? 4'b1101 : 4'b1010; // rotr / srl
                     6'h08: begin                       // jr
                         o_jump = 1'b1;              // jump to address in rs
                         o_jump_reg = 1'b1;
@@ -132,7 +133,7 @@ module control_unit(
             end
 
             6'h1F: begin // SPECIAL3
-                if (i_funct == 6'h20) begin
+                if (i_funct == 6'h20 && i_shamt == 5'h02) begin
                     o_reg_dst   = 1'b1;
                     o_reg_write = 1'b1;
                     o_alu_ctrl  = 4'b1100; // wsbh
