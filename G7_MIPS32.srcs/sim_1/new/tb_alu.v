@@ -55,6 +55,12 @@ module tb_alu;
         a=32'd5; b=32'd5; ctrl=4'b0111;
         check(32'd0, "slt 5 < 5 (false)");
 
+        // ---- LUI ----
+        a=32'hDEADBEEF; b=32'h00001234; ctrl=4'b1000;
+        check(32'h12340000, "lui immediate");
+        b=32'hFFFF8001;
+        check(32'h80010000, "lui negative immediate");
+
         // ---- Zero flag ----
         a=32'd5; b=32'd5; ctrl=4'b0110;
         #1;

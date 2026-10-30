@@ -142,8 +142,12 @@ def assemble(in_path, out_path, listing=False):
             rd, rt = reg(ops[0]), reg(ops[1])
             w = (opcode<<26)|(0<<21)|(rt<<16)|(rd<<11)|(0<<6)|funct
         elif kind_op == 'i':
-            if len(ops) != 3: raise ValueError(f"line {lineno}: '{mnem}' needs rt, rs, imm")
-            rt, rs, im = reg(ops[0]), reg(ops[1]), imm(ops[2])
+            if mnem == 'lui':
+                if len(ops) != 2: raise ValueError(f"line {lineno}: 'lui' needs rt, imm")
+                rt, rs, im = reg(ops[0]), 0, imm(ops[1])
+            else:
+                if len(ops) != 3: raise ValueError(f"line {lineno}: '{mnem}' needs rt, rs, imm")
+                rt, rs, im = reg(ops[0]), reg(ops[1]), imm(ops[2])
             w = (opcode<<26)|(rs<<21)|(rt<<16)|(im & 0xFFFF)
         elif kind_op == 'mem':
             if len(ops) != 2: raise ValueError(f"line {lineno}: '{mnem}' needs rt, offset(rs)")

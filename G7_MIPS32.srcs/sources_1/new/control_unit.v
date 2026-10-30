@@ -11,44 +11,44 @@
 // COMMON ISA (17 Instructions) - Mandatory for all groups
 // ============================================================================
 // R-type:  [opcode = 0x00, ALU op selected by funct]
-//   add      -> opcode 0x00, funct 0x20   [DONE]
-//   sub      -> opcode 0x00, funct 0x22   [DONE]
-//   and      -> opcode 0x00, funct 0x24   [DONE]
-//   or       -> opcode 0x00, funct 0x25   [DONE]
-//   slt      -> opcode 0x00, funct 0x2A   [DONE]
-
-//   xor      -> opcode 0x00, funct 0x26   [TODO]
-//   sll      -> opcode 0x00, funct 0x00   [TODO]
-//   srl      -> opcode 0x00, funct 0x02   [TODO]
-//   jr       -> opcode 0x00, funct 0x08   [TODO]
+//   add      -> opcode 0x00, funct 0x20   [DONE], adds two registers and stores the result in a register
+//   sub      -> opcode 0x00, funct 0x22   [DONE], subtracts two registers and stores the result in a register
+//   and      -> opcode 0x00, funct 0x24   [DONE], performs bitwise AND on two registers and stores the result in a register
+//   or       -> opcode 0x00, funct 0x25   [DONE], performs bitwise OR on two registers and stores the result in a register
+//   slt      -> opcode 0x00, funct 0x2A   [DONE], sets a register to 1 if one register is less than another, otherwise sets it to 0
+//   xor      -> opcode 0x00, funct 0x26   [DONE], performs bitwise XOR on two registers and stores the result in a register
+//   sll      -> opcode 0x00, funct 0x00   [DONE], shifts a register left by a specified number of bits and stores the result in a register
+//   srl      -> opcode 0x00, funct 0x02   [DONE], shifts a register right by a specified number of bits and stores the result in a register
+//   jr       -> opcode 0x00, funct 0x08   [DONE], jumps to the address contained in a register (used for function returns)
 //
 // I-type:  [opcode selects instruction, rs/rt/imm = instr fields]
-//   addi     -> opcode 0x08               [DONE]
-//   lw       -> opcode 0x23               [DONE]
-//   sw       -> opcode 0x2B               [DONE]
-//   beq      -> opcode 0x04               [DONE]
-//   bne      -> opcode 0x05               [DONE]
-
-//   lui      -> opcode 0x0F               [TODO]
+//   addi     -> opcode 0x08               [DONE], adds a register and an immediate value and stores the result in a register
+//   lw       -> opcode 0x23               [DONE], loads a word from memory into a register
+//   sw       -> opcode 0x2B               [DONE], stores a word from a register into memory
+//   beq      -> opcode 0x04               [DONE], branches to a specified address if two registers are equal
+//   bne      -> opcode 0x05               [DONE], branches to a specified address if two registers are not equal
+//   lui      -> opcode 0x0F               [DONE], loads an immediate value into the upper half of a register, setting the lower half to zero
 //
 // J-type:  [opcode selects instruction, target = instr[25:0]]
-//   j        -> opcode 0x02               [DONE]
-//   jal      -> opcode 0x03               [DONE]
+//   j        -> opcode 0x02               [DONE], jumps to a specified address
+//   jal      -> opcode 0x03               [DONE], jumps to a specified address and stores the return address in the link register ($ra)
 //
 // ============================================================================
 // GROUP 7 ISA (7 Instructions) - Our custom subset
 // ============================================================================
 // I-type:  [opcode selects instruction, rs/rt/imm = instr fields]
-//   bltz     -> opcode 0x01, rt = 0x00    [DONE]
-//   bgez     -> opcode 0x01, rt = 0x01    [DONE]
-
-//   bgtz     -> opcode 0x07, rt = 0x00    [TODO]  (needs BDU conditionDONE
-//   blez     -> opcode 0x06, rt = 0x00    [TODO]  (needs BDU condition)
+//   bltz     -> opcode 0x01, rt = 0x00    [DONE], branches to a specified address if a register is less than zero
+//   bgez     -> opcode 0x01, rt = 0x01    [DONE], branches to a specified address if a register is greater than or equal to zero
+//   bgtz     -> opcode 0x07, rt = 0x00    [DONE], branches to a specified address if a register is greater than zero
+//   blez     -> opcode 0x06, rt = 0x00    [DONE], branches to a specified address if a register is less than or equal to zero
 //
 // R-type:  [opcode = 0x00, ALU op selected by funct]
-//   jalr     -> opcode 0x00, funct 0x09   [TODO]  (PC = rs; writes rd = PC+4)
-//   wsbh     -> opcode 0x1F, funct 0x20   [TODO]  (SPECIAL3 format: rd = swap_bytes(rt))
-//   rotr     -> opcode 0x00, funct 0x02   [TODO]  (SPECIAL format: rs = 1, rd = rotate(rt))
+//   jalr     -> opcode 0x00, funct 0x09   [DONE], jumps to the address contained in a register and stores the return address in another register
+//(PC = rs; writes rd = PC+4)
+//   wsbh     -> opcode 0x1F, funct 0x20   [DONE], swaps the bytes in a word (word swap byte halfword)
+//(SPECIAL3 format: rd = swap_bytes(rt))
+//   rotr     -> opcode 0x00, funct 0x02   [DONE], rotates the bits in a register to the right by a specified number of bits
+//(SPECIAL format: rs = 1, rd = rotate(rt))
 // -----------------------------------------------------------------------------
 
 
@@ -65,7 +65,8 @@ module control_unit(
     output reg         o_mem_write,     // memory write enable
     output reg         o_branch,        // branch instruction flag
     output reg         o_jump,          // jump instruction flag
-    output reg         o_link,          // jal: write return address to $ra
+    output reg         o_jump_reg,      // jump target comes from register rs
+    output reg         o_link,          // write PC+4 to the selected destination
     output reg [3:0]   o_branch_cond,   // branch condition code (4 bits)
     // ALU control signals (4 bits) to the ALU block, MIPS R-types instructions-
     // will have at most 4 bits of control, meaning 16 differents operations
@@ -82,7 +83,8 @@ module control_unit(
         o_mem_write   = 1'b0;   // memory write enable
         o_branch      = 1'b0;   // branch instruction flag
         o_jump        = 1'b0;   // jump instruction flag
-        o_link        = 1'b0;   // jal link flag
+        o_jump_reg    = 1'b0;   // register-target jump flag
+        o_link        = 1'b0;   // link flag
         o_branch_cond = 4'b0000; // branch condition code (4 bits)
         o_alu_ctrl    = 4'b0010;// alu function control (default to add)
 
@@ -110,6 +112,22 @@ module control_unit(
                     6'h24: o_alu_ctrl = 4'b0000;    // and
                     6'h25: o_alu_ctrl = 4'b0001;    // or
                     6'h2A: o_alu_ctrl = 4'b0111;    // slt
+                    6'h26: o_alu_ctrl = 4'b0011;    // xor
+                    6'h00: o_alu_ctrl = 4'b1001;    // sll
+                    6'h02: o_alu_ctrl = 4'b1010;    // srl
+                    6'h08: begin                       // jr
+                        o_jump = 1'b1;              // jump to address in rs
+                        o_jump_reg = 1'b1;
+                        o_reg_write = 1'b0;         // no register write for jr
+                    end
+                    6'h09: begin                       // jalr
+                        o_jump = 1'b1;              // jump to address in rs
+                        o_jump_reg = 1'b1;
+                        o_link = 1'b1;              // link: write return address to rd
+                        o_reg_write = 1'b1;         // write return address to rd
+                    end
+                    6'h20: o_alu_ctrl = 4'b1100;    // wsbh: word swap byte halfword
+                    6'h02: o_alu_ctrl = 4'b1101;    // rotr: rotate right
                     default: o_alu_ctrl = 4'b0010;  // default to add for unsupported funct
                 endcase
             end
@@ -141,6 +159,18 @@ module control_unit(
                 endcase
             end
 
+            6'h07: begin    // bgtz  rs, offset
+                o_branch    = 1'b1;
+                o_alu_ctrl  = 4'b0110;  // subtract to compare rs - 0
+                o_branch_cond = 4'b0100; // branch if greater than zero
+            end
+
+            6'h06: begin    // blez  rs, offset
+                o_branch    = 1'b1;
+                o_alu_ctrl  = 4'b0110;  // subtract to compare rs - 0
+                o_branch_cond = 4'b0101; // branch if less than or equal to zero
+            end
+
             6'h08: begin    // addi  rt, rs, imm
                 o_alu_src   = 1'b1;
                 o_reg_write = 1'b1;
@@ -159,6 +189,12 @@ module control_unit(
                 o_alu_src   = 1'b1;
                 o_mem_write = 1'b1;
                 o_alu_ctrl  = 4'b0010;  // effective address = rs + sign_ext(imm)
+            end
+
+            6'h0F: begin    // lui   rt, imm
+                o_alu_src   = 1'b1;
+                o_reg_write = 1'b1;
+                o_alu_ctrl  = 4'b1000;  // LUI operation (shift left by 16)
             end
 
             // -----------------------------------------------------------------

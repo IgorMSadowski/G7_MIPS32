@@ -19,7 +19,8 @@ module datapath(
     input  wire        i_reg_write,     // 1 = commit to register file
     input  wire        i_branch,        // 1 = branch instruction
     input  wire        i_jump,          // 1 = jump instruction
-    input  wire        i_link,          // 1 = jal (writes $ra)
+    input  wire        i_jump_reg,      // 1 = jump target is register rs
+    input  wire        i_link,          // 1 = write PC+4 to the selected destination
     
     input  wire [3:0]  i_branch_cond,   // Branch condition code
     input  wire [3:0]  i_alu_ctrl,      // ALU operation select
@@ -56,7 +57,7 @@ module datapath(
     wire [31:0] _alu_mem;        // Mux output: ALU result or memory data
     wire [31:0] _wb;             // Final write-back value to RF
     wire [31:0] _wb_exec;        // Write-back during S_EXEC (non-load)
-    wire [31:0] _ret_addr;       // jal return address = PC + 4
+    wire [31:0] _ret_addr;       // link address = PC + 4
     wire [4:0]  _wa;             // RF write address from reg_dst mux (rt or rd)
     wire [4:0]  _wa_final;       // _wa with $ra override for jal
     wire [4:0]  _wa_use;         // _wa_final or _wa_hold (during S_LOAD)
@@ -70,7 +71,8 @@ module datapath(
     assign _pc4 = _pc_r + 32'd4;
 
     // Priority: jump > branch taken > sequential
-    assign _pc_next = i_jump ? _jmp_tgt : (i_branch && _branch_taken) ? _br_tgt : _pc4;
+    assign _pc_next = i_jump ? (i_jump_reg ? _rd1_v : _jmp_tgt) :
+                      (i_branch && _branch_taken) ? _br_tgt : _pc4;
 
     // During S_EXEC, present _pc_next to IMEM so the address is captured at
     // the upcoming posedge.  One cycle later, that instruction arrives on
@@ -106,11 +108,11 @@ module datapath(
         .o_y(_wa)
     );
     // Write Address: If its a JAL the link forces the write address to be the reg 31 all '1's 
-    assign _wa_final = i_link ? 5'd31 : _wa;   // jal forces $ra (reg 31)
+    assign _wa_final = (i_link && !i_jump_reg) ? 5'd31 : _wa;
 
 
 
-    // Used to hold the return address for jal (PC+4) to write into $ra
+    // Link address used by jal and jalr.
     assign _ret_addr = _pc4;
 
     // hold write address across S_LOAD.
@@ -208,7 +210,7 @@ module datapath(
     );
 
     // Writeback value 
-    assign _wb_exec = i_link ? _ret_addr : _alu_mem;   // jal writes PC+4
+    assign _wb_exec = i_link ? _ret_addr : _alu_mem;
     
     // If its a LOAD the writeback value is the read memory value. If not its the Writeback_Execute Value
     assign _wb      = (_state == S_LOAD) ? i_rdata : _wb_exec;   // loads force memory data

@@ -36,7 +36,8 @@ module cpu(
     wire        _reg_write;             // 1 = write to Register File
     wire        _branch;                // 1 = branch
     wire        _jump;                  // 1 = jump
-    wire        _link;                  // 1 = jal (writes $ra)
+    wire        _jump_reg;              // jump target comes from register rs
+    wire        _link;                  // write PC+4 to the link destination
     wire [3:0]  _alu_ctrl;              // ALU operation select
     wire [3:0]  _branch_cond;           // Branch condition code
 
@@ -61,6 +62,7 @@ module cpu(
         .o_mem_write(_mem_write_raw),   // captured raw; gated below
         .o_branch(_branch),
         .o_jump(_jump),
+        .o_jump_reg(_jump_reg),
         .o_link(_link),
         .o_alu_ctrl(_alu_ctrl),
         .o_branch_cond(_branch_cond)
@@ -80,6 +82,7 @@ module cpu(
         .i_reg_write(_reg_write),
         .i_branch(_branch),
         .i_jump(_jump),
+        .i_jump_reg(_jump_reg),
         .i_link(_link),
         .i_alu_ctrl(_alu_ctrl),
         .i_branch_cond(_branch_cond),
