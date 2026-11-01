@@ -84,9 +84,9 @@
       <obj_property name="ElementShortName">o_alu_out[31:0]</obj_property>
       <obj_property name="ObjectShortName">o_alu_out[31:0]</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_soc/dut/u_cpu/u_dp/o_zero">
-      <obj_property name="ElementShortName">o_zero</obj_property>
-      <obj_property name="ObjectShortName">o_zero</obj_property>
+   <wvobject type="logic" fp_name="/tb_soc/dut/u_cpu/u_dp/_zero">
+      <obj_property name="ElementShortName">_zero</obj_property>
+      <obj_property name="ObjectShortName">_zero</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_soc/dut/u_cpu/u_dp/_branch_taken">
       <obj_property name="ElementShortName">_branch_taken</obj_property>

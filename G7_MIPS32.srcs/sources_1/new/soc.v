@@ -22,7 +22,6 @@ module soc(
     wire [31:0] _alu_out;       // ALU result - doubles as DMEM address
     wire [31:0] _wdata;         // Write data for DMEM (rt register value for sw)
     wire [31:0] _rdata;         // Read data returned from DMEM (lw result)
-    wire        _zero;          // ALU zero flag (used by branch unit)
     wire        _mem_read;      // CPU requests DMEM read (1 = lw)
     wire        _mem_write;     // CPU requests DMEM write (1 = sw)
     wire        _en;            // Global CPU enable (active-high, derived from reset)
@@ -57,7 +56,6 @@ module soc(
         .o_pc(_pc),
         .o_alu_out(_alu_out),
         .o_wdata(_wdata),
-        .o_zero(_zero),
         .o_mem_read(_mem_read),
         .o_mem_write(_mem_write)
     );

@@ -6,7 +6,7 @@ module tb_cpu_memory;
     reg clk = 0, rst = 1, en = 0;
     reg [31:0] instr = 0;
     wire [31:0] rdata, wdata, pc, addr;
-    wire zero, re, we;
+    wire re, we;
     integer errors = 0;
     integer checks = 0;
 
@@ -16,7 +16,7 @@ module tb_cpu_memory;
         .i_clk(clk), .i_rst(rst), .i_en(en),
         .i_instr(instr), .i_rdata(rdata),
         .o_wdata(wdata), .o_pc(pc), .o_alu_out(addr),
-        .o_zero(zero), .o_mem_read(re), .o_mem_write(we)
+        .o_mem_read(re), .o_mem_write(we)
     );
     data_memory dm(
         .i_clk(clk), .i_rst(rst), .i_en(en), .i_addr(addr),
@@ -72,6 +72,32 @@ module tb_cpu_memory;
         @(negedge clk); en = 1;
         @(posedge clk); #1;
         check(dut.u_dp.registers._rf[9] === 42, "load writes saved destination");
+
+        // The zero flag stays internal to the datapath and must still reach BDU.
+        // t0 and t1 both contain 42; the branch offset is two words (8 bytes).
+        @(negedge clk); instr = 32'h11090002; #1; // beq t0,t1,2
+        check(dut.u_dp._zero === 1'b1 && dut.u_dp._branch_taken === 1'b1 &&
+              dut.u_dp._pc_next === (dut.u_dp._pc4 + 32'd8),
+              "BEQ takes equal operands using internal zero flag");
+        @(posedge clk); #1;
+
+        @(negedge clk); instr = 32'h15090002; #1; // bne t0,t1,2
+        check(dut.u_dp._zero === 1'b1 && dut.u_dp._branch_taken === 1'b0 &&
+              dut.u_dp._pc_next === dut.u_dp._pc4,
+              "BNE falls through for equal operands");
+        @(posedge clk); #1;
+
+        @(negedge clk); instr = 32'h11000002; #1; // beq t0,zero,2
+        check(dut.u_dp._zero === 1'b0 && dut.u_dp._branch_taken === 1'b0 &&
+              dut.u_dp._pc_next === dut.u_dp._pc4,
+              "BEQ falls through for unequal operands");
+        @(posedge clk); #1;
+
+        @(negedge clk); instr = 32'h15000002; #1; // bne t0,zero,2
+        check(dut.u_dp._zero === 1'b0 && dut.u_dp._branch_taken === 1'b1 &&
+              dut.u_dp._pc_next === (dut.u_dp._pc4 + 32'd8),
+              "BNE takes unequal operands using internal zero flag");
+        @(posedge clk); #1;
 
         // Unknown REGIMM selector with a zero ALU result must not branch.
         // Previously this could select BEQ's condition and jump by the offset.

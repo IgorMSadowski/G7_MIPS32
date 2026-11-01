@@ -30,7 +30,6 @@ module datapath(
     output wire [31:0] o_pc,            // IMEM address (current PC or pre-fetched PC+4)
     output wire [31:0] o_alu_out,       // ALU result,   o_y
     output wire [31:0] o_wdata,         // Store data (register target, rt, value for sw)
-    output wire        o_zero,          // ALU zero flag
     
     output wire        o_state_exec     // 1 while in S_EXEC (used by cpu.v to gate mem_write)
     );
@@ -63,6 +62,7 @@ module datapath(
     wire [4:0]  _wa_final;       // _wa with $ra override for jal
     wire [4:0]  _wa_use;         // _wa_final or _wa_hold (during S_LOAD)
     wire        _branch_taken;   // Branch condition evaluated
+    wire        _zero;           // Internal ALU zero flag for BEQ/BNE
     wire [31:0] _pc_next;        // Next PC value
     wire [31:0] _imem_addr;      // Address presented to IMEM this cycle
     wire        _is_load;        // 1 if current insn is lw/lb
@@ -189,7 +189,7 @@ module datapath(
         .i_b(_src_b),        // ALU operand B, takes the alu_src_mux output (rt or immediate)
         .i_ctrl(i_alu_ctrl),  // ALU control signals from CU
         .o_y(o_alu_out),      // ALU result (to DMEM address and/or WB )
-        .o_zero(o_zero)       // ALU zero flag (used by branch unit)
+        .o_zero(_zero)        // Internal ALU-to-BDU connection
     );
 
     // -------------------------------------------------------------------------
@@ -199,7 +199,7 @@ module datapath(
         .i_branch(i_branch),
         .i_branch_cond(i_branch_cond),
         .i_rs(_rd1_v),
-        .i_zero(o_zero),
+        .i_zero(_zero),
         .o_branch_taken(_branch_taken)
     );
 

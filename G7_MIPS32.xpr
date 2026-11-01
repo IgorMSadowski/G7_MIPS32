@@ -205,6 +205,7 @@
       </Config>
     </FileSet>
     <FileSet Name="control_unit" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/control_unit" RelGenDir="$PGENDIR/control_unit">
+      <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sim_1/new/tb_control_unit.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -235,6 +236,7 @@
       </Config>
     </FileSet>
     <FileSet Name="bdu" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/bdu" RelGenDir="$PGENDIR/bdu">
+      <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sim_1/new/tb_bdu.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -265,6 +267,7 @@
       </Config>
     </FileSet>
     <FileSet Name="alu" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/alu" RelGenDir="$PGENDIR/alu">
+      <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sim_1/new/tb_alu.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -295,6 +298,7 @@
       </Config>
     </FileSet>
     <FileSet Name="soc" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/soc" RelGenDir="$PGENDIR/soc">
+      <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sim_1/new/tb_soc.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -325,6 +329,7 @@
       </Config>
     </FileSet>
     <FileSet Name="regfile" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/regfile" RelGenDir="$PGENDIR/regfile">
+      <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sim_1/new/tb_regfile.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>

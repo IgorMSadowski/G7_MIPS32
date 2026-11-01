@@ -21,7 +21,6 @@ module cpu(
     output wire [31:0] o_wdata,         // Store data to DMEM
     output wire [31:0] o_pc,            // IMEM address
     output wire [31:0] o_alu_out,       // ALU result / DMEM address
-    output wire        o_zero,          // ALU zero flag
     output wire        o_mem_read,      // DMEM read enable (lw)
     output wire        o_mem_write      // DMEM write enable (sw) - gated
     );
@@ -98,7 +97,6 @@ module cpu(
         .o_pc(o_pc),
         .o_alu_out(o_alu_out),
         .o_wdata(o_wdata),
-        .o_zero(o_zero),
         .o_state_exec(_state_exec)
     );
 
