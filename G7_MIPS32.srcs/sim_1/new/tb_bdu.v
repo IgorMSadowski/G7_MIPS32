@@ -15,6 +15,24 @@ module tb_bdu;
 
     integer errors = 0;
 
+    // Simulation-only labels: display condition_name with ASCII radix.
+    reg [8*8-1:0] condition_name;
+    always @(*) begin
+        if (!branch)
+            condition_name = "DISABLED";
+        else begin
+            case (cond)
+                4'b0000: condition_name = "BEQ";
+                4'b0001: condition_name = "BNE";
+                4'b0010: condition_name = "BLTZ";
+                4'b0011: condition_name = "BGEZ";
+                4'b0100: condition_name = "BLEZ";
+                4'b0101: condition_name = "BGTZ";
+                default: condition_name = "UNKNOWN";
+            endcase
+        end
+    end
+
     task check(input exp_taken, input [8*32-1:0] name);
         begin
             #1;
@@ -31,7 +49,7 @@ module tb_bdu;
         check(0, "branch=0 always 0");
 
         branch=1;
-        // beq (cond=0): taken iff zero
+        // beq (cond=0): taken if zero
         cond=4'b0000;
         zero=1; check(1, "beq zero=1");
         zero=0; check(0, "beq zero=0");
@@ -53,14 +71,14 @@ module tb_bdu;
         rs=32'h7FFF_FFFF; check(1, "bgez positive");
         rs=32'h0000_0000; check(1, "bgez zero");
 
-        // blez (cond=6): taken for negative and zero, not positive
-        cond=4'b0110;
+        // blez (cond=4): taken for negative and zero, not positive
+        cond=4'b0100;
         rs=32'h8000_0000; check(1, "blez negative");
         rs=32'h0000_0000; check(1, "blez zero");
         rs=32'h0000_0001; check(0, "blez positive");
 
-        // bgtz (cond=7): taken only for positive
-        cond=4'b0111;
+        // bgtz (cond=5): taken only for positive
+        cond=4'b0101;
         rs=32'h8000_0000; check(0, "bgtz negative");
         rs=32'h0000_0000; check(0, "bgtz zero");
         rs=32'h0000_0001; check(1, "bgtz positive");

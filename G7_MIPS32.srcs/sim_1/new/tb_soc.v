@@ -38,6 +38,7 @@ module tb_soc;
             #1;
             cycles = cycles + 1;
             if (cycles > 500) begin
+                errors = errors + 1;
                 $display("TIMEOUT: program did not reach halt loop (PC=%h)", dut._pc);
                 $finish;
             end

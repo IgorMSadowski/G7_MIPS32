@@ -3,13 +3,13 @@
 module tb_control_unit;
 
     reg  [5:0] op, funct;
-    reg  [4:0] rs, rt;
+    reg  [4:0] rs, rt, shamt;
     wire       reg_dst, alu_src, mem_to_reg, reg_write, mem_read, mem_write;
     wire       branch, jump, jump_reg, link;
     wire [3:0] branch_cond, alu_ctrl;
 
     control_unit dut(
-        .i_op(op), .i_rs(rs), .i_rt(rt), .i_funct(funct),
+        .i_op(op), .i_rs(rs), .i_shamt(shamt), .i_rt(rt), .i_funct(funct),
         .o_reg_dst(reg_dst), .o_alu_src(alu_src),
         .o_mem_to_reg(mem_to_reg), .o_reg_write(reg_write),
         .o_mem_read(mem_read), .o_mem_write(mem_write),
@@ -18,6 +18,7 @@ module tb_control_unit;
     );
 
     integer errors = 0;
+    integer selector;
 
     task expect;
         input [8*16-1:0] name;
@@ -48,7 +49,7 @@ module tb_control_unit;
 
     initial begin
         // ---- R-type (op=0), all five currently implemented ----
-        op=6'h00; rs=0; rt=0;
+        op=6'h00; rs=0; rt=0; shamt=0;
         funct=6'h20; expect("add",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0010);
         funct=6'h22; expect("sub",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0110);
         funct=6'h24; expect("and",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0000);
@@ -59,6 +60,13 @@ module tb_control_unit;
         funct=6'h00; expect("sll",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1001);
         funct=6'h02; expect("srl",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1010);
         rs=1; funct=6'h02; expect("rotr", 1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1101);
+
+        // Reject every encoding with nonzero bits 25:22.
+        // Only rs=0/1 match the documented SRL/ROTR encodings.
+        for (selector=2; selector<32; selector=selector+1) begin
+            rs=selector[4:0];
+            expect("bad shift code", 1,0,0,0, 0,0,0,0,0,0, 4'b0000, 4'b0010);
+        end
 
         // ---- I-type ----
         funct=0; rs=0; rt=0;
@@ -73,8 +81,13 @@ module tb_control_unit;
         op=6'h01;
         rt=5'b00000; expect("bltz", 0,0,0,0, 0,0,1,0,0,0, 4'b0010, 4'b0010);
         rt=5'b00001; expect("bgez", 0,0,0,0, 0,0,1,0,0,0, 4'b0011, 4'b0010);
-        op=6'h07; expect("bgtz", 0,0,0,0, 0,0,1,0,0,0, 4'b0111, 4'b0110);
-        op=6'h06; expect("blez", 0,0,0,0, 0,0,1,0,0,0, 4'b0110, 4'b0110);
+        for (selector=2; selector<32; selector=selector+1) begin
+            rt=selector[4:0];
+            expect("REGIMM no branch", 0,0,0,0, 0,0,0,0,0,0, 4'b0000, 4'b0010);
+        end
+        rt=0;
+        op=6'h07; expect("bgtz", 0,0,0,0, 0,0,1,0,0,0, 4'b0101, 4'b0110);
+        op=6'h06; expect("blez", 0,0,0,0, 0,0,1,0,0,0, 4'b0100, 4'b0110);
 
         // ---- J-type ----
         rs=0; rt=0;
@@ -82,8 +95,16 @@ module tb_control_unit;
         op=6'h03; expect("jal", 0,0,0,1, 0,0,0,1,0,1, 4'b0000, 4'b0010);
 
         // ---- SPECIAL3 ----
-        op=6'h1F; funct=6'h20;
+        op=6'h1F; funct=6'h20; shamt=2;
         expect("wsbh", 1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1100);
+
+        // Fixed WSBH fields must match its MIPS32 encoding.
+        shamt=0;
+        expect("wsbh bad shamt", 0,0,0,0, 0,0,0,0,0,0, 4'b0000, 4'b0010);
+        shamt=2; rs=1;
+        expect("wsbh bad rs", 0,0,0,0, 0,0,0,0,0,0, 4'b0000, 4'b0010);
+        rs=0; funct=6'h21;
+        expect("wsbh bad funct", 0,0,0,0, 0,0,0,0,0,0, 4'b0000, 4'b0010);
 
         $display("--- %0d errors ---", errors);
         if (errors==0) $display("PASS"); else $display("FAILED");

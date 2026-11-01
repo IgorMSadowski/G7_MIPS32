@@ -29,8 +29,8 @@ module bdu(
                 4'b0001: o_branch_taken = ~i_zero;      // bne, branch if not equal
                 4'b0010: o_branch_taken = i_rs[31];     // bltz, branch if less than zero
                 4'b0011: o_branch_taken = ~i_rs[31];    // bgez, branch if greater than or equal to zero
-                4'b0110: o_branch_taken = i_rs[31] || (i_rs == 32'b0); // blez
-                4'b0111: o_branch_taken = i_rs[31] == 1'b0 && i_rs != 32'b0; // bgtz, branch if greater than zero: rs > 0
+                4'b0100: o_branch_taken = i_rs[31] || (i_rs == 32'b0); // blez
+                4'b0101: o_branch_taken = i_rs[31] == 1'b0 && i_rs != 32'b0; // bgtz, branch if greater than zero: rs > 0
                 default: o_branch_taken = 1'b0;         // default: not a branch instruction
             endcase
         end else begin

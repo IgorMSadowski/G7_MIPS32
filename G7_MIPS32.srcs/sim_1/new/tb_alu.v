@@ -25,6 +25,25 @@ module tb_alu;
             end
         end
     endtask
+    
+    reg [8*8-1:0] operation;
+
+    always @(*) begin
+        case (ctrl)
+            4'b0000: operation = "AND";
+            4'b0001: operation = "OR";
+            4'b0010: operation = "ADD";
+            4'b0011: operation = "XOR";
+            4'b0110: operation = "SUB";
+            4'b0111: operation = "SLT";
+            4'b1000: operation = "LUI";
+            4'b1001: operation = "SLL";
+            4'b1010: operation = "SRL";
+            4'b1100: operation = "WSBH";
+            4'b1101: operation = "ROTR";
+            default: operation = "UNKNOWN";
+        endcase
+    end
 
     initial begin
         // ---- AND ----
@@ -72,7 +91,7 @@ module tb_alu;
         check(32'h3412_7856, "wsbh");
 
         // ---- LUI ----
-        a=32'hDEADBEEF; b=32'h00001234; ctrl=4'b1000;
+        a = 32'h00000000; b=32'h00001234; ctrl=4'b1000;
         check(32'h12340000, "lui immediate");
         b=32'hFFFF8001;
         check(32'h80010000, "lui negative immediate");

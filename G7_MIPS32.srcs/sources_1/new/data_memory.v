@@ -54,8 +54,8 @@ module data_memory(
         .addra(_addr_w),            // Word address
         .clka(i_clk),               // Clock
         .dina(i_wdata),             // Write data
-        .ena(i_en | i_re | i_we),   // enable on any access
-        .wea({4{i_we}}),            // 4-bit byte write enable
+        .ena(i_en & ~i_rst & (i_re | i_we)), // access only while running
+        .wea({4{i_we & i_en & ~i_rst}}),      // block writes in pause/reset
         .douta(o_rdata),            // ★ output drives port directly
         .injectsbiterra(1'b0),      // no ECC error injection
         .injectdbiterra(1'b0),      // no ECC error injection

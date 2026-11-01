@@ -31,6 +31,7 @@ module cpu(
     wire [4:0]  _rs;                    // instruction[25:21] - rs register number
     wire [5:0]  _funct;                 // instruction[5:0]   - R-type funct
     wire [4:0]  _rt;                    // instruction[20:16] - rt register number
+    wire [4:0]  _shamt;                 // instruction[10:6] - shift/encoding field
     wire        _reg_dst;               // 0 = write rt, 1 = write rd
     wire        _alu_src;               // 0 = ALU B = rt, 1 = ALU B = immediate
     wire        _mem_to_reg;            // 0 = WB = ALU, 1 = WB = memory
@@ -51,10 +52,12 @@ module cpu(
     assign _rs    = i_instr[25:21];
     assign _funct = i_instr[5:0];
     assign _rt    = i_instr[20:16];
+    assign _shamt = i_instr[10:6];
 
     control_unit u_cu(
         .i_op(_op),
         .i_rs(_rs),
+        .i_shamt(_shamt),
         .i_rt(_rt),
         .i_funct(_funct),
         .o_reg_dst(_reg_dst),
@@ -71,7 +74,9 @@ module cpu(
         .o_branch_cond(_branch_cond)
     );
     
-    assign o_mem_read = _mem_read;      // CPU output port still reflects CU
+    // External memory requests require an active execution cycle.
+    // Keep the raw _mem_read connected to the datapath for load decoding.
+    assign o_mem_read = _mem_read & _state_exec & i_en & ~i_rst;
     
     datapath u_dp(
         .i_clk(i_clk),
@@ -105,6 +110,6 @@ module cpu(
     // o_mem_write would be 1 for an extra cycle, causing a double write.
     // AND-ing with _state_exec guarantees a store only commits in the exact
     // cycle it was decoded.
-    assign o_mem_write = _mem_write_raw & _state_exec;
+    assign o_mem_write = _mem_write_raw & _state_exec & i_en & ~i_rst;
 
 endmodule

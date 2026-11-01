@@ -55,6 +55,7 @@
 module control_unit(
     input  wire [5:0] i_op,
     input  wire [4:0] i_rs,
+    input  wire [4:0] i_shamt,
     input  wire [4:0] i_rt,
     input  wire [5:0] i_funct,
 
@@ -115,7 +116,14 @@ module control_unit(
                     6'h2A: o_alu_ctrl = 4'b0111;    // slt
                     6'h26: o_alu_ctrl = 4'b0011;    // xor
                     6'h00: o_alu_ctrl = 4'b1001;    // sll
-                    6'h02: o_alu_ctrl = (i_rs == 5'd1) ? 4'b1101 : 4'b1010; // rotr / srl
+                    // MIPS32: bits 25:22 must be zero; bit 21 selects SRL/ROTR.
+                    6'h02: begin
+                        case (i_rs)
+                            5'b00000: o_alu_ctrl = 4'b1010; // SRL
+                            5'b00001: o_alu_ctrl = 4'b1101; // ROTR
+                            default: o_reg_write = 1'b0; // unsupported encoding
+                        endcase
+                    end
                     6'h08: begin                       // jr
                         o_jump = 1'b1;              // jump to address in rs
                         o_jump_reg = 1'b1;
@@ -132,7 +140,7 @@ module control_unit(
             end
 
             6'h1F: begin // SPECIAL3
-                if (i_funct == 6'h20) begin
+                if (i_funct == 6'h20 && i_shamt == 5'd2 && i_rs == 5'd0) begin
                     o_reg_dst   = 1'b1;
                     o_reg_write = 1'b1;
                     o_alu_ctrl  = 4'b1100; // wsbh
@@ -162,20 +170,20 @@ module control_unit(
                 case (i_rt)
                     5'b00000: o_branch_cond = 4'b0010; // bltz
                     5'b00001: o_branch_cond = 4'b0011; // bgez
-                    default: o_branch_cond = 4'b0000; // default to beq behavior
+                    default: o_branch = 1'b0; // unsupported REGIMM selector: no branch
                 endcase
             end
 
             6'h07: begin    // bgtz  rs, offset
                 o_branch    = 1'b1;
                 o_alu_ctrl  = 4'b0110;  // subtract to compare rs - 0
-                o_branch_cond = 4'b0111; // branch if greater than zero
+                o_branch_cond = 4'b0101; // branch if greater than zero
             end
 
             6'h06: begin    // blez  rs, offset
                 o_branch    = 1'b1;
                 o_alu_ctrl  = 4'b0110;  // subtract to compare rs - 0
-                o_branch_cond = 4'b0110; // branch if less than or equal to zero
+                o_branch_cond = 4'b0100; // branch if less than or equal to zero
             end
 
             6'h08: begin    // addi  rt, rs, imm

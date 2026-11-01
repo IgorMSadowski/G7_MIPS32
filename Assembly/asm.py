@@ -140,7 +140,7 @@ def assemble(in_path, out_path, listing=False):
         elif kind_op == 'wsbh':
             if len(ops) != 2: raise ValueError(f"line {lineno}: 'wsbh' needs rd, rt")
             rd, rt = reg(ops[0]), reg(ops[1])
-            w = (opcode<<26)|(0<<21)|(rt<<16)|(rd<<11)|(0<<6)|funct
+            w = (opcode<<26)|(0<<21)|(rt<<16)|(rd<<11)|(2<<6)|funct
         elif kind_op == 'i':
             if mnem == 'lui':
                 if len(ops) != 2: raise ValueError(f"line {lineno}: 'lui' needs rt, imm")
