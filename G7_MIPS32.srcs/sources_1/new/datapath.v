@@ -51,10 +51,10 @@ module datapath(
     wire [31:0] _jmp_tgt;        // Jump target address
     wire [31:0] _imm_ext;        // Sign-extended 16-bit immediate
     wire [31:0] _imm_sl2;        // Immediate shifted left by 2 (×4)
-    wire [31:0] _rd1_v;            // RF read port 1 (rs value)
-    wire [31:0] _rd2_v;            // RF read port 2 (rt value)
-    wire [31:0] _src_a;            // ALU operand A (shift amount for shifts, otherwise rs)
-    wire [31:0] _src_b;            // ALU operand B (rt or immediate)
+    wire [31:0] _rd1_v;          // RF read port 1 (rs value)
+    wire [31:0] _rd2_v;          // RF read port 2 (rt value)
+    wire [31:0] _src_a;          // ALU operand A (shift amount for shifts, otherwise rs)
+    wire [31:0] _src_b;          // ALU operand B (rt or immediate)
     wire [31:0] _alu_mem;        // Mux output: ALU result or memory data
     wire [31:0] _wb;             // Final write-back value to RF
     wire [31:0] _wb_exec;        // Write-back during S_EXEC (non-load)
