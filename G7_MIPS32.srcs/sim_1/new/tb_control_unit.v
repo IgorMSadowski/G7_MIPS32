@@ -8,6 +8,79 @@ module tb_control_unit;
     wire       branch, jump, jump_reg, link;
     wire [3:0] branch_cond, alu_ctrl;
 
+    // Simulation-only labels: display these signals with ASCII radix.
+    // test_name identifies the stimulus; the other labels describe DUT outputs.
+    reg [8*16-1:0] test_name;
+    reg [8*8-1:0] branch_name, alu_operation, jump_name;
+    reg [8*8-1:0] memory_action, writeback_source;
+    always @(*) begin
+        case (alu_ctrl)
+            4'd0:  alu_operation = "AND";
+            4'd1:  alu_operation = "OR";
+            4'd2:  alu_operation = "ADD";
+            4'd3:  alu_operation = "XOR";
+            4'd6:  alu_operation = "SUB";
+            4'd7:  alu_operation = "SLT";
+            4'd8:  alu_operation = "LUI";
+            4'd9:  alu_operation = "SLL";
+            4'd10: alu_operation = "SRL";
+            4'd12: alu_operation = "WSBH";
+            4'd13: alu_operation = "ROTR";
+            default: alu_operation = "UNKNOWN";
+        endcase
+
+        case (branch)
+            1'b0: branch_name = "DISABLED";
+            1'b1: begin
+                case (branch_cond)
+                    4'd0: branch_name = "BEQ";
+                    4'd1: branch_name = "BNE";
+                    4'd2: branch_name = "BLTZ";
+                    4'd3: branch_name = "BGEZ";
+                    4'd4: branch_name = "BLEZ";
+                    4'd5: branch_name = "BGTZ";
+                    default: branch_name = "UNKNOWN";
+                endcase
+            end
+            default: branch_name = "UNKNOWN";
+        endcase
+
+        case ({jump, jump_reg, link})
+            3'b000: jump_name = "DISABLED";
+            3'b100: jump_name = "J";
+            3'b101: jump_name = "JAL";
+            3'b110: jump_name = "JR";
+            3'b111: jump_name = "JALR";
+            default: jump_name = "UNKNOWN";
+        endcase
+
+        case ({mem_read, mem_write})
+            2'b00: memory_action = "NONE";
+            2'b10: memory_action = "READ";
+            2'b01: memory_action = "WRITE";
+            2'b11: memory_action = "INVALID";
+            default: memory_action = "UNKNOWN";
+        endcase
+
+        case (reg_write)
+            1'b0: writeback_source = "DISABLED";
+            1'b1: begin
+                case (link)
+                    1'b1: writeback_source = "PC+4";
+                    1'b0: begin
+                        case (mem_to_reg)
+                            1'b0: writeback_source = "ALU";
+                            1'b1: writeback_source = "MEMORY";
+                            default: writeback_source = "UNKNOWN";
+                        endcase
+                    end
+                    default: writeback_source = "UNKNOWN";
+                endcase
+            end
+            default: writeback_source = "UNKNOWN";
+        endcase
+    end
+
     control_unit dut(
         .i_op(op), .i_rs(rs), .i_shamt(shamt), .i_rt(rt), .i_funct(funct),
         .o_reg_dst(reg_dst), .o_alu_src(alu_src),
@@ -27,6 +100,7 @@ module tb_control_unit;
         input [3:0] exp_branch_cond;
         input [3:0] exp_alu_ctrl;
         begin
+            test_name = name;
             #1;
             if (reg_dst    !== exp_reg_dst    || alu_src   !== exp_alu_src   ||
                 mem_to_reg !== exp_mem_to_reg || reg_write !== exp_reg_write ||
@@ -66,6 +140,18 @@ module tb_control_unit;
         for (selector=2; selector<32; selector=selector+1) begin
             rs=selector[4:0];
             expect("bad shift code", 1,0,0,0, 0,0,0,0,0,0, 4'b0000, 4'b0010);
+        end
+
+        // Unimplemented R-type functions must not write an ADD result.
+        rs=0;
+        for (selector=0; selector<64; selector=selector+1) begin
+            funct=selector[5:0];
+            case (funct)
+                6'h00, 6'h02, 6'h08, 6'h09, 6'h20, 6'h22,
+                6'h24, 6'h25, 6'h26, 6'h2A: begin end
+                default:
+                    expect("unknown R funct", 1,0,0,0, 0,0,0,0,0,0, 4'b0000, 4'b0010);
+            endcase
         end
 
         // ---- I-type ----

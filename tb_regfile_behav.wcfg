@@ -12,12 +12,94 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="70.196 ns"></ZoomEndTime>
-      <Cursor1Time time="34.128 ns"></Cursor1Time>
+      <ZoomEndTime time="67.001 ns"></ZoomEndTime>
+      <Cursor1Time time="23.522 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="96"></NameColumnWidth>
-      <ValueColumnWidth column_width="228"></ValueColumnWidth>
+      <NameColumnWidth column_width="153"></NameColumnWidth>
+      <ValueColumnWidth column_width="163"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="0" />
+   <WVObjectSize size="17" />
+   <wvobject type="array" fp_name="/tb_regfile/test_name">
+      <obj_property name="ElementShortName">test_name[255:0]</obj_property>
+      <obj_property name="ObjectShortName">test_name[255:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider1322" type="divider">
+      <obj_property name="label">Clock &amp; Reset</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_regfile/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_regfile/rst">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider1323" type="divider">
+      <obj_property name="label">Write Port</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_regfile/write_action">
+      <obj_property name="ElementShortName">write_action[127:0]</obj_property>
+      <obj_property name="ObjectShortName">write_action[127:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_regfile/we">
+      <obj_property name="ElementShortName">we</obj_property>
+      <obj_property name="ObjectShortName">we</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_regfile/wa">
+      <obj_property name="ElementShortName">wa[4:0]</obj_property>
+      <obj_property name="ObjectShortName">wa[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_regfile/wdata">
+      <obj_property name="ElementShortName">wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">wdata[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider1324" type="divider">
+      <obj_property name="label">Read Port 1</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_regfile/ra1">
+      <obj_property name="ElementShortName">ra1[4:0]</obj_property>
+      <obj_property name="ObjectShortName">ra1[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_regfile/rd1">
+      <obj_property name="ElementShortName">rd1[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rd1[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider1325" type="divider">
+      <obj_property name="label">Read Port 2</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_regfile/ra2">
+      <obj_property name="ElementShortName">ra2[4:0]</obj_property>
+      <obj_property name="ObjectShortName">ra2[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_regfile/rd2">
+      <obj_property name="ElementShortName">rd2[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rd2[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider1326" type="divider">
+      <obj_property name="label">Debug</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_regfile/errors">
+      <obj_property name="ElementShortName">errors[31:0]</obj_property>
+      <obj_property name="ObjectShortName">errors[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
 </wave_config>

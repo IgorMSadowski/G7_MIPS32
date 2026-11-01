@@ -12,49 +12,103 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="86.001 ns"></ZoomEndTime>
-      <Cursor1Time time="86.000 ns"></Cursor1Time>
+      <ZoomEndTime time="173.218 ns"></ZoomEndTime>
+      <Cursor1Time time="58.552 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="112"></NameColumnWidth>
-      <ValueColumnWidth column_width="97"></ValueColumnWidth>
+      <NameColumnWidth column_width="171"></NameColumnWidth>
+      <ValueColumnWidth column_width="141"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="19" />
+   <WVObjectSize size="31" />
+   <wvobject type="array" fp_name="/tb_control_unit/test_name">
+      <obj_property name="ElementShortName">test_name[127:0]</obj_property>
+      <obj_property name="ObjectShortName">test_name[127:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider1225" type="divider">
+      <obj_property name="label">Instruction Fields</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#00FFFF</obj_property>
+   </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/op">
       <obj_property name="ElementShortName">op[5:0]</obj_property>
       <obj_property name="ObjectShortName">op[5:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/funct">
       <obj_property name="ElementShortName">funct[5:0]</obj_property>
       <obj_property name="ObjectShortName">funct[5:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/rs">
       <obj_property name="ElementShortName">rs[4:0]</obj_property>
       <obj_property name="ObjectShortName">rs[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/rt">
       <obj_property name="ElementShortName">rt[4:0]</obj_property>
       <obj_property name="ObjectShortName">rt[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/shamt">
       <obj_property name="ElementShortName">shamt[4:0]</obj_property>
       <obj_property name="ObjectShortName">shamt[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_control_unit/reg_dst">
-      <obj_property name="ElementShortName">reg_dst</obj_property>
-      <obj_property name="ObjectShortName">reg_dst</obj_property>
+   <wvobject fp_name="divider1226" type="divider">
+      <obj_property name="label">ALU Control</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#00FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_control_unit/alu_operation">
+      <obj_property name="ElementShortName">alu_operation[63:0]</obj_property>
+      <obj_property name="ObjectShortName">alu_operation[63:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/alu_src">
       <obj_property name="ElementShortName">alu_src</obj_property>
       <obj_property name="ObjectShortName">alu_src</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_control_unit/mem_to_reg">
-      <obj_property name="ElementShortName">mem_to_reg</obj_property>
-      <obj_property name="ObjectShortName">mem_to_reg</obj_property>
+   <wvobject type="array" fp_name="/tb_control_unit/alu_ctrl">
+      <obj_property name="ElementShortName">alu_ctrl[3:0]</obj_property>
+      <obj_property name="ObjectShortName">alu_ctrl[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider1227" type="divider">
+      <obj_property name="label">Register Writeback</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#00FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_control_unit/writeback_source">
+      <obj_property name="ElementShortName">writeback_source[63:0]</obj_property>
+      <obj_property name="ObjectShortName">writeback_source[63:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/reg_write">
       <obj_property name="ElementShortName">reg_write</obj_property>
       <obj_property name="ObjectShortName">reg_write</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_control_unit/reg_dst">
+      <obj_property name="ElementShortName">reg_dst</obj_property>
+      <obj_property name="ObjectShortName">reg_dst</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_control_unit/mem_to_reg">
+      <obj_property name="ElementShortName">mem_to_reg</obj_property>
+      <obj_property name="ObjectShortName">mem_to_reg</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_control_unit/link">
+      <obj_property name="ElementShortName">link</obj_property>
+      <obj_property name="ObjectShortName">link</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider1230" type="divider">
+      <obj_property name="label">Memory Control</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#00FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_control_unit/memory_action">
+      <obj_property name="ElementShortName">memory_action[63:0]</obj_property>
+      <obj_property name="ObjectShortName">memory_action[63:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/mem_read">
       <obj_property name="ElementShortName">mem_read</obj_property>
@@ -64,9 +118,28 @@
       <obj_property name="ElementShortName">mem_write</obj_property>
       <obj_property name="ObjectShortName">mem_write</obj_property>
    </wvobject>
+   <wvobject fp_name="divider1231" type="divider">
+      <obj_property name="label">Branch and Jump</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#00FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_control_unit/branch_name">
+      <obj_property name="ElementShortName">branch_name[63:0]</obj_property>
+      <obj_property name="ObjectShortName">branch_name[63:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+   </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/branch">
       <obj_property name="ElementShortName">branch</obj_property>
       <obj_property name="ObjectShortName">branch</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_control_unit/branch_cond">
+      <obj_property name="ElementShortName">branch_cond[3:0]</obj_property>
+      <obj_property name="ObjectShortName">branch_cond[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_control_unit/jump_name">
+      <obj_property name="ElementShortName">jump_name[63:0]</obj_property>
+      <obj_property name="ObjectShortName">jump_name[63:0]</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/jump">
       <obj_property name="ElementShortName">jump</obj_property>
@@ -76,24 +149,19 @@
       <obj_property name="ElementShortName">jump_reg</obj_property>
       <obj_property name="ObjectShortName">jump_reg</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_control_unit/link">
-      <obj_property name="ElementShortName">link</obj_property>
-      <obj_property name="ObjectShortName">link</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_control_unit/branch_cond">
-      <obj_property name="ElementShortName">branch_cond[3:0]</obj_property>
-      <obj_property name="ObjectShortName">branch_cond[3:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_control_unit/alu_ctrl">
-      <obj_property name="ElementShortName">alu_ctrl[3:0]</obj_property>
-      <obj_property name="ObjectShortName">alu_ctrl[3:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_control_unit/errors">
-      <obj_property name="ElementShortName">errors[31:0]</obj_property>
-      <obj_property name="ObjectShortName">errors[31:0]</obj_property>
+   <wvobject fp_name="divider1232" type="divider">
+      <obj_property name="label">Debug</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#00FFFF</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/selector">
       <obj_property name="ElementShortName">selector[31:0]</obj_property>
       <obj_property name="ObjectShortName">selector[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_control_unit/errors">
+      <obj_property name="ElementShortName">errors[31:0]</obj_property>
+      <obj_property name="ObjectShortName">errors[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
 </wave_config>

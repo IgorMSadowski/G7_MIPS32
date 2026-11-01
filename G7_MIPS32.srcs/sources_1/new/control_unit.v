@@ -135,7 +135,7 @@ module control_unit(
                         o_link = 1'b1;              // link: write return address to rd
                         o_reg_write = 1'b1;         // write return address to rd
                     end
-                    default: o_alu_ctrl = 4'b0010;  // default to add for unsupported funct
+                    default: o_reg_write = 1'b0; // unsupported funct has no state effect
                 endcase
             end
 

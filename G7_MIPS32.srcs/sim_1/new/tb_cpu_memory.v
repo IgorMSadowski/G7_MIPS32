@@ -86,6 +86,12 @@ module tb_cpu_memory;
         check(dut.u_dp.registers._rf[8] === 42,
               "unsupported shift encoding cannot write a register");
 
+        // Unknown R-type function must not execute the default ALU ADD.
+        @(negedge clk); instr = 32'h0000403F;
+        @(posedge clk); #1;
+        check(dut.u_dp.registers._rf[8] === 42,
+              "unsupported R-type function cannot overwrite a register");
+
         @(negedge clk); instr = 32'hAC000004; rst = 1; #1;
         check(re === 0 && we === 0, "reset blocks decoded store");
         $display("--- %0d memory/pause checks, %0d errors ---", checks, errors);

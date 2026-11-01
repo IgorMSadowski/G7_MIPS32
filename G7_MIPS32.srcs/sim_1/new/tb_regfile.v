@@ -7,6 +7,29 @@ module tb_regfile;
     reg  [31:0] wdata;
     wire [31:0] rd1, rd2;
 
+    // Simulation-only labels: display these signals with ASCII radix.
+    reg [8*32-1:0] test_name;
+    reg [8*16-1:0] write_action;
+    always @(*) begin
+        case (rst)
+            1'b1: write_action = "RESET";
+            1'b0: begin
+                case (we)
+                    1'b0: write_action = "DISABLED";
+                    1'b1: begin
+                        case (wa == 5'd0)
+                            1'b1: write_action = "R0 BLOCKED";
+                            1'b0: write_action = "WRITE ENABLED";
+                            default: write_action = "UNKNOWN";
+                        endcase
+                    end
+                    default: write_action = "UNKNOWN";
+                endcase
+            end
+            default: write_action = "UNKNOWN";
+        endcase
+    end
+
     register_file dut(
         .i_clk(clk), .i_rst(rst), .i_we(we),
         .i_ra1(ra1), .i_ra2(ra2), .i_wa(wa),
@@ -36,27 +59,34 @@ module tb_regfile;
     endtask
 
     initial begin
+        test_name = "RESET REGISTERS";
         clk=0; rst=1; we=0; ra1=0; ra2=0; wa=0; wdata=0;
         @(negedge clk); @(negedge clk);
         rst=0;
 
         // $zero reads 0 immediately
+        test_name = "CHECK R0 AFTER RESET";
         check(0, 32'd0, "r0 is zero after reset");
 
         // Write r5, read back
-        write_reg(5, 32'hDEAD_BEEF);
-        check(5, 32'hDEAD_BEEF, "r5 write/read");
+        test_name = "WRITE AND READ R5";
+        write_reg(5, 32'h1234_5678);
+        check(5, 32'h1234_5678, "r5 write/read");
 
         // Try to write r0 — must be ignored
+        test_name = "CHECK R0 WRITE PROTECTION";
         write_reg(0, 32'hFFFF_FFFF);
         check(0, 32'd0, "r0 write ignored ($zero protection)");
 
         // Two consecutive writes — second wins
+        test_name = "WRITE R7 FIRST VALUE";
         write_reg(7, 32'h1111_1111);
+        test_name = "WRITE R7 SECOND VALUE";
         write_reg(7, 32'h2222_2222);
         check(7, 32'h2222_2222, "consecutive writes");
 
         // we=0 — no write happens
+        test_name = "CHECK WRITE DISABLED";
         wa=8; wdata=32'hAAAA_AAAA; we=0;
         @(posedge clk); #1;
         check(8, 32'd0, "we=0 no write");
