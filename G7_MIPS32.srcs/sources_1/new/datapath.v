@@ -84,6 +84,11 @@ module datapath(
     assign o_pc       = _imem_addr;
 
     assign _is_load = i_mem_read;   // mem_read comes from CU; 1 only for lw/lb
+
+    // ALU operand A select
+    // For shift instructions, ALU operand A = shamt (instruction[10:6])
+    // For all other instructions, ALU operand A = rs value (from RF)
+    // ALU control codes for shifts: SLL=1001, SRL=1010, SRA=1101
     assign _src_a = (i_alu_ctrl == 4'b1001 ||
                      i_alu_ctrl == 4'b1010 ||
                      i_alu_ctrl == 4'b1101)
@@ -112,9 +117,9 @@ module datapath(
         .i_sel(i_reg_dst),
         .o_y(_wa)
     );
+
     // Write Address: If its a JAL the link forces the write address to be the reg 31 all '1's 
     assign _wa_final = (i_link && !i_jump_reg) ? 5'd31 : _wa;
-
 
 
     // Link address used by jal and jalr.
