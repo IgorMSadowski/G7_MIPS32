@@ -1,10 +1,19 @@
 1. [ ] Implement memory-mapped I/O (MMIO)
 	- Add address decoding and read/write control logic.
 	- Verify accesses to mapped addresses on testbenches.
+
+
 2. [ ] Implement the peripherals
 	- Connect each peripheral to the MMIO interface.
     - Implement the peripherals
 	- Verify peripheral reads and writes.
+
+
 3. [ ] Add the interrupt system
 	- Connect peripheral interrupt signals.
 	- Verify interrupt handling.
+
+
+
+
+	MIPS COPROCESSOR 0 HANDLES TRAPS AND INTERRUPTS

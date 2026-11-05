@@ -22,7 +22,7 @@ module register_file(
     reg [31:0] _rf [0:31];          // 32 registers × 32 bits
     integer    _index;              // Reset loop counter
 
-    always @(posedge i_clk or posedge i_rst) begin
+    always @(posedge i_clk) begin
         if (i_rst) begin
             for (_index = 0; _index < 32; _index = _index + 1)
                 _rf[_index] <= 32'b0;

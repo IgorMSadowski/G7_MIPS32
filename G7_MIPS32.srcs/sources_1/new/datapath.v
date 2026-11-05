@@ -228,7 +228,7 @@ module datapath(
     // -------------------------------------------------------------------------
     // FSM + PC update
     // -------------------------------------------------------------------------
-    always @(posedge i_clk or posedge i_rst) begin
+    always @(posedge i_clk) begin
         if (i_rst) begin
             _state <= S_FETCH;
             _pc_r  <= 32'b0;
