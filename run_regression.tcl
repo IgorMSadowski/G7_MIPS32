@@ -3,9 +3,8 @@
 # ==============================================================================
 # Open G7_MIPS32.xpr, save/close any active simulation, then run:
 # source {/home/igor/Documents/Vivado_Projects/G7_MIPS32/run_regression.tcl}
-# Uses the project's existing ROM configuration; does not select a .mem file.
-# Uses the alu, regfile, control_unit, bdu and soc simulation sets.
-# Creates a cpu_memory set for the additional memory/pause test when needed.
+# Uses test ROMs through module parameters; does not change project ROM settings.
+# Uses all existing component simulation sets and creates test sets when needed.
 # A failed test is reported in the summary and makes this script return an error.
 # ==============================================================================
 
@@ -67,6 +66,31 @@ if {[lsearch -exact [get_files -quiet -of_objects $pause_set] $pause_tb] < 0} {
     add_files -fileset cpu_memory -norecurse $pause_tb
 }
 
+set component_set [get_filesets -quiet component_tests]
+if {[llength $component_set] == 0} {
+    create_fileset -simset component_tests
+    set component_set [get_filesets component_tests]
+    set_property SOURCE_SET sources_1 $component_set
+    set_property top tb_data_bus $component_set
+}
+set component_dir [file join $regression_dir G7_MIPS32.srcs sim_1 new]
+foreach tb_name {
+    tb_data_bus.v
+    tb_ctrl_enc.v
+    tb_pario.v
+    tb_memories.v
+    tb_primitives.v
+    tb_soc_mmio.v
+} {
+    set tb_path [file join $component_dir $tb_name]
+    if {![file exists $tb_path]} {
+        error "Component testbench not found: $tb_path"
+    }
+    if {[lsearch -exact [get_files -quiet -of_objects $component_set] $tb_path] < 0} {
+        add_files -fileset component_tests -norecurse $tb_path
+    }
+}
+
 set regression_results {}
 set regression_failed 0
 foreach {simset tb} {
@@ -74,8 +98,14 @@ foreach {simset tb} {
     regfile      tb_regfile
     control_unit tb_control_unit
     bdu          tb_bdu
+    component_tests tb_primitives
+    component_tests tb_ctrl_enc
+    component_tests tb_pario
+    component_tests tb_data_bus
+    component_tests tb_memories
     cpu_memory   tb_cpu_memory
     soc          tb_soc
+    component_tests tb_soc_mmio
 } {
     if {[catch {run_one $tb $simset} message]} {
         incr regression_failed

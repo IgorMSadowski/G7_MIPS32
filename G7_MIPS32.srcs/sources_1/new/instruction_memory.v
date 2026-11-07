@@ -9,7 +9,9 @@
 
 // Instruction memory (ROM) - BRAM, latency 1
 
-module instruction_memory(
+module instruction_memory #(
+    parameter MEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/imem_init.mem"
+)(
     input  wire        i_clk,       // Clock
     input  wire        i_rst,       // Reset
     input  wire        i_en,        // Enable
@@ -27,7 +29,7 @@ module instruction_memory(
         .ECC_MODE("no_ecc"),        
         .ECC_TYPE("none"),          
         .IGNORE_INIT_SYNTH(0),      
-        .MEMORY_INIT_FILE("/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/imem_init.mem"),
+        .MEMORY_INIT_FILE(MEM_INIT_FILE),
         .MEMORY_INIT_PARAM("0"),    
         .MEMORY_OPTIMIZATION("true"),
         .MEMORY_PRIMITIVE("block"), // BRAM

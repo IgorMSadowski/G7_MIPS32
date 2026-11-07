@@ -13,7 +13,7 @@ module ctrl_dec(
     wire [3:0] oe_, we_;
     
     // Unpack the control bus
-    assign {oe_, we_, ad, rst, clk} = ctrl;
+    assign {oe_, we_, ad, rst, clk} = ctrl[21:0];
 
     // Only activate signals if this specific peripheral is selected
     assign oe = sel ? oe_ : 4'b0;

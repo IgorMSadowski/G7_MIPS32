@@ -28,7 +28,7 @@ module ctrl_enc(
 
     // Pack the bus: {oe, we, address[11:0], rst, clk}
     // We use io_ad[11:0] to give us room for 4096 peripherals/sub-registers.
-    assign ctrl = {oe, we, io_ad[11:0], rst, clk};
+    assign ctrl = {10'b0, oe, we, io_ad[11:0], rst, clk};
 
     // Decode the specific peripheral based on bits [11:8] of the address.
     // This is exactly like the professor's code, but for 32-bit addresses.

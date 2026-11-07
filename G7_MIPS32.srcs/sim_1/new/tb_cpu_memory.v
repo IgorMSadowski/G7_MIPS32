@@ -9,6 +9,8 @@ module tb_cpu_memory;
     wire re, we;
     integer errors = 0;
     integer checks = 0;
+    reg [8*24-1:0] test_name;
+    reg [8*20-1:0] memory_phase;
 
     always #5 clk = ~clk;
 
@@ -34,10 +36,13 @@ module tb_cpu_memory;
     endtask
 
     initial begin
+        test_name = "CPU MEMORY AND PAUSE";
+        memory_phase = "RESET";
         #1;
         check(re === 0 && we === 0, "no memory requests during reset");
         repeat (2) @(negedge clk);
         rst = 0; en = 1;
+        memory_phase = "EXECUTE";
         @(posedge clk); #1; // Initial FETCH -> EXEC.
 
         @(negedge clk); instr = 32'h2008002A; // addi t0,zero,42
@@ -45,6 +50,7 @@ module tb_cpu_memory;
         check(dut.u_dp.registers._rf[8] === 32'd42, "prepare store value");
 
         @(negedge clk); instr = 32'hAC080000; en = 0; // paused sw t0,0(zero)
+        memory_phase = "PAUSED STORE";
         repeat (2) begin
             @(posedge clk); #1;
             check(re === 0 && we === 0, "paused store has no request");
@@ -54,6 +60,7 @@ module tb_cpu_memory;
         @(posedge clk); #1; // Store commits.
 
         @(negedge clk); instr = 32'h8C090000; en = 0; // paused lw t1,0(zero)
+        memory_phase = "PAUSED LOAD";
         @(posedge clk); #1;
         check(re === 0 && we === 0, "paused load has no request");
         @(negedge clk); en = 1; #1;

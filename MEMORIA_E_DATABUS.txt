@@ -1,0 +1,307 @@
+G7_MIPS32 - COMO FUNCIONAM A MEMORIA E O DATABUS
+================================================
+
+Este texto explica o caminho de dados entre o CPU, a memoria de dados (DMEM)
+e os perifericos mapeados em memoria (MMIO). Tambem explica a notacao ===
+usada nos testbenches.
+
+1. Ideia geral
+--------------
+
+O CPU nao escreve diretamente na DMEM nem num periferico. Durante a execucao,
+produz:
+
+  - endereco: resultado da ALU (soc._alu_out);
+  - pedido de leitura: soc._mem_read;
+  - pedido de escrita: soc._mem_write;
+  - dado a escrever: soc._wdata.
+
+O modulo data_bus recebe estes sinais e descodifica o destino:
+
+  CPU -> data_bus -> DMEM
+                  -> periferico PARIO
+
+Nas leituras, o dado escolhido pelo barramento regressa ao CPU por
+soc._rdata. Na pratica, o barramento e composto por sinais separados de
+pedido e resposta; nao e um unico fio bidirecional.
+
+Os sinais principais estao em:
+
+  G7_MIPS32.srcs/sources_1/new/data_bus.v
+  G7_MIPS32.srcs/sources_1/new/soc.v
+  G7_MIPS32.srcs/sources_1/new/data_memory.v
+  G7_MIPS32.srcs/sources_1/new/instruction_memory.v
+  G7_MIPS32.srcs/sources_1/new/cpu.v
+  G7_MIPS32.srcs/sources_1/new/datapath.v
+
+2. Porque nao usar o fio tri-state antigo?
+------------------------------------------
+
+Um fio tri-state pode ter valor 0, 1 ou Z (alta impedancia). A ideia antiga
+era ligar CPU, memoria e perifericos ao mesmo fio e deixar que cada um o
+conduzisse apenas na altura certa.
+
+Isto e dificil de verificar: se dois componentes conduzirem o fio ao mesmo
+tempo, ha conflito; se nenhum o conduzir, o valor lido e Z ou desconhecido.
+Tambem e uma arquitetura inconveniente para a logica interna de FPGAs.
+
+Agora:
+
+  - os pedidos sao sinais normais separados;
+  - o descodificador ativa apenas o destino correto;
+  - um mux escolhe a resposta correta.
+
+Assim, nao ha arbitro implicito nem condutores tri-state internos.
+
+3. Como o endereco escolhe o destino?
+--------------------------------------
+
+DMEM:
+
+  - cobre os enderecos de byte 0x00000000 a 0x000000FC;
+  - tem 64 words de 32 bits, ou 64 x 4 = 256 bytes;
+  - um endereco de word tem de ser alinhado: os bits [1:0] devem ser 00;
+  - a word selecionada e i_addr[7:2].
+
+Por exemplo:
+
+  endereco de byte 0x00 -> indice de word 0
+  endereco de byte 0x04 -> indice de word 1
+  endereco de byte 0x08 -> indice de word 2
+  endereco de byte 0xFC -> indice de word 63
+
+O data_bus ativa o pedido DMEM apenas quando o endereco esta dentro dessa
+regiao, alinhado, o CPU pede leitura/escrita, o sistema esta ativo e o reset
+nao esta aplicado.
+
+MMIO:
+
+  - endereco[31] indica a zona MMIO;
+  - ctrl_enc olha para endereco[11:8] e produz o chip-select do periferico;
+  - sel[0] escolhe o PARIO na regiao 0x80000000-0x800000FF;
+  - sel[1], sel[2] e sel[3] reservam outras regioes, ainda sem perifericos.
+
+Exemplos:
+
+  0x00000008 -> DMEM, word 2
+  0x80000000 -> PARIO, regiao 0, offset 0
+  0x80000100 -> regiao MMIO 1, reservada
+
+Uma escrita ou leitura MMIO nao ativa a DMEM. O mesmo vale ao contrario:
+um endereco de DMEM nao seleciona um periferico. A verificacao de alinhamento
+tambem e aplicada aos acessos word MMIO.
+
+4. O control bus e o PARIO
+--------------------------
+
+ctrl_enc junta controlo e endereco num vetor chamado ctrl. Este vetor nao
+transporta o dado escrito nem o dado lido; transporta sinais de controlo:
+
+  - oe: habilitacoes de leitura do periferico;
+  - we: habilitacoes de escrita do periferico;
+  - ad: os 12 bits inferiores do endereco;
+  - rst e clk.
+
+O ctrl_dec faz a operacao inversa: separa ctrl em oe, we, ad, rst e clk. Se
+o chip-select desse periferico estiver desligado, poe oe e we a zero, para o
+periferico nao responder a um pedido dirigido a outro.
+
+No PARIO, o endereco base, offset 0:
+
+  lw 0x80000000 -> devolve os 8 bits de botoes/switches, com os bits altos a 0
+  sw 0x80000000 -> guarda os 3 bits baixos de wdata nos LEDs de utilizador
+
+O quarto LED fisico continua ligado ao reset e nao e um bit guardado pelo
+PARIO. Outros offsets do PARIO devolvem zero e nao alteram os LEDs.
+
+5. Porque uma leitura precisa de mais de um ciclo?
+--------------------------------------------------
+
+A memoria de dados e uma BRAM com READ_LATENCY_A = 1. Isso significa que o
+endereco/pedido e amostrado num flanco do clock e o dado aparece depois desse
+flanco. O CPU tem estados para acomodar esse atraso:
+
+  S_FETCH: prepara a primeira instrucao depois do reset.
+  S_EXEC:  executa a instrucao atual. Um lw pede a leitura aqui.
+  S_LOAD:  no ciclo seguinte, escreve no registo do CPU o dado recebido.
+
+Exemplo de lw $t0, 8($zero):
+
+Antes do flanco:
+  CPU esta em S_EXEC
+  ALU calcula endereco 8
+  mem_read = 1
+  data_bus ativa dmem_re
+
+No flanco de clock:
+  DMEM amostra endereco 8
+  data_bus guarda que existe uma resposta pendente e que ela vem da DMEM
+  CPU avanca de S_EXEC para S_LOAD
+
+Depois do flanco:
+  saida da BRAM contem a word 2
+  rsp_valid = 1
+  data_bus apresenta essa word em rdata
+
+No flanco seguinte, enquanto CPU esta em S_LOAD:
+  register_file grava rdata no registo destino $t0
+  load_done informa o data_bus que o CPU consumiu a resposta
+  data_bus limpa rsp_valid depois do flanco
+
+O endereco do load tambem precisa de ficar certo ate a BRAM o amostrar. A
+FSM do datapath mantem o PC nessa instrucao/load enquanto termina o ciclo de
+carga; o proximo PC ja foi preparado pela logica de fetch.
+
+6. O que guardam rsp_valid e _rsp_is_mmio?
+------------------------------------------
+
+No data_bus:
+
+  o_rsp_valid (rsp_valid)
+      Diz que ha uma resposta de leitura pendente para o CPU.
+
+  _rsp_is_mmio
+      Guarda qual dispositivo respondeu: 0 = DMEM, 1 = MMIO.
+
+  _mmio_rdata_hold
+      Guarda o valor que o periferico devolveu, para a resposta nao depender
+      de mudancas posteriores nos botoes, switches ou entradas do periferico.
+
+Quando a resposta vem da DMEM, o dado ja esta guardado no registo de saida
+sincrono da BRAM, por isso o data_bus mantem selecionada essa saida enquanto
+rsp_valid estiver a 1.
+
+Quando a resposta vem de MMIO, o valor e capturado em _mmio_rdata_hold no
+flanco do pedido. A resposta fica estavel ate o CPU a consumir.
+
+Se o CPU for pausado durante S_LOAD:
+
+  - o CPU nao avanca de estado;
+  - load_done fica a 0 porque tambem depende do enable do CPU;
+  - rsp_valid nao e limpo;
+  - o dado continua no caminho de leitura para o CPU.
+
+Quando o CPU retoma, grava o dado e consome a resposta. Reset limpa a resposta
+pendente.
+
+Nota: este protocolo e feito para o CPU atual, que executa no maximo uma
+leitura pendente de cada vez. Nao e um protocolo com varias leituras em voo,
+IDs de transacao ou handshaking pronto/aceite.
+
+7. Escrita na DMEM
+------------------
+
+Para sw, o CPU apresenta endereco e wdata, e mem_write fica ativo no estado
+de execucao. O data_bus ativa dmem_we somente se:
+
+  - o endereco pertence a DMEM;
+  - o endereco esta alinhado;
+  - mem_write esta ativo;
+  - reset esta desativado e o sistema esta habilitado.
+
+Na DMEM, wea tem quatro bits, um por byte da word. Para sw completo, os quatro
+bits recebem o mesmo write-enable, logo os 32 bits sao escritos.
+
+A memoria esta configurada como read_first: se houver leitura/escrita na
+mesma word no mesmo flanco, a saida de leitura representa o valor anterior.
+No protocolo normal do CPU, o store nao usa essa saida como resposta.
+
+8. Memoria de instrucoes e memoria de dados
+-------------------------------------------
+
+As duas memorias sao diferentes:
+
+IMEM (instruction_memory):
+  - ROM de instrucoes;
+  - recebe o PC em endereco de bytes;
+  - transforma o endereco em indice de word usando bits [7:2];
+  - tem leitura sincrona com latencia de um ciclo;
+  - inicializa a partir do ficheiro .mem indicado pelo parametro
+    MEM_INIT_FILE.
+
+DMEM (data_memory):
+  - RAM para dados lidos/escritos por lw e sw;
+  - tambem usa endereco[7:2] como indice de word;
+  - suporta escrita por byte, usada aqui como word completa para sw;
+  - output da leitura e registado e tem latencia de um ciclo.
+
+As memorias usam XPM (Xilinx Parameterized Macros), modelos da AMD/Xilinx
+para que Vivado possa inferir blocos BRAM e simular o mesmo componente.
+
+9. O que e === ?
+----------------
+
+Em Verilog, === e o operador de igualdade de casos (case equality). Compara
+tambem os quatro estados possiveis de um bit:
+
+  0 = zero logico
+  1 = um logico
+  X = desconhecido/indeterminado
+  Z = alta impedancia
+
+Ao contrario de ==, === sempre produz 0 ou 1. X e Z sao comparados como
+valores literais.
+
+Exemplos:
+
+  1'b0 === 1'b0  -> 1
+  1'bx === 1'bx  -> 1
+  1'bz === 1'bz  -> 1
+  1'bx === 1'b0  -> 0
+
+O operador normal == pode devolver X se algum bit necessario a comparacao
+for desconhecido:
+
+  1'bx == 1'b0   -> X
+
+Isto e importante em testbenches. Se espero que uma saida seja zero, quero
+que um X ou Z conte como erro:
+
+  if (rdata !== 32'h00000000)
+      $display("FAIL");
+
+Aqui, !== e a desigualdade de casos (case inequality), o inverso de ===.
+Devolve sempre 0 ou 1; qualquer bit X/Z que nao coincida com o esperado faz
+a comparacao dar 1, portanto o teste falha.
+
+Em contraste:
+
+  if (rdata != 32'h00000000)
+
+usa desigualdade normal. Se rdata tiver X, o resultado pode ser X; em
+Verilog, um if com expressao X nao entra no ramo verdadeiro. Assim, um teste
+com != pode deixar passar um valor desconhecido. Para verificar valores
+exatos conhecidos, === e !== sao normalmente os operadores apropriados.
+
+=== nao e atribuicao e nao altera sinais. E apenas uma comparacao de teste.
+O simbolo <=, por exemplo, e que significa atribuicao nao bloqueante em
+logica sequencial; sao operadores diferentes.
+
+10. Como confirmar isto no Vivado
+---------------------------------
+
+Execute a regressao completa na consola Tcl:
+
+  source {/home/igor/Documents/Vivado_Projects/G7_MIPS32/run_regression.tcl}
+
+Para observar um caso, escolha um top como tb_data_bus ou tb_soc_mmio e
+adicione a waveform:
+
+  testbench.test_name
+  testbench.bus_phase ou testbench.system_phase
+  dut._addr
+  dut._mem_read / dut._mem_write
+  dut._dmem_re / dut._dmem_we
+  dut._mmio_re / dut._mmio_we
+  dut._rdata
+  dut.u_data_bus.o_rsp_valid
+  dut.u_cpu.u_dp._state
+
+Os nomes hierarquicos podem aparecer sem underscore inicial ou ser
+renomeados pela otimizacao. Se os sinais internos nao aparecerem, reexecute
+a simulacao em modo debug (xelab debug typical/all) ou desative a otimizacao
+de sinais no settings da simulacao.
+
+Este texto descreve o RTL e os testbenches implementados. A simulacao nao
+substitui o teste fisico na Zybo, nem verifica por si so o timing final de
+place-and-route.

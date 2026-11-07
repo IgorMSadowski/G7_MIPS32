@@ -1,54 +1,50 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: Igor Sadowski
-// 
-// Create Date:
-// Design Name: 
 // Module Name: Parallel I/O (PARIO)
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: Parallel I/O for MIPS processor
+// Address 0x80000000 reads buttons/switches and writes the three user LEDs.
 //////////////////////////////////////////////////////////////////////////////////
 
 module pario(
     input  wire        i_clk,
     input  wire        i_rst,
-    input  wire [31:0] i_addr,   // Endereço vindo da CPU
-    input  wire [31:0] i_wdata,  // Dado vindo da CPU (sw)
-    input  wire        i_we,     // Write enable
-    input  wire        i_re,     // Read enable
-    output reg  [31:0] o_rdata,  // Dado a devolver para a CPU (lw)
-    output wire [2:0] o_led,    // Ligação física aos LEDs da Zybo
-    input  wire [3:0] i_switch  // Ligação física aos switches da Zybo
+    input  wire        i_sel,
+    input  wire        i_re,
+    input  wire        i_we,
+    input  wire [31:0] i_ctrl,
+    input  wire [7:0]  i,
+    input  wire [31:0] i_wdata,
+    output reg  [31:0] o_rdata,
+    output wire [2:0]  o_led
     );
 
-    // Registo do LED (mapeado no endereço 0x80000000)
-    reg [3:0] _led_reg;
+    wire [3:0]  oe;
+    wire [3:0]  we;
+    wire [11:0] ad;
+    reg  [2:0]  _led_reg;
+
+    ctrl_dec u_ctrl_dec (
+        .ctrl(i_ctrl),
+        .sel(i_sel),
+        .clk(),
+        .rst(),
+        .oe(oe),
+        .we(we),
+        .ad(ad)
+    );
 
     always @(posedge i_clk) begin
-        if (i_rst) begin
-            _led_reg <= 4'b0;
-        end else if (i_we && (i_addr[7:0] == 8'h00)) begin
-            // Se o CPU fez um sw e o endereço é o base (00), grava o LED
-            _led_reg <= i_wdata[3:0];
-        end
+        if (i_rst)
+            _led_reg <= 3'b000;
+        else if (i_we && we[1] && ad[7:0] == 8'h00)
+            _led_reg <= i_wdata[2:0];
+    end
+
+    always @(*) begin
+        o_rdata = 32'b0;
+        if (i_re && oe[1] && ad[7:0] == 8'h00)
+            o_rdata = {24'b0, i};
     end
 
     assign o_led = _led_reg;
 
-    // Lógica de Leitura (lw)
-    always @(*) begin
-        if (i_re) begin
-            
-
-
-
-
-
-
-            
-        end
-    end
 endmodule

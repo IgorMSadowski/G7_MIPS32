@@ -31,7 +31,8 @@ module datapath(
     output wire [31:0] o_alu_out,       // ALU result,   o_y
     output wire [31:0] o_wdata,         // Store data (register target, rt, value for sw)
     
-    output wire        o_state_exec     // 1 while in S_EXEC (used by cpu.v to gate mem_write)
+    output wire        o_state_exec,    // 1 while in S_EXEC (used by cpu.v to gate mem_write)
+    output wire        o_state_load     // 1 while committing a load result
     );
 
     // FSM state encoding
@@ -43,6 +44,7 @@ module datapath(
     reg [31:0] _pc_r;            // Program counter register
 
     assign o_state_exec = (_state == S_EXEC);   // exported for cpu.v gate
+    assign o_state_load = (_state == S_LOAD);
 
     // Intermediate signals
     wire [31:0] _pc4;            // PC + 4 (next sequential address)
