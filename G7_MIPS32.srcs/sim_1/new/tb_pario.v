@@ -3,14 +3,10 @@
 module tb_pario;
     reg clk = 0;
     reg rst = 1;
-    reg io = 1;
-    reg [31:0] addr = 32'h8000_0000;
-    reg lw = 0, sw = 0;
-    reg [7:0] inputs = 0;
-    reg [31:0] wdata = 0;
-    wire [31:0] ctrl, rdata;
-    wire [7:0] sel;
-    wire per_re, per_we;
+    reg write_enable = 0;
+    reg [7:0] pins = 0;
+    reg [31:0] write_data = 0;
+    wire [31:0] read_data;
     wire [2:0] led;
     reg [8*24-1:0] test_name;
     reg [8*16-1:0] pario_phase;
@@ -19,20 +15,10 @@ module tb_pario;
 
     always #5 clk = ~clk;
 
-    ctrl_enc encoder(
-        .clk(clk), .rst(rst), .io(io), .io_ad(addr),
-        .lw(lw), .lb(1'b0), .sw(sw), .sb(1'b0),
-        .ctrl(ctrl), .sel(sel)
-    );
-
-    assign per_re = lw && sel[0];
-    assign per_we = sw && sel[0];
-
     pario dut(
         .i_clk(clk), .i_rst(rst),
-        .i_sel(sel[0]), .i_re(per_re), .i_we(per_we),
-        .i_ctrl(ctrl), .i(inputs), .i_wdata(wdata),
-        .o_rdata(rdata), .o_led(led)
+        .i_write_enable(write_enable), .i_pins(pins),
+        .i_write_data(write_data), .o_read_data(read_data), .o_led(led)
     );
 
     task check(input condition, input [8*56-1:0] name);
@@ -56,41 +42,22 @@ module tb_pario;
         pario_phase = "WRITE LED";
         @(negedge clk);
         rst = 0;
-        sw = 1;
-        wdata = 32'h0000_0005;
-        #1;
-        check(sel[0] && dut.we[1], "selected word store enables PARIO write");
+        write_enable = 1;
+        write_data = 32'h0000_00FD;
         @(posedge clk);
         #1;
-        check(led === 3'b101, "store updates all user LED bits");
+        check(led === 3'b101, "write uses only the three low bits");
 
-        pario_phase = "READ SWITCHES";
+        pario_phase = "READ PINS";
         @(negedge clk);
-        sw = 0;
-        lw = 1;
-        inputs = 8'h5A;
+        write_enable = 0;
+        write_data = 32'h0000_0002;
+        pins = 8'h5A;
         #1;
-        check(dut.oe[1] && rdata === 32'h0000_005A,
-              "word load returns button/switch input");
-
-        pario_phase = "UNSUPPORTED OFFSET";
-        @(negedge clk);
-        addr = 32'h8000_0004;
-        #1;
-        check(rdata === 32'b0, "unimplemented register offset reads as zero");
-        lw = 0;
-        sw = 1;
-        wdata = 32'h0000_0002;
+        check(read_data === 32'h0000_005A, "read data zero-extends the pins");
         @(posedge clk);
         #1;
-        check(led === 3'b101, "unimplemented register offset cannot write LEDs");
-
-        pario_phase = "UNSELECTED";
-        @(negedge clk);
-        addr = 32'h8000_0100;
-        #1;
-        check(!sel[0] && !dut.we[1] && rdata === 32'b0,
-              "other peripheral region cannot affect PARIO");
+        check(led === 3'b101, "LED output holds without a write");
 
         if (errors == 0) $display("PASS: %0d PARIO checks", checks);
         else $display("FAILED: %0d of %0d PARIO checks", errors, checks);

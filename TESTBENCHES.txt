@@ -15,9 +15,9 @@ o ciclo de lw e os operadores ===/!==, consulte MEMORIA_E_DATABUS.txt.
   Uma pausa do CPU nao perde a resposta pendente.
 - A DMEM so aceita palavras alinhadas dentro dos seus 64 words (0x00-0xFC).
   Os acessos a MMIO nao escrevem nem leem a DMEM.
-- O PARIO esta ligado ao control bus. No endereco 0x80000000, lw devolve
-  botoes/switches e sw atualiza os tres LEDs de utilizador. O LED0 continua
-  ligado ao reset. Outros offsets do PARIO devolvem zero e ignoram escritas.
+- O data_bus seleciona o PARIO pelo endereço exato 0x80000000.
+  LW lê botões/switches e SW atualiza LD3..LD1. LD0 segue o reset.
+  Os encoders/decoders da aula continuam disponíveis no teste isolado.
 - O endereco de inicializacao da ROM passou a ser parametrizavel, permitindo
   testar o SoC com Assembly/soc_mmio.mem sem alterar o programa normal.
 - O projeto Vivado passou a incluir ctrl_enc, cntrl_dec, pario e data_bus.
@@ -33,8 +33,7 @@ tb_regfile        Reset, leitura/escrita, protecao do registo zero e writes
                   consecutivos.
 tb_primitives     mux2_32bit, mux2_5bit, sign_extend e shift_left_two.
 tb_ctrl_enc       Codificacao/descodificacao de control bus e chip-selects.
-tb_pario          Leitura dos inputs, escrita/reset dos LEDs e offsets
-                  nao implementados.
+tb_pario          Leitura dos pinos, escrita, retenção e reset dos LEDs.
 tb_data_bus       Selecao DMEM/MMIO, alinhamento, enderecos invalidos,
                   resposta sincrona, pausa, consumo e reset.
 tb_memories       Latencia/enable/reset da ROM e escrita read-first, leitura

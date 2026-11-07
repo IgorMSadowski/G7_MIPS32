@@ -76,43 +76,22 @@ nao esta aplicado.
 
 MMIO:
 
-  - endereco[31] indica a zona MMIO;
-  - ctrl_enc olha para endereco[11:8] e produz o chip-select do periferico;
-  - sel[0] escolhe o PARIO na regiao 0x80000000-0x800000FF;
-  - sel[1], sel[2] e sel[3] reservam outras regioes, ainda sem perifericos.
+  - 0x80000000 seleciona o PARIO. A comparação usa o endereço completo.
+  - Outros endereços não emitem pedidos ao PARIO.
+  - Um pedido MMIO nunca ativa a DMEM.
 
-Exemplos:
+4. Controlo do PARIO
+---------------------
 
-  0x00000008 -> DMEM, word 2
-  0x80000000 -> PARIO, regiao 0, offset 0
-  0x80000100 -> regiao MMIO 1, reservada
+O data_bus ativa pario_write_enable numa escrita ao endereço do PARIO.
+No flanco ascendente, o ParIO guarda os três bits baixos de _wdata em
+LD3..LD1. LD0 acompanha o reset.
 
-Uma escrita ou leitura MMIO nao ativa a DMEM. O mesmo vale ao contrario:
-um endereco de DMEM nao seleciona um periferico. A verificacao de alinhamento
-tambem e aplicada aos acessos word MMIO.
-
-4. O control bus e o PARIO
---------------------------
-
-ctrl_enc junta controlo e endereco num vetor chamado ctrl. Este vetor nao
-transporta o dado escrito nem o dado lido; transporta sinais de controlo:
-
-  - oe: habilitacoes de leitura do periferico;
-  - we: habilitacoes de escrita do periferico;
-  - ad: os 12 bits inferiores do endereco;
-  - rst e clk.
-
-O ctrl_dec faz a operacao inversa: separa ctrl em oe, we, ad, rst e clk. Se
-o chip-select desse periferico estiver desligado, poe oe e we a zero, para o
-periferico nao responder a um pedido dirigido a outro.
-
-No PARIO, o endereco base, offset 0:
-
-  lw 0x80000000 -> devolve os 8 bits de botoes/switches, com os bits altos a 0
-  sw 0x80000000 -> guarda os 3 bits baixos de wdata nos LEDs de utilizador
-
-O quarto LED fisico continua ligado ao reset e nao e um bit guardado pelo
-PARIO. Outros offsets do PARIO devolvem zero e nao alteram os LEDs.
+O ParIO disponibiliza os bits de botões e switches em pario_read_data.
+O data_bus captura esse valor quando pario_read_enable está ativo.
+A seleção do endereço pertence ao data_bus. Os módulos ctrl_enc e
+ctrl_dec continuam disponíveis como referência das aulas e têm um
+teste isolado.
 
 5. Porque uma leitura precisa de mais de um ciclo?
 --------------------------------------------------
@@ -131,7 +110,7 @@ Antes do flanco:
   CPU esta em S_EXEC
   ALU calcula endereco 8
   mem_read = 1
-  data_bus ativa dmem_re
+  data_bus ativa ram_read_enable
 
 No flanco de clock:
   DMEM amostra endereco 8
@@ -140,59 +119,35 @@ No flanco de clock:
 
 Depois do flanco:
   saida da BRAM contem a word 2
-  rsp_valid = 1
+  read_response_valid = 1
   data_bus apresenta essa word em rdata
 
 No flanco seguinte, enquanto CPU esta em S_LOAD:
   register_file grava rdata no registo destino $t0
-  load_done informa o data_bus que o CPU consumiu a resposta
-  data_bus limpa rsp_valid depois do flanco
+  load_complete informa o data_bus que o CPU consumiu a resposta
+  data_bus limpa read_response_valid depois do flanco
 
 O endereco do load tambem precisa de ficar certo ate a BRAM o amostrar. A
-FSM do datapath mantem o PC nessa instrucao/load enquanto termina o ciclo de
-carga; o proximo PC ja foi preparado pela logica de fetch.
+FSM avança o PC no fim de EXEC. Durante LOAD, mantém esse PC e escreve
+no destino guardado em _wa_hold.
 
-6. O que guardam rsp_valid e _rsp_is_mmio?
-------------------------------------------
+6. Como o barramento guarda uma leitura?
+-----------------------------------------
 
-No data_bus:
+read_source guarda NO_READ, READ_FROM_RAM ou READ_FROM_PARIO. O mux usa
+este estado para escolher a saída registada da RAM, saved_pario_data ou
+zero. read_response_valid indica que há uma resposta pendente.
 
-  o_rsp_valid (rsp_valid)
-      Diz que ha uma resposta de leitura pendente para o CPU.
-
-  _rsp_is_mmio
-      Guarda qual dispositivo respondeu: 0 = DMEM, 1 = MMIO.
-
-  _mmio_rdata_hold
-      Guarda o valor que o periferico devolveu, para a resposta nao depender
-      de mudancas posteriores nos botoes, switches ou entradas do periferico.
-
-Quando a resposta vem da DMEM, o dado ja esta guardado no registo de saida
-sincrono da BRAM, por isso o data_bus mantem selecionada essa saida enquanto
-rsp_valid estiver a 1.
-
-Quando a resposta vem de MMIO, o valor e capturado em _mmio_rdata_hold no
-flanco do pedido. A resposta fica estavel ate o CPU a consumir.
-
-Se o CPU for pausado durante S_LOAD:
-
-  - o CPU nao avanca de estado;
-  - load_done fica a 0 porque tambem depende do enable do CPU;
-  - rsp_valid nao e limpo;
-  - o dado continua no caminho de leitura para o CPU.
-
-Quando o CPU retoma, grava o dado e consome a resposta. Reset limpa a resposta
-pendente.
-
-Nota: este protocolo e feito para o CPU atual, que executa no maximo uma
-leitura pendente de cada vez. Nao e um protocolo com varias leituras em voo,
-IDs de transacao ou handshaking pronto/aceite.
+O CPU sinaliza load_complete quando grava a resposta em LOAD. Em pausa,
+esse sinal fica a zero e a resposta mantém-se disponível. O CPU usa
+latência fixa e não espera pelo valid. Um LW para um endereço rejeitado
+continua a concluir com o valor zero apresentado pelo barramento.
 
 7. Escrita na DMEM
 ------------------
 
 Para sw, o CPU apresenta endereco e wdata, e mem_write fica ativo no estado
-de execucao. O data_bus ativa dmem_we somente se:
+de execucao. O data_bus ativa ram_write_enable somente se:
 
   - o endereco pertence a DMEM;
   - o endereco esta alinhado;
@@ -289,12 +244,12 @@ adicione a waveform:
 
   testbench.test_name
   testbench.bus_phase ou testbench.system_phase
-  dut._addr
+  dut._alu_out
   dut._mem_read / dut._mem_write
-  dut._dmem_re / dut._dmem_we
-  dut._mmio_re / dut._mmio_we
+  dut.ram_read_enable / dut.ram_write_enable
+  dut.pario_read_enable / dut.pario_write_enable
   dut._rdata
-  dut.u_data_bus.o_rsp_valid
+  dut.u_data_bus.o_read_response_valid
   dut.u_cpu.u_dp._state
 
 Os nomes hierarquicos podem aparecer sem underscore inicial ou ser

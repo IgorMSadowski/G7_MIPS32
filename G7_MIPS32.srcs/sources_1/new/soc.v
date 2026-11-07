@@ -5,7 +5,7 @@
 // 
 // Module Name: System on Chip (SoC)
 // Description: SoC for MIPS processor
-//              Instantiates CPU, IMEM, DMEM, and LED output.
+//              Connects the CPU, memories, data bus and ParIO.
 //////////////////////////////////////////////////////////////////////////////////
 
 module soc #(
@@ -28,18 +28,14 @@ module soc #(
     wire        _mem_write;     // CPU requests DMEM write (1 = sw)
     wire        _en;            // Global CPU enable (active-high, derived from reset)
 
-    // Address and peripheral decode
-    wire [31:0] _addr = _alu_out;
-    wire [31:0] _rdata_dmem;
-    wire [31:0] _rdata_pario;
-    wire [31:0] _ctrl;
-    wire [7:0]  _sel;
-    wire        _dmem_re;
-    wire        _dmem_we;
-    wire        _mmio_re;
-    wire        _mmio_we;
-    wire        _load_done;
-    wire        _rsp_valid;
+    wire [31:0] ram_read_data;
+    wire [31:0] pario_read_data;
+    wire        ram_read_enable;
+    wire        ram_write_enable;
+    wire        pario_read_enable;
+    wire        pario_write_enable;
+    wire        load_complete;
+    wire        read_response_valid;
 
     assign _en = ~i_rst;        // CPU runs while reset is deasserted
 
@@ -54,24 +50,22 @@ module soc #(
         .o_instr(_instr)        // Instruction word returned (valid one cycle later)
     );
 
-    // Decode requests and hold read responses until the CPU commits a load.
     data_bus u_data_bus(
         .i_clk(i_clk),
         .i_rst(i_rst),
         .i_en(_en),
-        .i_addr(_addr),
-        .i_mem_read(_mem_read),
-        .i_mem_write(_mem_write),
-        .i_io_sel(|_sel),
-        .i_dmem_rdata(_rdata_dmem),
-        .i_mmio_rdata(_rdata_pario),
-        .i_rsp_consume(_load_done),
-        .o_dmem_re(_dmem_re),
-        .o_dmem_we(_dmem_we),
-        .o_mmio_re(_mmio_re),
-        .o_mmio_we(_mmio_we),
-        .o_rdata(_rdata),
-        .o_rsp_valid(_rsp_valid)
+        .i_address(_alu_out),
+        .i_read_request(_mem_read),
+        .i_write_request(_mem_write),
+        .i_ram_read_data(ram_read_data),
+        .i_pario_read_data(pario_read_data),
+        .i_load_complete(load_complete),
+        .o_ram_read_enable(ram_read_enable),
+        .o_ram_write_enable(ram_write_enable),
+        .o_pario_read_enable(pario_read_enable),
+        .o_pario_write_enable(pario_write_enable),
+        .o_read_data(_rdata),
+        .o_read_response_valid(read_response_valid)
     );
 
     data_memory u_dmem(
@@ -80,35 +74,18 @@ module soc #(
         .i_en(_en),
         .i_addr(_alu_out),
         .i_wdata(_wdata),
-        .i_re(_dmem_re),
-        .i_we(_dmem_we),
-        .o_rdata(_rdata_dmem)
+        .i_re(ram_read_enable),
+        .i_we(ram_write_enable),
+        .o_rdata(ram_read_data)
     );
 
-    ctrl_enc u_ctrl_enc (
-        .clk(i_clk),
-        .rst(i_rst),
-        .io(_addr[31]),
-        .io_ad(_addr),
-        .lw(_mem_read),
-        .lb(1'b0),
-        .sw(_mem_write),
-        .sb(1'b0),
-        .ctrl(_ctrl),
-        .sel(_sel)
-    );
-
-
-    pario u_pario (
+    pario u_pario(
         .i_clk(i_clk),
         .i_rst(i_rst),
-        .i_sel(_sel[0]),
-        .i_re(_mmio_re),
-        .i_we(_mmio_we),
-        .i_ctrl(_ctrl),
-        .i({1'b0, i_btn, i_sw}),
-        .i_wdata(_wdata),
-        .o_rdata(_rdata_pario),
+        .i_write_enable(pario_write_enable),
+        .i_pins({1'b0, i_btn, i_sw}),
+        .i_write_data(_wdata),
+        .o_read_data(pario_read_data),
         .o_led(o_led[3:1])
     );
 
@@ -117,13 +94,13 @@ module soc #(
         .i_rst(i_rst),
         .i_en(_en),
         .i_instr(_instr),
-        .i_rdata(_rdata),       // Reads from the tri-state bus
+        .i_rdata(_rdata),
         .o_pc(_pc),
         .o_alu_out(_alu_out),
         .o_wdata(_wdata),
         .o_mem_read(_mem_read),
         .o_mem_write(_mem_write),
-        .o_load_done(_load_done)
+        .o_load_done(load_complete)
     );
 
     // LED wired to reset button 

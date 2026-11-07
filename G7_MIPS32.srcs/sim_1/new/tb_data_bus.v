@@ -7,7 +7,6 @@ module tb_data_bus;
     reg [31:0] addr = 0;
     reg mem_read = 0;
     reg mem_write = 0;
-    reg io_sel = 0;
     reg [31:0] mmio_rdata = 0;
     reg rsp_consume = 0;
     reg [31:0] dmem [0:63];
@@ -31,19 +30,18 @@ module tb_data_bus;
         .i_clk(clk),
         .i_rst(rst),
         .i_en(en),
-        .i_addr(addr),
-        .i_mem_read(mem_read),
-        .i_mem_write(mem_write),
-        .i_io_sel(io_sel),
-        .i_dmem_rdata(dmem_rdata),
-        .i_mmio_rdata(mmio_rdata),
-        .i_rsp_consume(rsp_consume),
-        .o_dmem_re(dmem_re),
-        .o_dmem_we(dmem_we),
-        .o_mmio_re(mmio_re),
-        .o_mmio_we(mmio_we),
-        .o_rdata(rdata),
-        .o_rsp_valid(rsp_valid)
+        .i_address(addr),
+        .i_read_request(mem_read),
+        .i_write_request(mem_write),
+        .i_ram_read_data(dmem_rdata),
+        .i_pario_read_data(mmio_rdata),
+        .i_load_complete(rsp_consume),
+        .o_ram_read_enable(dmem_re),
+        .o_ram_write_enable(dmem_we),
+        .o_pario_read_enable(mmio_re),
+        .o_pario_write_enable(mmio_we),
+        .o_read_data(rdata),
+        .o_read_response_valid(rsp_valid)
     );
 
     task check(input condition, input [8*56-1:0] name);
@@ -73,7 +71,6 @@ module tb_data_bus;
         @(negedge clk);
         mem_write = 0;
         addr = 32'h8000_0000;
-        io_sel = 1;
         mem_write = 1;
         #1;
         check(mmio_we && !dmem_we && !mmio_re,
@@ -86,12 +83,25 @@ module tb_data_bus;
         check(!dmem_we && !mmio_we, "misaligned MMIO word write is rejected");
         @(negedge clk);
         mem_write = 0;
-        addr = 32'h8000_0000;
-        io_sel = 0;
+        addr = 32'h8000_0100;
         mem_read = 1;
         #1;
         check(!dmem_re && !mmio_re && !rsp_valid,
               "unmapped MMIO read is not routed");
+        @(posedge clk);
+        #1;
+        check(!rsp_valid && rdata === 32'b0, "unmapped read creates no response");
+
+        @(negedge clk);
+        mem_read = 0;
+        mem_write = 1;
+        addr = 32'h8000_1000;
+        #1;
+        check(!mmio_we && !dmem_we, "former high-bit alias cannot write ParIO");
+        addr = 32'h8000_0004;
+        #1;
+        check(!mmio_we && !dmem_we, "unused ParIO offset cannot write either target");
+        mem_write = 0;
 
         bus_phase = "DMEM READ RESPONSE";
         addr = 32'h0000_0008;
@@ -117,7 +127,6 @@ module tb_data_bus;
         @(negedge clk);
         rsp_consume = 0;
         addr = 32'h8000_0000;
-        io_sel = 1;
         mmio_rdata = 32'h0000_005A;
         mem_read = 1;
         #1;

@@ -24,10 +24,10 @@ module tb_soc_mmio;
     );
 
     always @(posedge clk) begin
-        if (dut._dmem_re) dmem_reads = dmem_reads + 1;
-        if (dut._dmem_we) dmem_writes = dmem_writes + 1;
-        if (dut._mmio_re) mmio_reads = mmio_reads + 1;
-        if (dut._mmio_we) mmio_writes = mmio_writes + 1;
+        if (dut.ram_read_enable) dmem_reads = dmem_reads + 1;
+        if (dut.ram_write_enable) dmem_writes = dmem_writes + 1;
+        if (dut.pario_read_enable) mmio_reads = mmio_reads + 1;
+        if (dut.pario_write_enable) mmio_writes = mmio_writes + 1;
     end
 
     task check_reg(input [4:0] index, input [31:0] expected,
