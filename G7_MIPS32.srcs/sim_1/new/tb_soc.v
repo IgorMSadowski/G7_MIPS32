@@ -15,7 +15,7 @@ module tb_soc;
         .i_clk(clk), .i_rst(rst), .i_sw(switches), .i_btn(buttons), .o_led(led)
     );
 
-    always #5 clk = ~clk;
+    always #4 clk = ~clk; // Zybo board clock: 125 MHz
 
     integer cycles;
     integer errors = 0;
@@ -40,14 +40,15 @@ module tb_soc;
         buttons = 3'b0;
         test_name = "RUN ROM REGRESSION";
         cpu_phase = "RESET";
-        #20;
+        repeat (3) @(negedge clk);
         rst = 0;
+        wait (dut.soc_reset === 1'b0);
         cpu_phase = "EXECUTE";
 
         // The assembled test program ends in the self-loop at address 0x9C.
         cycles = 0;
         while (dut._pc !== 32'h0000_009C) begin
-            @(posedge clk);
+            @(posedge dut.clk_50mhz);
             #1;
             cycles = cycles + 1;
             if (cycles > 500) begin
@@ -56,7 +57,7 @@ module tb_soc;
                 $finish;
             end
         end
-        repeat (4) @(posedge clk);
+        repeat (4) @(posedge dut.clk_50mhz);
         #1;
         cpu_phase = "CHECK RESULTS";
 
@@ -91,4 +92,12 @@ module tb_soc;
         $finish;
     end
 
+    // Catch a clock that never locks or stops running.
+    initial begin
+        #100_000;
+        errors = errors + 1;
+        $display("FAIL: SoC simulation timeout (clock_locked=%b, soc_reset=%b)",
+                 dut.clock_locked, dut.soc_reset);
+        $finish;
+    end
 endmodule

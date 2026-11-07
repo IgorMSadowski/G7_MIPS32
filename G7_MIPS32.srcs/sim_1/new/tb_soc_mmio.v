@@ -15,7 +15,7 @@ module tb_soc_mmio;
     integer mmio_reads = 0;
     integer mmio_writes = 0;
 
-    always #5 clk = ~clk;
+    always #4 clk = ~clk; // Zybo board clock: 125 MHz
 
     soc #(
         .IMEM_INIT_FILE("/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_mmio.mem")
@@ -23,7 +23,7 @@ module tb_soc_mmio;
         .i_clk(clk), .i_rst(rst), .i_sw(switches), .i_btn(buttons), .o_led(leds)
     );
 
-    always @(posedge clk) begin
+    always @(posedge dut.clk_50mhz) begin
         if (dut.ram_read_enable) dmem_reads = dmem_reads + 1;
         if (dut.ram_write_enable) dmem_writes = dmem_writes + 1;
         if (dut.pario_read_enable) mmio_reads = mmio_reads + 1;
@@ -45,12 +45,13 @@ module tb_soc_mmio;
 
         test_name = "END-TO-END DMEM AND MMIO";
         system_phase = "RESET";
-        #20;
+        repeat (3) @(negedge clk);
         rst = 0;
+        wait (dut.soc_reset === 1'b0);
         system_phase = "RUN PROGRAM";
 
         while (dut._pc !== 32'h0000_001C) begin
-            @(posedge clk);
+            @(posedge dut.clk_50mhz);
             #1;
             cycles = cycles + 1;
             if (cycles > 100) begin
@@ -59,7 +60,7 @@ module tb_soc_mmio;
                 $finish;
             end
         end
-        repeat (3) @(posedge clk);
+        repeat (3) @(posedge dut.clk_50mhz);
         #1;
         system_phase = "CHECK RESULTS";
 
@@ -80,6 +81,14 @@ module tb_soc_mmio;
             $display("PASS: end-to-end SoC MMIO/DMEM, %0d cycles", cycles);
         else
             $display("FAILED: %0d SoC checks", errors);
+        $finish;
+    end
+    // Catch a clock that never locks or stops running.
+    initial begin
+        #100_000;
+        errors = errors + 1;
+        $display("FAIL: SoC simulation timeout (clock_locked=%b, soc_reset=%b)",
+                 dut.clock_locked, dut.soc_reset);
         $finish;
     end
 endmodule

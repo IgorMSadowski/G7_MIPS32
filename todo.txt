@@ -1,19 +1,36 @@
-1. [ ] Implement memory-mapped I/O (MMIO)
-	- Add address decoding and read/write control logic.
-	- Verify accesses to mapped addresses on testbenches.
+1. [x] Implement memory-mapped I/O (MMIO)
+   - [x] Decode aligned RAM addresses and the ParIO address (0x80000000).
+   - [x] Gate read/write requests and select the read response.
+   - [x] Verify valid, unmapped, and misaligned accesses in simulation
+         with tb_data_bus and tb_soc_mmio.
 
+2. [ ] Implement and verify the peripherals
+   - [x] Connect ParIO to MMIO. Verify switch/button reads and LED writes
+         with tb_pario and tb_soc_mmio.
+   - [ ] Add a timer with control, period, and count registers.
+   - [ ] Map the timer registers and verify MMIO reads, writes, and expiry.
 
-2. [ ] Implement the peripherals
-	- Connect each peripheral to the MMIO interface.
-    - Implement the peripherals
-	- Verify peripheral reads and writes.
+3. [ ] Add vectored interrupts
+   - [ ] Build an interrupt controller for the timer and an external button.
+         Track pending requests, provide enables, and define the priority
+         when both requests arrive together.
+   - [ ] Synchronize and debounce the button input. Define how the timer
+         and button requests are acknowledged.
+   - [ ] Assign separate ROM vectors for the timer and button handlers.
+   - [ ] Accept interrupts between instructions, after any active LW has
+         completed. Save the resume PC in EPC and return with ERET.
+   - [ ] Test both sources, simultaneous requests, and exact resumption.
 
+4. [ ] Add CPU exceptions and traps
+   - [ ] Define a minimal MIPS32 CP0 interface: EPC for the return address,
+         Cause for the reason, and Status for interrupt/exception state.
+         Decide which fields software needs to access with MFC0 and MTC0.
+   - [ ] Start with signed ADD overflow. Suppress the destination write,
+         save the faulting PC and cause, and jump to the exception handler.
+   - [ ] Verify overflow, normal arithmetic, and return via ERET.
+         Decide next whether to add ADDI/SUB overflow, misaligned accesses,
+         unsupported instructions, or explicit trap instructions.
 
-3. [ ] Add the interrupt system
-	- Connect peripheral interrupt signals.
-	- Verify interrupt handling.
-
-
-
-
-	MIPS COPROCESSOR 0 HANDLES TRAPS AND INTERRUPTS
+5. [ ] Verify the integrated design on the Zybo
+   - [ ] Confirm ParIO, the timer interrupt, and the physical button
+         interrupt on the board.
