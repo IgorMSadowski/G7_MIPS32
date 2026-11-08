@@ -89,9 +89,7 @@ LD3..LD1. LD0 acompanha o reset.
 
 O ParIO disponibiliza os bits de botões e switches em pario_read_data.
 O data_bus captura esse valor quando pario_read_enable está ativo.
-A seleção do endereço pertence ao data_bus. Os módulos ctrl_enc e
-ctrl_dec continuam disponíveis como referência das aulas e têm um
-teste isolado.
+A seleção do endereço pertence ao data_bus.
 
 5. Porque uma leitura precisa de mais de um ciclo?
 --------------------------------------------------

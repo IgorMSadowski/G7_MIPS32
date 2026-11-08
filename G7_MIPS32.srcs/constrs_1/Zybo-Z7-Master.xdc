@@ -6,7 +6,7 @@
 
 ##Clock signal
 set_property -dict { PACKAGE_PIN K17   IOSTANDARD LVCMOS33 } [get_ports { i_clk }]; #IO_L12P_T1_MRCC_35 Sch=sysclk
-create_clock -name sys_clk_pin -period 8.000 -waveform {0.000 4.000} [get_ports { i_clk }];
+#create_clock -name sys_clk_pin -period 8.000 -waveform {0.000 4.000} [get_ports { i_clk }];
 #create_clock -add -name sys_clk_pin -period 8.00 -waveform {0 4} [get_ports { sysclk }];
 
 ##Reset - !!! If used comment i_btn[3]

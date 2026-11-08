@@ -1,0 +1,65 @@
+source {/home/igor/Documents/Vivado_Projects/G7_MIPS32/run_regression.tcl}
+
+1. REGRESSÃO COMPORTAMENTAL
+   Cola o comando acima na consola Tcl do Vivado com G7_MIPS32.xpr
+   aberto e sem uma simulação ativa. A regressão corre 11 testbenches,
+   um de cada vez, e lê o contador errors de cada um no fim.
+   Resultado esperado: PASS: all testbenches passed.
+
+   Se precisares de fechar uma simulação ativa:
+       close_sim
+
+2. SIMULAÇÃO COM OS ATRASOS DO CIRCUITO ENCAMINHADO
+   Confirma que o topo de design é soc, que o set timing tem
+   tb_soc_timing como topo e que soc.v seleciona Assembly/soc_mmio.mem
+   antes da síntese. Faz Run Synthesis e Run Implementation se o design
+   estiver desatualizado. Com a implementação concluída, usa:
+
+       launch_simulation -simset timing -mode post-implementation -type timing
+
+   O Vivado pode executar a simulação automaticamente ao abrir. Procura
+   PASS: SoC MMIO with Clocking Wizard, LEDs = 1010 na consola.
+   Se quiseres repetir a simulação desde o início:
+
+       restart
+       run 21 us
+       get_value -radix unsigned /tb_soc_timing/errors
+
+   0 erros significa que os checks do testbench passaram. Se já viste
+   $finish, evita carregar em Run All novamente, porque o clock continua
+   a alternar e o testbench só chama $finish uma vez.
+   Na waveform, observa clk, rst e leds. O valor hexadecimal A é 1010.
+   No ensaio registado, o teste passou com quatro avisos de hold da BRAM
+   na libertação do reset. Esses avisos são separados do contador errors.
+
+3. RELATÓRIO DE TIMING ESTÁTICO
+   Abre Implemented Design no Flow Navigator e usa a consola Tcl:
+
+       report_clocks
+       report_timing_summary
+       report_timing -delay_type max -max_paths 5
+
+   Confirma um período de 8 ns na entrada e 20 ns na saída do Clocking
+   Wizard. Na Timing Summary, WNS e WHS devem ser zero ou positivos.
+   O relatório verifica os caminhos com constraints. A simulação acima
+   verifica o comportamento do programa MMIO com os atrasos aplicados.
+
+   Para consultar o estado dos runs do projeto:
+
+       get_property STATUS [get_runs synth_1]
+       get_property STATUS [get_runs impl_1]
+
+4. CORRER SÓ UM TESTBENCH COMPORTAMENTAL
+   Exemplo para tb_soc_mmio, depois de fechar qualquer simulação:
+
+       current_fileset -simset [get_filesets component_tests]
+       set_property top tb_soc_mmio [get_filesets component_tests]
+       set_property xsim.simulate.runtime 0ns [get_filesets component_tests]
+       launch_simulation -simset component_tests -mode behavioral
+       run all
+       get_value -radix unsigned /tb_soc_mmio/errors
+       close_sim
+
+   A opção 0ns deixa o simulador aberto no início. run all avança
+   até ao $finish. Para abrir uma waveform de um novo teste, acrescenta
+   os sinais na janela Objects e usa Restart antes de repetir o run.

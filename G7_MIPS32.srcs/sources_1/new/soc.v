@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module soc #(
-    parameter IMEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/imem_init.mem"
+    parameter IMEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_mmio.mem"
 )(
     input  wire        i_clk,       // 125 MHz board clock on K17
     input  wire        i_rst,       // Reset button on the Zybo (Btn_0)

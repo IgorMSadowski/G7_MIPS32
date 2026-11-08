@@ -76,7 +76,6 @@ if {[llength $component_set] == 0} {
 set component_dir [file join $regression_dir G7_MIPS32.srcs sim_1 new]
 foreach tb_name {
     tb_data_bus.v
-    tb_ctrl_enc.v
     tb_pario.v
     tb_memories.v
     tb_primitives.v
@@ -99,7 +98,6 @@ foreach {simset tb} {
     control_unit tb_control_unit
     bdu          tb_bdu
     component_tests tb_primitives
-    component_tests tb_ctrl_enc
     component_tests tb_pario
     component_tests tb_data_bus
     component_tests tb_memories

@@ -17,10 +17,8 @@ o ciclo de lw e os operadores ===/!==, consulte MEMORIA_E_DATABUS.txt.
   Os acessos a MMIO nao escrevem nem leem a DMEM.
 - O data_bus seleciona o PARIO pelo endereço exato 0x80000000.
   LW lê botões/switches e SW atualiza LD3..LD1. LD0 segue o reset.
-  Os encoders/decoders da aula continuam disponíveis no teste isolado.
 - O endereco de inicializacao da ROM passou a ser parametrizavel, permitindo
   testar o SoC com Assembly/soc_mmio.mem sem alterar o programa normal.
-- O projeto Vivado passou a incluir ctrl_enc, cntrl_dec, pario e data_bus.
 
 2. Testbenches incluidos
 ------------------------
@@ -32,7 +30,6 @@ tb_control_unit   Descodificacao de instrucoes suportadas e rejeicao de
 tb_regfile        Reset, leitura/escrita, protecao do registo zero e writes
                   consecutivos.
 tb_primitives     mux2_32bit, mux2_5bit, sign_extend e shift_left_two.
-tb_ctrl_enc       Codificacao/descodificacao de control bus e chip-selects.
 tb_pario          Leitura dos pinos, escrita, retenção e reset dos LEDs.
 tb_data_bus       Selecao DMEM/MMIO, alinhamento, enderecos invalidos,
                   resposta sincrona, pausa, consumo e reset.
@@ -67,7 +64,7 @@ Simulation > Run Simulation > Run Behavioral Simulation. Antes de iniciar,
 selecione o Simulation Set correspondente e escolha o top desejado:
 alu/tb_alu, bdu/tb_bdu, control_unit/tb_control_unit, regfile/tb_regfile,
 cpu_memory/tb_cpu_memory, soc/tb_soc ou component_tests. No set
-component_tests, altere o campo top para tb_primitives, tb_ctrl_enc, tb_pario,
+component_tests, altere o campo top para tb_primitives, tb_pario,
 tb_data_bus, tb_memories ou tb_soc_mmio.
 
 Na waveform, adicione test_name e a fase correspondente (bus_phase,
