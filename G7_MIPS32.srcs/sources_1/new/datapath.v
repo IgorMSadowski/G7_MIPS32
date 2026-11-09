@@ -90,10 +90,10 @@ module datapath(
     // ALU operand A select
     // For shift instructions, ALU operand A = shamt (instruction[10:6])
     // For all other instructions, ALU operand A = rs value (from RF)
-    // ALU control codes for shifts/rotate: SLL=0110, SRL=0111, ROTR=1001
-    assign _src_a = (i_alu_ctrl == 4'b0110 ||
-                     i_alu_ctrl == 4'b0111 ||
-                     i_alu_ctrl == 4'b1001)
+    // ALU control codes for shifts/rotate: SLL=0101, SRL=0110, ROTR=1000
+    assign _src_a = (i_alu_ctrl == 4'b0101 ||
+                     i_alu_ctrl == 4'b0110 ||
+                     i_alu_ctrl == 4'b1000)
                     ? {27'b0, i_instr[10:6]} : _rd1_v;
 
     // Immediate / branch target

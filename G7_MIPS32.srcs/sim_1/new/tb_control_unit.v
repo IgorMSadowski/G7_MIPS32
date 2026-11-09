@@ -19,13 +19,13 @@ module tb_control_unit;
             4'd1:  alu_operation = "SUB";
             4'd2:  alu_operation = "AND";
             4'd3:  alu_operation = "OR";
-            4'd4:  alu_operation = "SLT";
-            4'd5:  alu_operation = "XOR";
-            4'd6:  alu_operation = "SLL";
-            4'd7:  alu_operation = "SRL";
-            4'd8:  alu_operation = "LUI";
-            4'd9:  alu_operation = "ROTR";
-            4'd10: alu_operation = "WSBH";
+            4'd4:  alu_operation = "LUI";
+            4'd5:  alu_operation = "SLL";
+            4'd6:  alu_operation = "SRL";
+            4'd7:  alu_operation = "XOR";
+            4'd8:  alu_operation = "ROTR";
+            4'd9:  alu_operation = "WSBH";
+            4'd10: alu_operation = "SLT";
             default: alu_operation = "UNKNOWN";
         endcase
 
@@ -128,13 +128,13 @@ module tb_control_unit;
         funct=6'h22; expect("sub",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0001);
         funct=6'h24; expect("and",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0010);
         funct=6'h25; expect("or",   1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0011);
-        funct=6'h2A; expect("slt",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0100);
-        funct=6'h26; expect("xor",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0101);
+        funct=6'h2A; expect("slt",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1010);
+        funct=6'h26; expect("xor",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0111);
         funct=6'h08; expect("jr",   1,0,0,0, 0,0,0,1,1,0, 4'b0000, 4'b0000);
         funct=6'h09; expect("jalr", 1,0,0,1, 0,0,0,1,1,1, 4'b0000, 4'b0000);
-        funct=6'h00; expect("sll",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0110);
-        funct=6'h02; expect("srl",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0111);
-        rs=1; funct=6'h02; expect("rotr", 1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1001);
+        funct=6'h00; expect("sll",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0101);
+        funct=6'h02; expect("srl",  1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0110);
+        rs=1; funct=6'h02; expect("rotr", 1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1000);
 
         // Reject every encoding with nonzero bits 25:22.
         // Only rs=0/1 match the documented SRL/ROTR encodings.
@@ -158,7 +158,7 @@ module tb_control_unit;
         // ---- I-type ----
         funct=0; rs=0; rt=0;
         op=6'h08; expect("addi", 0,1,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0000);
-        op=6'h0F; expect("lui",  0,1,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1000);
+        op=6'h0F; expect("lui",  0,1,0,1, 0,0,0,0,0,0, 4'b0000, 4'b0100);
         op=6'h23; expect("lw",   0,1,1,1, 1,0,0,0,0,0, 4'b0000, 4'b0000);
         op=6'h2B; expect("sw",   0,1,0,0, 0,1,0,0,0,0, 4'b0000, 4'b0000);
         op=6'h04; expect("beq",  0,0,0,0, 0,0,1,0,0,0, 4'b0000, 4'b0001);
@@ -183,7 +183,7 @@ module tb_control_unit;
 
         // ---- SPECIAL3 ----
         op=6'h1F; funct=6'h20; shamt=2;
-        expect("wsbh", 1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1010);
+        expect("wsbh", 1,0,0,1, 0,0,0,0,0,0, 4'b0000, 4'b1001);
 
         // Fixed WSBH fields must match its MIPS32 encoding.
         shamt=0;

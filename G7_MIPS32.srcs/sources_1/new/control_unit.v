@@ -113,14 +113,14 @@ module control_unit(
                     6'h22: o_alu_ctrl = 4'b0001;    // sub
                     6'h24: o_alu_ctrl = 4'b0010;    // and
                     6'h25: o_alu_ctrl = 4'b0011;    // or
-                    6'h2A: o_alu_ctrl = 4'b0100;    // slt
-                    6'h26: o_alu_ctrl = 4'b0101;    // xor
-                    6'h00: o_alu_ctrl = 4'b0110;    // sll
+                    6'h2A: o_alu_ctrl = 4'b1010;    // slt
+                    6'h26: o_alu_ctrl = 4'b0111;    // xor
+                    6'h00: o_alu_ctrl = 4'b0101;    // sll
                     // MIPS32: bits 25:22 must be zero; bit 21 selects SRL/ROTR.
                     6'h02: begin
                         case (i_rs)
-                            5'b00000: o_alu_ctrl = 4'b0111; // SRL
-                            5'b00001: o_alu_ctrl = 4'b1001; // ROTR
+                            5'b00000: o_alu_ctrl = 4'b0110; // SRL
+                            5'b00001: o_alu_ctrl = 4'b1000; // ROTR
                             default: o_reg_write = 1'b0; // unsupported encoding
                         endcase
                     end
@@ -143,7 +143,7 @@ module control_unit(
                 if (i_funct == 6'h20 && i_shamt == 5'd2 && i_rs == 5'd0) begin
                     o_reg_dst   = 1'b1;
                     o_reg_write = 1'b1;
-                    o_alu_ctrl  = 4'b1010; // wsbh
+                    o_alu_ctrl  = 4'b1001; // wsbh
                 end
             end
 
@@ -209,7 +209,7 @@ module control_unit(
             6'h0F: begin    // lui   rt, imm
                 o_alu_src   = 1'b1;
                 o_reg_write = 1'b1;
-                o_alu_ctrl  = 4'b1000;  // LUI operation (shift left by 16)
+                o_alu_ctrl  = 4'b0100;  // LUI operation (shift left by 16)
             end
 
             // -----------------------------------------------------------------

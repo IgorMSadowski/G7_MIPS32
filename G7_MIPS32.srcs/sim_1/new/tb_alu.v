@@ -34,13 +34,13 @@ module tb_alu;
             4'b0001: operation = "SUB";
             4'b0010: operation = "AND";
             4'b0011: operation = "OR";
-            4'b0100: operation = "SLT";
-            4'b0101: operation = "XOR";
-            4'b0110: operation = "SLL";
-            4'b0111: operation = "SRL";
-            4'b1000: operation = "LUI";
-            4'b1001: operation = "ROTR";
-            4'b1010: operation = "WSBH";
+            4'b0100: operation = "LUI";
+            4'b0101: operation = "SLL";
+            4'b0110: operation = "SRL";
+            4'b0111: operation = "XOR";
+            4'b1000: operation = "ROTR";
+            4'b1001: operation = "WSBH";
+            4'b1010: operation = "SLT";
             default: operation = "UNKNOWN";
         endcase
     end
@@ -67,31 +67,31 @@ module tb_alu;
         check(32'hFFFFFFF6, "sub 10-20 = -10");
 
         // ---- SLT (signed) ----
-        a=32'hFFFFFFFF; b=32'd1; ctrl=4'b0100;
+        a=32'hFFFFFFFF; b=32'd1; ctrl=4'b1010;
         check(32'd1, "slt -1 < 1 (true)");
-        a=32'd1; b=32'hFFFFFFFF; ctrl=4'b0100;
+        a=32'd1; b=32'hFFFFFFFF; ctrl=4'b1010;
         check(32'd0, "slt 1 < -1 (false)");
-        a=32'd5; b=32'd5; ctrl=4'b0100;
+        a=32'd5; b=32'd5; ctrl=4'b1010;
         check(32'd0, "slt 5 < 5 (false)");
 
         // ---- XOR ----
-        a=32'hA5A5_0F0F; b=32'hFFFF_00FF; ctrl=4'b0101;
+        a=32'hA5A5_0F0F; b=32'hFFFF_00FF; ctrl=4'b0111;
         check(32'h5A5A_0FF0, "xor");
 
         // ---- Shifts and rotate (A is the shift amount) ----
-        a=32'd2; b=32'h0000_0005; ctrl=4'b0110;
+        a=32'd2; b=32'h0000_0005; ctrl=4'b0101;
         check(32'h0000_0014, "sll 5 by 2");
-        a=32'd1; b=32'h0000_0014; ctrl=4'b0111;
+        a=32'd1; b=32'h0000_0014; ctrl=4'b0110;
         check(32'h0000_000A, "srl 20 by 1");
-        a=32'd8; b=32'h1234_0000; ctrl=4'b1001;
+        a=32'd8; b=32'h1234_0000; ctrl=4'b1000;
         check(32'h0012_3400, "rotr by 8");
 
         // ---- WSBH ----
-        a=0; b=32'h1234_5678; ctrl=4'b1010;
+        a=0; b=32'h1234_5678; ctrl=4'b1001;
         check(32'h3412_7856, "wsbh");
 
         // ---- LUI ----
-        a = 32'h00000000; b=32'h00001234; ctrl=4'b1000;
+        a = 32'h00000000; b=32'h00001234; ctrl=4'b0100;
         check(32'h12340000, "lui immediate");
         b=32'hFFFF8001;
         check(32'h80010000, "lui negative immediate");
