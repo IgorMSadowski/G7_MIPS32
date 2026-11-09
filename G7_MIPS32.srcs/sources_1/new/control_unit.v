@@ -88,7 +88,7 @@ module control_unit(
         o_jump_reg    = 1'b0;   // register-target jump flag
         o_link        = 1'b0;   // link flag
         o_branch_cond = 4'b0000; // branch condition code (4 bits)
-        o_alu_ctrl    = 4'b0010;// alu function control (default to add)
+        o_alu_ctrl    = 4'b0000;// alu function control (default to add)
 
         // ---------------------------------------------------------------------
         // Decode table by instruction format
@@ -109,18 +109,18 @@ module control_unit(
                 o_reg_write = 1'b1;     // General register write enable
 
                 case (i_funct)
-                    6'h20: o_alu_ctrl = 4'b0010;    // add
-                    6'h22: o_alu_ctrl = 4'b0110;    // sub
-                    6'h24: o_alu_ctrl = 4'b0000;    // and
-                    6'h25: o_alu_ctrl = 4'b0001;    // or
-                    6'h2A: o_alu_ctrl = 4'b0111;    // slt
-                    6'h26: o_alu_ctrl = 4'b0011;    // xor
-                    6'h00: o_alu_ctrl = 4'b1001;    // sll
+                    6'h20: o_alu_ctrl = 4'b0000;    // add
+                    6'h22: o_alu_ctrl = 4'b0001;    // sub
+                    6'h24: o_alu_ctrl = 4'b0010;    // and
+                    6'h25: o_alu_ctrl = 4'b0011;    // or
+                    6'h2A: o_alu_ctrl = 4'b0100;    // slt
+                    6'h26: o_alu_ctrl = 4'b0101;    // xor
+                    6'h00: o_alu_ctrl = 4'b0110;    // sll
                     // MIPS32: bits 25:22 must be zero; bit 21 selects SRL/ROTR.
                     6'h02: begin
                         case (i_rs)
-                            5'b00000: o_alu_ctrl = 4'b1010; // SRL
-                            5'b00001: o_alu_ctrl = 4'b1101; // ROTR
+                            5'b00000: o_alu_ctrl = 4'b0111; // SRL
+                            5'b00001: o_alu_ctrl = 4'b1001; // ROTR
                             default: o_reg_write = 1'b0; // unsupported encoding
                         endcase
                     end
@@ -143,7 +143,7 @@ module control_unit(
                 if (i_funct == 6'h20 && i_shamt == 5'd2 && i_rs == 5'd0) begin
                     o_reg_dst   = 1'b1;
                     o_reg_write = 1'b1;
-                    o_alu_ctrl  = 4'b1100; // wsbh
+                    o_alu_ctrl  = 4'b1010; // wsbh
                 end
             end
 
@@ -155,13 +155,13 @@ module control_unit(
             // -----------------------------------------------------------------
             6'h04: begin    // beq   rs, rt, offset
                 o_branch    = 1'b1;
-                o_alu_ctrl  = 4'b0110;  // subtract to compare rs - rt
+                o_alu_ctrl  = 4'b0001;  // subtract to compare rs - rt
                 o_branch_cond = 4'b0000; // branch if equal
             end
 
             6'h05: begin    // bne   rs, rt, offset
                 o_branch    = 1'b1;
-                o_alu_ctrl  = 4'b0110;  // subtract to compare rs - rt
+                o_alu_ctrl  = 4'b0001;  // subtract to compare rs - rt
                 o_branch_cond = 4'b0001; // branch if not equal
             end
 
@@ -176,20 +176,20 @@ module control_unit(
 
             6'h07: begin    // bgtz  rs, offset
                 o_branch    = 1'b1;
-                o_alu_ctrl  = 4'b0110;  // subtract to compare rs - 0
+                o_alu_ctrl  = 4'b0001;  // subtract to compare rs - 0
                 o_branch_cond = 4'b0101; // branch if greater than zero
             end
 
             6'h06: begin    // blez  rs, offset
                 o_branch    = 1'b1;
-                o_alu_ctrl  = 4'b0110;  // subtract to compare rs - 0
+                o_alu_ctrl  = 4'b0001;  // subtract to compare rs - 0
                 o_branch_cond = 4'b0100; // branch if less than or equal to zero
             end
 
             6'h08: begin    // addi  rt, rs, imm
                 o_alu_src   = 1'b1;
                 o_reg_write = 1'b1;
-                o_alu_ctrl  = 4'b0010;  // ADD
+                o_alu_ctrl  = 4'b0000;  // ADD
             end
 
             6'h23: begin    // lw    rt, imm(rs)
@@ -197,13 +197,13 @@ module control_unit(
                 o_mem_to_reg = 1'b1;
                 o_reg_write  = 1'b1;
                 o_mem_read   = 1'b1;
-                o_alu_ctrl   = 4'b0010;  // effective address = rs + sign_ext(imm)
+                o_alu_ctrl   = 4'b0000;  // effective address = rs + sign_ext(imm)
             end
 
             6'h2B: begin    // sw    rt, imm(rs)
                 o_alu_src   = 1'b1;
                 o_mem_write = 1'b1;
-                o_alu_ctrl  = 4'b0010;  // effective address = rs + sign_ext(imm)
+                o_alu_ctrl  = 4'b0000;  // effective address = rs + sign_ext(imm)
             end
 
             6'h0F: begin    // lui   rt, imm
