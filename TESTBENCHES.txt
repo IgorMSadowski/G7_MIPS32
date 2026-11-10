@@ -1,24 +1,12 @@
 G7_MIPS32 - TESTES E COMO OS EXECUTAR
 =====================================
 
-Para uma explicacao detalhada de como funcionam IMEM, DMEM, MMIO, data_bus,
-o ciclo de lw e os operadores ===/!==, consulte MEMORIA_E_DATABUS.txt.
+1. Base atual
+-------------
 
-1. O que foi alterado
----------------------
-
-- O barramento interno do SoC deixou de usar tri-state. O novo data_bus.v
-  descodifica pedidos e seleciona explicitamente a resposta da DMEM ou do
-  periferico. Isto evita contenção e valores Z no tecido FPGA.
-- A leitura da DMEM tem latencia de um ciclo. A resposta fica selecionada
-  durante S_LOAD e so e limpa quando o CPU confirma o consumo do dado.
-  Uma pausa do CPU nao perde a resposta pendente.
-- A DMEM so aceita palavras alinhadas dentro dos seus 64 words (0x00-0xFC).
-  Os acessos a MMIO nao escrevem nem leem a DMEM.
-- O data_bus seleciona o PARIO pelo endereço exato 0x80000000.
-  LW lê botões/switches e SW atualiza LD3..LD1. LD0 segue o reset.
-- O endereco de inicializacao da ROM passou a ser parametrizavel, permitindo
-  testar o SoC com Assembly/soc_mmio.mem sem alterar o programa normal.
+O CPU está ligado diretamente à ROM e à RAM. A ROM carrega Assembly/test.mem.
+A RAM fornece o dado do LW durante S_LOAD. A saída LD0 mostra apenas o reset.
+O ficheiro MEMORIA_E_DATABUS.txt descreve a implementação MMIO anterior.
 
 2. Testbenches incluidos
 ------------------------
@@ -30,18 +18,12 @@ tb_control_unit   Descodificacao de instrucoes suportadas e rejeicao de
 tb_regfile        Reset, leitura/escrita, protecao do registo zero e writes
                   consecutivos.
 tb_primitives     mux2_32bit, mux2_5bit, sign_extend e shift_left_two.
-tb_pario          Leitura dos pinos, escrita, retenção e reset dos LEDs.
-tb_data_bus       Selecao DMEM/MMIO, alinhamento, enderecos invalidos,
-                  resposta sincrona, pausa, consumo e reset.
 tb_memories       Latencia/enable/reset da ROM e escrita read-first, leitura
                   e pausa da RAM.
 tb_cpu_memory     CPU/datapath com DMEM; load/store, pausa do CPU, branches,
                   reset e instrucoes invalidas.
 tb_soc            Programa completo Assembly/test.mem executado atraves do
                   SoC, incluindo verificacao de resultados dos registos.
-tb_soc_mmio        Programa curto de ponta a ponta: le botoes/switches,
-                  escreve os LEDs e escreve/le a DMEM. Confirma os contadores
-                  de pedidos nos dois destinos.
 
 Cada testbench tem sinais com nomes ASCII como test_name, phase e operation
 para identificar a verificacao na waveform do Vivado.
@@ -55,8 +37,7 @@ para identificar a verificacao na waveform do Vivado.
 
        source {/home/igor/Documents/Vivado_Projects/G7_MIPS32/run_regression.tcl}
 
-O script executa as suites existentes, os novos testes de componentes, o teste
-do CPU/memoria, a regressao SoC e o teste integrado MMIO. Se alguma verificacao
+O script executa os oito testbenches comportamentais. Se alguma verificação
 falhar, o resumo identifica o testbench e o script termina com erro.
 
 Para executar um teste individual, no painel Flow Navigator selecione
@@ -64,30 +45,24 @@ Simulation > Run Simulation > Run Behavioral Simulation. Antes de iniciar,
 selecione o Simulation Set correspondente e escolha o top desejado:
 alu/tb_alu, bdu/tb_bdu, control_unit/tb_control_unit, regfile/tb_regfile,
 cpu_memory/tb_cpu_memory, soc/tb_soc ou component_tests. No set
-component_tests, altere o campo top para tb_primitives, tb_pario,
-tb_data_bus, tb_memories ou tb_soc_mmio.
+component_tests, altere o campo top para tb_primitives ou tb_memories.
 
-Na waveform, adicione test_name e a fase correspondente (bus_phase,
-memory_phase, pario_phase, system_phase ou cpu_phase). Para isso, expanda o
+Na waveform, adicione test_name e a fase correspondente, como memory_phase
+ou cpu_phase. Para isso, expanda o
 testbench na janela Scopes e adicione os sinais da janela Objects. Os sinais
-internos sob dut mostram os pedidos e a resposta do barramento. As mensagens
+internos sob dut mostram os pedidos e os dados da RAM. As mensagens
 PASS/FAIL e os nomes das verificacoes tambem aparecem na consola Tcl.
 
 O XSim gera os executaveis e waveforms dentro de G7_MIPS32.sim, sem precisar
 de instalar outro simulador.
 
-4. Mapa atual do barramento
+4. Endereçamento desta base
 ---------------------------
 
-DMEM: 0x00000000-0x000000FC, 64 words, acessos word alinhados.
-PARIO: regiao 0x80000000-0x800000FF; offset 0 le botoes/switches e escreve
-       os 3 LEDs, em acessos word alinhados.
-Regioes MMIO 0x80000100, 0x80000200 e 0x80000300 tem chip-select reservado,
-       mas ainda nao tem perifericos implementados.
+O software usa endereços alinhados de 0x00000000 a 0x000000FC para as 64
+palavras da RAM. A ligação direta usa i_addr[7:2] como índice. Os outros
+bits são ignorados e um acesso fora da faixa ou desalinhado pode
+selecionar uma palavra existente.
 
-Estes testes validam RTL e simulacao. Ainda nao substituem a sintese e a
-verificacao de timing/IO no Vivado para a placa Zybo.
-
-Os caminhos de ROM por omissao mantem o caminho absoluto ja usado neste
-projeto. Se mover a pasta do projeto, atualize MEM_INIT_FILE em
-instruction_memory.v e os parametros IMEM_INIT_FILE nos testbenches SoC.
+O RTL e os testbenches usam caminhos absolutos para Assembly/test.mem.
+Se mover a pasta, atualize os parâmetros de inicialização da ROM.

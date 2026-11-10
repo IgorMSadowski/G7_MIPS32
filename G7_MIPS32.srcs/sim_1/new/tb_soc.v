@@ -3,16 +3,14 @@
 module tb_soc;
 
     reg         clk, rst;
-    reg  [3:0]  switches;
-    reg  [3:1]  buttons;
-    wire [3:0]  led;
+    wire [0:0]  led;
     reg [8*24-1:0] test_name;
     reg [8*16-1:0] cpu_phase;
 
     soc #(
         .IMEM_INIT_FILE("/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/test.mem")
     ) dut(
-        .i_clk(clk), .i_rst(rst), .i_sw(switches), .i_btn(buttons), .o_led(led)
+        .i_clk(clk), .i_rst(rst), .o_led(led)
     );
 
     always #4 clk = ~clk; // Zybo board clock: 125 MHz
@@ -36,8 +34,6 @@ module tb_soc;
     initial begin
         clk = 0;
         rst = 1;
-        switches = 4'b0;
-        buttons = 3'b0;
         test_name = "RUN ROM REGRESSION";
         cpu_phase = "RESET";
         repeat (3) @(negedge clk);

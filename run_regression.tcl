@@ -71,15 +71,12 @@ if {[llength $component_set] == 0} {
     create_fileset -simset component_tests
     set component_set [get_filesets component_tests]
     set_property SOURCE_SET sources_1 $component_set
-    set_property top tb_data_bus $component_set
+    set_property top tb_memories $component_set
 }
 set component_dir [file join $regression_dir G7_MIPS32.srcs sim_1 new]
 foreach tb_name {
-    tb_data_bus.v
-    tb_pario.v
     tb_memories.v
     tb_primitives.v
-    tb_soc_mmio.v
 } {
     set tb_path [file join $component_dir $tb_name]
     if {![file exists $tb_path]} {
@@ -98,12 +95,9 @@ foreach {simset tb} {
     control_unit tb_control_unit
     bdu          tb_bdu
     component_tests tb_primitives
-    component_tests tb_pario
-    component_tests tb_data_bus
     component_tests tb_memories
     cpu_memory   tb_cpu_memory
     soc          tb_soc
-    component_tests tb_soc_mmio
 } {
     if {[catch {run_one $tb $simset} message]} {
         incr regression_failed

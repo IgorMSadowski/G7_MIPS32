@@ -18,7 +18,7 @@ module tb_memories;
     always #5 clk = ~clk;
 
     instruction_memory #(
-        .MEM_INIT_FILE("/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_mmio.mem")
+        .MEM_INIT_FILE("/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/test.mem")
     ) imem(
         .i_clk(clk), .i_rst(rst), .i_en(en),
         .i_addr(imem_addr), .o_instr(instr)
@@ -55,18 +55,18 @@ module tb_memories;
         imem_addr = 0;
         @(posedge clk);
         #1;
-        check(instr === 32'h3C09_8000, "ROM returns first instruction after one edge");
+        check(instr === 32'h3C08_1234, "ROM returns first instruction after one edge");
         @(negedge clk);
         imem_addr = 4;
         en = 0;
         @(posedge clk);
         #1;
-        check(instr === 32'h3C09_8000, "disabled ROM holds its output");
+        check(instr === 32'h3C08_1234, "disabled ROM holds its output");
         @(negedge clk);
         en = 1;
         @(posedge clk);
         #1;
-        check(instr === 32'h2008_0005, "ROM advances when enabled");
+        check(instr === 32'h2009_0005, "ROM advances when enabled");
 
         memory_phase = "RAM WRITE AND READ";
         @(negedge clk);

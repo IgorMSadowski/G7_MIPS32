@@ -22,8 +22,7 @@ module cpu(
     output wire [31:0] o_pc,            // IMEM address
     output wire [31:0] o_alu_out,       // ALU result / DMEM address
     output wire        o_mem_read,      // DMEM read enable (lw)
-    output wire        o_mem_write,     // DMEM write enable (sw) - gated
-    output wire        o_load_done      // Load response consumed by the datapath
+    output wire        o_mem_write      // DMEM write enable (sw) - gated
     );
 
     // Instruction fields and decoded control signals
@@ -46,7 +45,6 @@ module cpu(
     wire        _mem_read;              // from CU, drives both CPU output and datapath
     wire        _mem_write_raw;         // Raw CU mem_write (may be stale during non-EXEC states)
     wire        _state_exec;            // From datapath: 1 only in S_EXEC
-    wire        _state_load;            // From datapath: 1 while committing a load
 
     // Instruction field extraction
     assign _op    = i_instr[31:26];
@@ -78,7 +76,6 @@ module cpu(
     // External memory requests require an active execution cycle.
     // Keep the raw _mem_read connected to the datapath for load decoding.
     assign o_mem_read = _mem_read & _state_exec & i_en & ~i_rst;
-    assign o_load_done = _state_load & i_en & ~i_rst;
     
     datapath u_dp(
         .i_clk(i_clk),
@@ -100,8 +97,7 @@ module cpu(
         .o_pc(o_pc),
         .o_alu_out(o_alu_out),
         .o_wdata(o_wdata),
-        .o_state_exec(_state_exec),
-        .o_state_load(_state_load)
+        .o_state_exec(_state_exec)
     );
 
     // -------------------------------------------------------------------------
