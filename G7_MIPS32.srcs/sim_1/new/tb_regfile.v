@@ -85,6 +85,23 @@ module tb_regfile;
         write_reg(7, 32'h2222_2222);
         check(7, 32'h2222_2222, "consecutive writes");
 
+        // The two asynchronous read ports can read different registers together.
+        test_name = "READ R5 AND R7 TOGETHER";
+        ra1 = 5'd5; ra2 = 5'd7;
+        #1;
+        if (rd1 !== 32'h1234_5678 || rd2 !== 32'h2222_2222) begin
+            $display("FAIL simultaneous reads: rd1=%h rd2=%h", rd1, rd2);
+            errors = errors + 1;
+        end
+
+        test_name = "SWAP READ ADDRESSES";
+        ra1 = 5'd7; ra2 = 5'd5;
+        #1;
+        if (rd1 !== 32'h2222_2222 || rd2 !== 32'h1234_5678) begin
+            $display("FAIL swapped reads: rd1=%h rd2=%h", rd1, rd2);
+            errors = errors + 1;
+        end
+
         // we=0 — no write happens
         test_name = "CHECK WRITE DISABLED";
         wa=8; wdata=32'hAAAA_AAAA; we=0;

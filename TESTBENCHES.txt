@@ -5,7 +5,9 @@ G7_MIPS32 - TESTES E COMO OS EXECUTAR
 -------------
 
 O CPU está ligado diretamente à ROM e à RAM. A ROM carrega Assembly/test.mem.
-A RAM fornece o dado do LW durante S_LOAD. A saída LD0 mostra apenas o reset.
+Durante o stall de LW, o PC e a ROM conservam a instrução. O CPU grava
+o dado da RAM e avança no flanco de conclusão.
+A saída LD0 mostra apenas o reset.
 
 2. Testbenches incluidos
 ------------------------

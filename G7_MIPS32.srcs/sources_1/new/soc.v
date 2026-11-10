@@ -40,6 +40,7 @@ module soc #(
     wire soc_reset = reset_sync[1];
 
     // CPU memory bus wires
+    wire        _imem_en;       // CPU-controlled ROM advance
     wire [31:0] _instr;         // Instruction word returned from IMEM
     wire [31:0] _pc;            // Program counter / IMEM address from CPU
     wire [31:0] _alu_out;       // ALU result - doubles as DMEM address
@@ -56,7 +57,7 @@ module soc #(
     ) u_imem(
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
-        .i_en(_en),
+        .i_en(_imem_en),
         .i_addr(_pc),           // Instruction Memory address (current PC)
         .o_instr(_instr)        // Instruction word returned (valid one cycle later)
     );
@@ -79,6 +80,7 @@ module soc #(
         .i_instr(_instr),
         .i_rdata(_rdata),
         .o_pc(_pc),
+        .o_imem_en(_imem_en),
         .o_alu_out(_alu_out),
         .o_wdata(_wdata),
         .o_mem_read(_mem_read),

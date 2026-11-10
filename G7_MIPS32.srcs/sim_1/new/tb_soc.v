@@ -18,6 +18,19 @@ module tb_soc;
     integer cycles;
     integer errors = 0;
 
+    always @(posedge dut.clk_50mhz) begin : check_rom_hold
+        reg [31:0] held_instr, held_pc;
+        if (dut._mem_read) begin
+            held_instr = dut._instr;
+            held_pc = dut.u_cpu.u_dp._pc_r;
+            #1;
+            if (dut._instr !== held_instr || dut.u_cpu.u_dp._pc_r !== held_pc) begin
+                $display("FAIL: PC or ROM advanced before LW write-back");
+                errors = errors + 1;
+            end
+        end
+    end
+
     task check_reg;
         input [4:0] index;
         input [31:0] expected;

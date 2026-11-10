@@ -25,24 +25,27 @@ module datapath(
     input  wire [3:0]  i_branch_cond,   // Branch condition code
     input  wire [3:0]  i_alu_ctrl,      // ALU operation select
     
-    input  wire        i_mem_read,      // 1 when current insn is lw/lb (from CU)
+    input  wire        i_mem_read,      // 1 when the CU decodes LW
 
-    output wire [31:0] o_pc,            // IMEM address (current PC or pre-fetched PC+4)
+    output wire [31:0] o_pc,            // IMEM byte address
     output wire [31:0] o_alu_out,       // ALU result,   o_y
     output wire [31:0] o_wdata,         // Store data (register target, rt, value for sw)
     
-    output wire        o_state_exec     // 1 during EXEC (used by cpu.v to gate memory requests)
+    output wire        o_imem_en,       // ROM enable: prime or retire
+    output wire        o_load_issue,    // Start one synchronous RAM read
+    output wire        o_commit         // Complete the current instruction
     );
 
-    // FSM state encoding
-    localparam S_FETCH = 2'd0;   // post-reset prime: present PC=0 to IMEM
-    localparam S_EXEC  = 2'd1;   // execute current insn; prefetch next
-    localparam S_LOAD  = 2'd2;   // lw only: DMEM data valid, commit to RF
+    reg        _rom_ready;     // The ROM has returned its first instruction.
+    reg        _load_pending;  // The held LW has issued its RAM read.
+    reg [31:0] _pc_r;
 
-    reg [1:0]  _state;           // Current FSM state
-    reg [31:0] _pc_r;            // Program counter register
+    wire _stall = _rom_ready && i_mem_read && !_load_pending;
+    wire _enabled = i_en && !i_rst;
 
-    assign o_state_exec = (_state == S_EXEC);   // exported for cpu.v gate
+    assign o_commit     = _enabled && _rom_ready && !_stall;
+    assign o_load_issue = _enabled && _stall;
+    assign o_imem_en    = _enabled && (!_rom_ready || o_commit);
 
     // Intermediate signals
     wire [31:0] _pc4;            // PC + 4 (next sequential address)
@@ -54,19 +57,14 @@ module datapath(
     wire [31:0] _rd2_v;          // RF read port 2 (rt value)
     wire [31:0] _src_a;          // ALU operand A (shift amount for shifts, otherwise rs)
     wire [31:0] _src_b;          // ALU operand B (rt or immediate)
-    wire [31:0] _alu_mem;        // Mux output: ALU result or memory data
     wire [31:0] _wb;             // Final write-back value to RF
-    wire [31:0] _wb_exec;        // Write-back during S_EXEC (non-load)
     wire [31:0] _ret_addr;       // link address = PC + 4
     wire [4:0]  _wa;             // RF write address from reg_dst mux (rt or rd)
     wire [4:0]  _wa_final;       // _wa with $ra override for jal
-    wire [4:0]  _wa_use;         // _wa_final or _wa_hold (during S_LOAD)
     wire        _branch_taken;   // Branch condition evaluated
     wire        _zero;           // Internal ALU zero flag for BEQ/BNE
     wire [31:0] _pc_next;        // Next PC value
-    wire [31:0] _imem_addr;      // Address presented to IMEM this cycle
-    wire        _is_load;        // 1 if current insn is lw/lb
-    wire        _do_rf_we;       // FSM-aware RF write enable
+    wire        _do_rf_we;       // Register file write enable
 
     // PC arithmetic
     assign _pc4 = _pc_r + 32'd4;
@@ -75,15 +73,8 @@ module datapath(
     assign _pc_next = i_jump ? (i_jump_reg ? _rd1_v : _jmp_tgt) :
                       (i_branch && _branch_taken) ? _br_tgt : _pc4;
 
-    // During S_EXEC, present _pc_next to IMEM so the address is captured at
-    // the upcoming posedge.  One cycle later, that instruction arrives on
-    // i_instr - just in time.  This is why non-load instructions finish in
-    // 1 cycle despite latency-1 BRAM.  Not pipelining - one instruction in
-    // the datapath at a time.
-    assign _imem_addr = (_state == S_EXEC) ? _pc_next : _pc_r;
-    assign o_pc       = _imem_addr;
-
-    assign _is_load = i_mem_read;   // mem_read comes from CU; 1 only for lw/lb
+    // The ROM holds the LW until its RAM result is ready.
+    assign o_pc = o_commit ? _pc_next : _pc_r;
 
     // ALU operand A select
     // For shift instructions, ALU operand A = shamt (instruction[10:6])
@@ -125,34 +116,8 @@ module datapath(
     // Link address used by jal and jalr.
     assign _ret_addr = _pc4;
 
-    // hold write address across S_LOAD.
-    // During S_LOAD, i_instr is already the NEXT instruction.  If we used the live rt field in S_LOAD
-    // we'd write the load result into the wrong register.  Capture at end of S_EXEC (when the lw was still on the bus).
-    reg [4:0] _wa_hold;         // Registered write address (holds lw's rt across S_LOAD)
-
-    // If its load stores the write address to use later 
-    always @(posedge i_clk or posedge i_rst) begin
-        if (i_rst)                              _wa_hold <= 5'd0;
-        else if (_state == S_EXEC && _is_load)  _wa_hold <= _wa_final;
-    end
-
-    // Write Address: If LOAD its the write address from the previous cycle, if not its the Final
-    assign _wa_use = (_state == S_LOAD) ? _wa_hold : _wa_final;
-
-    // -------------------------------------------------------------------------
-    // FSM-aware register-file write enable
-    //   S_EXEC : write non-load instructions only.
-    //            For a load, the loaded data is not available yet
-    //            (_wb would carry the load address, not the value),
-    //            so the write must wait for S_LOAD.
-    //   S_LOAD : write the load result.  The write address comes from
-    //            _wa_hold because i_instr already points at the next
-    //            instruction, whose rt/rd fields are wrong for this load.
-    //   S_FETCH: never write.
-    // -------------------------------------------------------------------------
-    // Do Register File Write Enable
-    // 0 dont change, 1 take _wb and overwrite the register chosen by _wa_use
-    assign _do_rf_we = ((_state == S_EXEC) & i_reg_write & ~_is_load) | (_state == S_LOAD);
+    // The held instruction still supplies its own destination and controls.
+    assign _do_rf_we = o_commit && i_reg_write;
 
     // -------------------------------------------------------------------------
     // Register file
@@ -160,10 +125,10 @@ module datapath(
     register_file registers(
         .i_clk(i_clk),
         .i_rst(i_rst),
-        .i_we(_do_rf_we & i_en),
+        .i_we(_do_rf_we),
         .i_ra1(i_instr[25:21]),   // rs field wired from the instruction memory
         .i_ra2(i_instr[20:16]),   // rt field
-        .i_wa(_wa_use),           // held address during S_LOAD
+        .i_wa(_wa_final),         // destination of the held instruction
         .i_wdata(_wb),            // write-back value
         .o_rd1(_rd1_v),           // rs value wired to the ALU
         .o_rd2(_rd2_v)            // rt value
@@ -212,6 +177,7 @@ module datapath(
     // Write-back mux
     // WHAT to write back to the register file: ALU result, memory read data
     // -------------------------------------------------------------------------
+    wire [31:0] _alu_mem;
     mux2_32bit mem_to_reg_mux(
         .i_a(o_alu_out),        // ALU result
         .i_b(i_rdata),          // memory read data
@@ -219,30 +185,18 @@ module datapath(
         .o_y(_alu_mem)
     );
 
-    // Writeback value 
-    assign _wb_exec = i_link ? _ret_addr : _alu_mem;
-    
-    // If its a LOAD the writeback value is the read memory value. If not its the Writeback_Execute Value
-    assign _wb      = (_state == S_LOAD) ? i_rdata : _wb_exec;   // loads force memory data
+    assign _wb = i_link ? _ret_addr : _alu_mem;
 
-    // -------------------------------------------------------------------------
-    // FSM + PC update
-    // -------------------------------------------------------------------------
     always @(posedge i_clk) begin
         if (i_rst) begin
-            _state <= S_FETCH;
-            _pc_r  <= 32'b0;
+            _rom_ready    <= 1'b0;
+            _load_pending <= 1'b0;
+            _pc_r         <= 32'b0;
         end else if (i_en) begin
-            case (_state)
-                S_FETCH: _state <= S_EXEC;                        // one priming cycle
-
-                S_EXEC: begin
-                    _pc_r  <= _pc_next;                           // advance PC
-                    _state <= _is_load ? S_LOAD : S_EXEC;         // lw needs one more cycle
-                end
-
-                S_LOAD: _state <= S_EXEC;                         // PC held; load commits
-            endcase
+            _rom_ready    <= 1'b1;
+            _load_pending <= o_load_issue;
+            if (o_commit)
+                _pc_r <= _pc_next;
         end
     end
 

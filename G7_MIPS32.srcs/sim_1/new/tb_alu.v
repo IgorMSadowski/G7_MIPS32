@@ -83,8 +83,12 @@ module tb_alu;
         check(32'h0000_0014, "sll 5 by 2");
         a=32'd1; b=32'h0000_0014; ctrl=4'b0110;
         check(32'h0000_000A, "srl 20 by 1");
-        a=32'd8; b=32'h1234_0000; ctrl=4'b1000;
-        check(32'h0012_3400, "rotr by 8");
+        a=32'd8; b=32'h1234_5678; ctrl=4'b1000;
+        check(32'h7812_3456, "rotr wraps low byte");
+        a=32'd0;
+        check(32'h1234_5678, "rotr by 0");
+        a=32'd31; b=32'h8000_0001;
+        check(32'h0000_0003, "rotr by 31");
 
         // ---- WSBH ----
         a=0; b=32'h1234_5678; ctrl=4'b1001;

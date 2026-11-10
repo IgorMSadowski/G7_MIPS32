@@ -4,9 +4,7 @@
 // Engineer: Igor Sadowski
 // 
 // Module Name: Core Processing Unit (CPU)
-// Description: CPU core module that connects the control unit and datapath.
-//              Includes an external write-enable gate on o_mem_write to prevent
-//              stale memory writes during non-execution datapath FSM states.
+// Description: Connects the control unit and datapath and gates RAM requests.
 //////////////////////////////////////////////////////////////////////////////////
 
 module cpu(
@@ -20,6 +18,7 @@ module cpu(
     // outputs
     output wire [31:0] o_wdata,         // Store data to DMEM
     output wire [31:0] o_pc,            // IMEM address
+    output wire        o_imem_en,       // ROM advances only when enabled
     output wire [31:0] o_alu_out,       // ALU result / DMEM address
     output wire        o_mem_read,      // DMEM read enable (lw)
     output wire        o_mem_write      // DMEM write enable (sw) - gated
@@ -43,8 +42,8 @@ module cpu(
     wire [3:0]  _branch_cond;           // Branch condition code
 
     wire        _mem_read;              // from CU, drives both CPU output and datapath
-    wire        _mem_write_raw;         // Raw CU mem_write (may be stale during non-EXEC states)
-    wire        _state_exec;            // From datapath: 1 only in S_EXEC
+    wire        _mem_write_raw;         // Raw write request from the control unit
+    wire        _commit;                // Current instruction can complete
 
     // Instruction field extraction
     assign _op    = i_instr[31:26];
@@ -73,10 +72,6 @@ module cpu(
         .o_branch_cond(_branch_cond)
     );
     
-    // External memory requests require an active execution cycle.
-    // Keep the raw _mem_read connected to the datapath for load decoding.
-    assign o_mem_read = _mem_read & _state_exec & i_en & ~i_rst;
-    
     datapath u_dp(
         .i_clk(i_clk),
         .i_rst(i_rst),
@@ -97,17 +92,12 @@ module cpu(
         .o_pc(o_pc),
         .o_alu_out(o_alu_out),
         .o_wdata(o_wdata),
-        .o_state_exec(_state_exec)
+        .o_imem_en(o_imem_en),
+        .o_load_issue(o_mem_read),
+        .o_commit(_commit)
     );
 
-    // -------------------------------------------------------------------------
-    // WRITE GATE
-    // -------------------------------------------------------------------------
-    // During S_FETCH and S_LOAD, i_instr is either garbage or the next
-    // instruction.  If that stale instruction happens to be "sw", the raw
-    // o_mem_write would be 1 for an extra cycle, causing a double write.
-    // AND-ing with _state_exec guarantees a store only commits in the exact
-    // cycle it was decoded.
-    assign o_mem_write = _mem_write_raw & _state_exec & i_en & ~i_rst;
+    // RAM writes occur only when the current store completes.
+    assign o_mem_write = _mem_write_raw && _commit;
 
 endmodule

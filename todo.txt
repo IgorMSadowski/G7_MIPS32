@@ -1,75 +1,66 @@
 G7 MIPS32 - Project checklist
 
-1. [x] Establish the current MMIO and 50 MHz baseline
-   - [x] Decode aligned RAM addresses and ParIO at 0x80000000.
-   - [x] Verify RAM and ParIO reads, writes, and address rejection in simulation.
-   - [x] Run the behavioral regression with the Clocking Wizard connected.
-   - [x] Verify 125 MHz at K17 and a generated 50 MHz SoC clock. The latest
-         routed report had +0.366 ns setup slack and +0.160 ns hold slack.
-   - [x] Pass the routed MMIO LED test with soc_mmio.mem. Record the four
-         BRAM hold warnings at reset release alongside the functional pass.
+1. [ ] Finish verification of the implemented ISA and all testbenches
+   - [ ] Build a coverage matrix from the encodings in control_unit.v.
+         Check every supported instruction, its destinations and side effects,
+         and taken/not-taken cases for each conditional branch.
+   - [ ] Verify reserved encodings, register zero, signed comparisons, shifts
+         and rotations, PC+4 links, and the current no-delay-slot policy.
+   - [ ] Verify the RAM-only SoC: SW writes once; LW holds PC and the ROM word
+         until write-back; dependent instructions and consecutive loads resume.
+         Check reset, pause/resume and the current address-aliasing behavior.
+   - [ ] Review tb_alu, tb_bdu, tb_control_unit, tb_regfile, tb_primitives,
+         tb_memories, tb_cpu_memory and tb_soc. Record expected outcomes,
+         waveforms, uncovered cases and the Vivado regression result.
+   - [ ] Keep behavioral pass, coverage review, routed timing and board
+         validation as separate evidence.
 
-2. [ ] Review the testbench waveforms
-   For each test, predict one result from the code, find it in the waveform,
-   and explain which signal or clock edge caused it. Save a .wcfg if useful.
-   - [ ] tb_memories: follow a ROM fetch and a synchronous RAM read/write.
-   - [ ] tb_pario: follow the input bits, LED write enable, and reset.
-   - [ ] tb_data_bus: compare RAM, ParIO, and invalid addresses. Follow the
-         read response from the request through rsp_valid and rsp_consume.
-   - [ ] tb_cpu_memory: trace LW and SW, including a pause with enable low.
-   - [ ] tb_soc_mmio: trace the whole demo. Confirm LEDs = 1010,
-         register $t2 = 0x5A with the test inputs, and $t4 = 42.
-   - [ ] tb_primitives: explain the muxes, sign extension, and shift-left-by-two.
-   - [ ] Finish any unread tests with saved layouts: tb_alu, tb_bdu,
-         tb_control_unit, tb_regfile, and tb_soc.
-   - [ ] Save the regression summary and a few annotated waveforms for the report.
+2. [ ] Implement a single non-vectored interrupt
+   - [ ] Start with one testbench IRQ input and one fixed ISR entry in a dedicated
+         ROM image. Use a pending bit and a global enable. Mask IRQs in the ISR.
+   - [ ] Define the acceptance boundary after the current instruction retires.
+         If an LW is waiting, finish its write-back before accepting the IRQ.
+   - [ ] Save the next unexecuted PC in EPC, redirect PC and ROM together,
+         and return with a minimal ERET path that restores the saved enable.
+         Define how the request is acknowledged or cleared.
+   - [ ] Test a normal instruction, taken branch/jump, pending LW, mask,
+         repeated/held request and exact resumption. Check for duplicated
+         stores or register writes.
 
-3. [ ] Test the current SoC on the Zybo Z7-10
-   - [ ] Build with soc_mmio.mem as the boot ROM and program via JTAG.
-   - [ ] Press and release BTN0. Confirm LD0 follows reset and LD3/LD1
-         light after release (1010 on LD3:LD0).
-   - [ ] Record the board result. If startup is unreliable, investigate
-         the BRAM reset-release warnings seen in routed simulation.
+3. [ ] Extend interrupts to controlled nesting
+   - [ ] Review Arm Cortex-M NVIC priority/preemption and hardware stacking.
+         Review RISC-V mtvec Direct, mepc, mcause, MIE/MPIE and MRET as design
+         references. Keep the G7 instruction encodings and one common entry.
+   - [ ] Introduce two simulated sources with fixed priorities. Retain pending
+         requests and allow only a strictly higher priority to preempt.
+   - [ ] Choose and document how to save EPC, enable and active priority for
+         each level. Begin with a bounded depth and define overflow behavior.
+   - [ ] Test simultaneous IRQs, a higher-priority arrival during an ISR,
+         equal/lower-priority deferral, and return in reverse entry order.
 
-4. [ ] Add the timer peripheral over MMIO
-   - [ ] Define the timer base and the CTRL, PERIOD, and COUNT offsets.
-   - [ ] Connect the read data and write enable to the data bus.
-   - [ ] Verify that SW configures the timer, LW reads a changing count,
-         expiry occurs at the programmed period, and RAM/ParIO still work.
+4. [ ] Add a basic data bus and MMIO
+   - [ ] Write the memory map and the read/write timing contract first.
+         Check word alignment, ranges and invalid accesses.
+   - [ ] Add address decoding, per-target enables and a read-data mux.
+         Use separate address, write-data and read-data signals.
+   - [ ] Start with the RAM as the only target and rerun the ISA regression.
+         Then add ParIO with an input register view and an output register.
+         Verify reset, input reads, output writes and isolation from RAM.
+   - [ ] Add a 16-bit timer/counter. Start with enable, reload/period and count;
+         verify it by polling. Then add sticky status/acknowledge and connect
+         the timer IRQ to the already tested controller.
+   - [ ] Connect an external button IRQ through synchronization and debounce
+         once the simulator paths work.
 
-5. [ ] Add vectored interrupts and return
-   - [ ] Build a controller that keeps pending requests, applies enables,
-         selects a priority, and presents the selected vector to the CPU.
-   - [ ] Start with the timer IRQ and define how the handler acknowledges it.
-   - [ ] Define the minimal CP0 state: EPC for the return address, Cause for
-         the reason, and the Status bits needed for interrupt/exception state.
-         Decide which fields software will access with MFC0 and MTC0.
-   - [ ] Accept IRQs between instructions, after any active LW completes.
-         Save the resume PC in EPC, jump to the ISR, and return with ERET.
-   - [ ] Add an external button IRQ with synchronization and debounce.
-         Assign separate ROM vectors for timer and button.
-   - [ ] Test simultaneous requests, priority, the pending request that waits,
-         and resumption at the exact instruction. Test both sources on the Zybo.
+5. [ ] Extend synchronous exceptions after the baseline is stable
+   - [ ] Add signed ADD/ADDI/SUB overflow with write-back suppression and
+         faulting EPC. Define trap, unsupported-instruction and alignment cases.
+   - [ ] Handle unsigned carry separately. Check 0xFFFFFFFF + 1 (carry without
+         signed overflow) and 0x7FFFFFFF + 1 (signed overflow without carry).
+         Evaluate ADDU and SLTU for a software multiword addition.
 
-6. [ ] Add synchronous exceptions, traps, and carry handling
-   - [ ] Start with signed ADD overflow. Detect it in the ALU, qualify it
-         with the decoded instruction, block destination writeback, and save
-         the faulting PC and Cause before jumping to the exception handler.
-   - [ ] Test 0x7FFFFFFF + 1 for overflow and 1 + 2 for normal writeback.
-         Verify that ERET resumes at EPC. Advance EPC in the handler if
-         the test deliberately skips the faulting instruction.
-   - [ ] Extend overflow handling to ADDI and SUB. Keep address calculations
-         for LW/SW and comparisons from triggering arithmetic overflow traps.
-   - [ ] Add an explicit trap instruction such as TEQ. Test both equal
-         operands (trap) and unequal operands (continue).
-   - [ ] Define which misaligned accesses and unsupported instructions
-         should raise exceptions. Verify that a faulting store writes nothing.
-   - [ ] Handle unsigned carry separately. Test 0xFFFFFFFF + 1 (result 0,
-         carry 1, no signed overflow). MIPS32 has no integer carry flag.
-         For a MIPS-style software solution, consider implementing ADDU
-         and SLTU and use them to verify a two-word addition.
-
-7. [ ] Recheck the integrated build after each feature
-   - [ ] Run the behavioral regression and the new feature tests.
-   - [ ] Rerun implementation at 50 MHz and check setup and hold slack.
-   - [ ] Rerun the routed timing demo and repeat the relevant board checks.
+6. [ ] Verify each integrated increment and prepare the board demonstration
+   - [ ] Rerun the existing regression and add directed tests for each feature.
+   - [ ] Provide an observable CPU result before synthesis and board validation.
+   - [ ] Rebuild at 50 MHz, inspect setup/hold, simulate the routed build with
+         a suitable test, and demonstrate the result on the Zybo Z7-10.
