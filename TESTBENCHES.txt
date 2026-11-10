@@ -6,7 +6,6 @@ G7_MIPS32 - TESTES E COMO OS EXECUTAR
 
 O CPU está ligado diretamente à ROM e à RAM. A ROM carrega Assembly/test.mem.
 A RAM fornece o dado do LW durante S_LOAD. A saída LD0 mostra apenas o reset.
-O ficheiro MEMORIA_E_DATABUS.txt descreve a implementação MMIO anterior.
 
 2. Testbenches incluidos
 ------------------------
