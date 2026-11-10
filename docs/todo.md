@@ -1,0 +1,72 @@
+# G7 MIPS32 Project Checklist
+
+## 1. Finish verification of the implemented ISA and all testbenches
+
+- [ ] Build a coverage matrix from the encodings in `control_unit.v`.
+  Check every supported instruction, its destinations and side effects,
+  and taken/not-taken cases for each conditional branch.
+- [ ] Verify reserved encodings, register zero, signed comparisons, shifts
+  and rotations, PC+4 links, and the current no-delay-slot policy.
+- [ ] Verify the RAM-only SoC. `SW` writes once. `LW` holds PC and the ROM word
+  until write-back. Dependent instructions and consecutive loads resume.
+  Check reset, pause/resume and the current address-aliasing behavior.
+- [ ] Review tb_alu, tb_bdu, tb_control_unit, tb_regfile, tb_primitives,
+  tb_memories, tb_cpu_memory and tb_soc. Record expected outcomes,
+  waveforms, uncovered cases and the Vivado regression result.
+- [ ] Keep behavioral pass, coverage review, routed timing and board
+  validation as separate evidence.
+
+## 2. Implement a single non-vectored interrupt
+
+- [ ] Start with one testbench IRQ input and one fixed ISR entry in a dedicated
+  ROM image. Use a pending bit and a global enable. Mask IRQs in the ISR.
+- [ ] Define the acceptance boundary after the current instruction retires.
+  If an LW is waiting, finish its write-back before accepting the IRQ.
+- [ ] Save the next unexecuted PC in EPC, redirect PC and ROM together,
+  and return with a minimal ERET path that restores the saved enable.
+  Define how the request is acknowledged or cleared.
+- [ ] Test a normal instruction, taken branch/jump, pending LW, mask,
+  repeated/held request and exact resumption. Check for duplicated
+  stores or register writes.
+
+## 3. Extend interrupts to controlled nesting
+
+- [ ] Review Arm Cortex-M NVIC priority/preemption and hardware stacking.
+  Review RISC-V mtvec Direct, mepc, mcause, MIE/MPIE and MRET as design
+  references. Keep the G7 instruction encodings and one common entry.
+- [ ] Introduce two simulated sources with fixed priorities. Retain pending
+  requests and allow only a strictly higher priority to preempt.
+- [ ] Choose and document how to save EPC, enable and active priority for
+  each level. Begin with a bounded depth and define overflow behavior.
+- [ ] Test simultaneous IRQs, a higher-priority arrival during an ISR,
+  equal/lower-priority deferral, and return in reverse entry order.
+
+## 4. Add a basic data bus and MMIO
+
+- [ ] Write the memory map and the read/write timing contract first.
+  Check word alignment, ranges and invalid accesses.
+- [ ] Add address decoding, per-target enables and a read-data mux.
+  Use separate address, write-data and read-data signals.
+- [ ] Start with the RAM as the only target and rerun the ISA regression.
+  Then add ParIO with an input register view and an output register.
+  Verify reset, input reads, output writes and isolation from RAM.
+- [ ] Add a 16-bit timer/counter. Start with enable, reload/period and count.
+  Verify it by polling before adding sticky status/acknowledge. Connect
+  the timer IRQ to the already tested controller.
+- [ ] Connect an external button IRQ through synchronization and debounce
+  once the simulator paths work.
+
+## 5. Extend synchronous exceptions after the baseline is stable
+
+- [ ] Add signed ADD/ADDI/SUB overflow with write-back suppression and
+  faulting EPC. Define trap, unsupported-instruction and alignment cases.
+- [ ] Handle unsigned carry separately. Check 0xFFFFFFFF + 1 (carry without
+  signed overflow) and 0x7FFFFFFF + 1 (signed overflow without carry).
+  Evaluate ADDU and SLTU for a software multiword addition.
+
+## 6. Verify each integrated increment and prepare the board demonstration
+
+- [ ] Rerun the existing regression and add directed tests for each feature.
+- [ ] Provide an observable CPU result before synthesis and board validation.
+- [ ] Rebuild at 50 MHz, inspect setup/hold, simulate the routed build with
+  a suitable test, and demonstrate the result on the Zybo Z7-10.
