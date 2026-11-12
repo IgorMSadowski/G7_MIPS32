@@ -12,12 +12,12 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="173.218 ns"></ZoomEndTime>
-      <Cursor1Time time="58.552 ns"></Cursor1Time>
+      <ZoomEndTime time="141.001 ns"></ZoomEndTime>
+      <Cursor1Time time="36.870 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="171"></NameColumnWidth>
-      <ValueColumnWidth column_width="141"></ValueColumnWidth>
+      <ValueColumnWidth column_width="137"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="31" />
    <wvobject type="array" fp_name="/tb_control_unit/test_name">
@@ -140,6 +140,7 @@
    <wvobject type="array" fp_name="/tb_control_unit/jump_name">
       <obj_property name="ElementShortName">jump_name[63:0]</obj_property>
       <obj_property name="ObjectShortName">jump_name[63:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/jump">
       <obj_property name="ElementShortName">jump</obj_property>

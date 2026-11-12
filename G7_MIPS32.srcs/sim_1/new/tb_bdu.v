@@ -16,8 +16,7 @@ module tb_bdu;
     integer errors = 0;
     integer checks = 0;
     integer code;
-
-    // Simulation-only labels: display condition_name with ASCII radix.
+    
     reg [8*8-1:0] condition_name;
     always @(*) begin
         if (!branch)

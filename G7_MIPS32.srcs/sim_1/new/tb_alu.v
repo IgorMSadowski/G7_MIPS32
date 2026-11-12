@@ -46,27 +46,27 @@ module tb_alu;
     end
 
     initial begin
-        // ---- AND ----
+        // AND
         a=32'hFF00FF00; b=32'h0FF00FF0; ctrl=4'b0010;
         check(32'h0F000F00, "and mask");
 
-        // ---- OR ----
+        // OR
         a=32'hFF00FF00; b=32'h0FF00FF0; ctrl=4'b0011;
         check(32'hFFF0_FFF0, "or merge");
 
-        // ---- ADD (wraps on overflow, no trap) ----
+        // ADD (wraps on overflow, no trap)
         a=32'd10; b=32'd20; ctrl=4'b0000;
         check(32'd30, "add 10+20");
         a=32'hFFFFFFFF; b=32'd1; ctrl=4'b0000;
         check(32'h0, "add overflow wraps to 0");
 
-        // ---- SUB ----
+        // SUB
         a=32'd20; b=32'd10; ctrl=4'b0001;
         check(32'd10, "sub 20-10");
         a=32'd10; b=32'd20; ctrl=4'b0001;
         check(32'hFFFFFFF6, "sub 10-20 = -10");
 
-        // ---- SLT (signed) ----
+        // SLT signed
         a=32'hFFFFFFFF; b=32'd1; ctrl=4'b1010;
         check(32'd1, "slt -1 < 1 (true)");
         a=32'd1; b=32'hFFFFFFFF; ctrl=4'b1010;
@@ -74,11 +74,11 @@ module tb_alu;
         a=32'd5; b=32'd5; ctrl=4'b1010;
         check(32'd0, "slt 5 < 5 (false)");
 
-        // ---- XOR ----
+        // XOR
         a=32'hA5A5_0F0F; b=32'hFFFF_00FF; ctrl=4'b0111;
         check(32'h5A5A_0FF0, "xor");
 
-        // ---- Shifts and rotate (A is the shift amount) ----
+        // Shifts and rotate (A is the shift amount)
         a=32'd2; b=32'h0000_0005; ctrl=4'b0101;
         check(32'h0000_0014, "sll 5 by 2");
         a=32'd1; b=32'h0000_0014; ctrl=4'b0110;
@@ -90,17 +90,17 @@ module tb_alu;
         a=32'd31; b=32'h8000_0001;
         check(32'h0000_0003, "rotr by 31");
 
-        // ---- WSBH ----
+        // WSBH
         a=0; b=32'h1234_5678; ctrl=4'b1001;
         check(32'h3412_7856, "wsbh");
 
-        // ---- LUI ----
+        // LUI
         a = 32'h00000000; b=32'h00001234; ctrl=4'b0100;
         check(32'h12340000, "lui immediate");
         b=32'hFFFF8001;
         check(32'h80010000, "lui negative immediate");
 
-        // ---- Zero flag ----
+        // Zero flag
         a=32'd5; b=32'd5; ctrl=4'b0001;
         #1;
         if (zero !== 1'b1) begin

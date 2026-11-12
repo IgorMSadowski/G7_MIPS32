@@ -36,12 +36,12 @@ module datapath(
     output wire        o_commit         // Complete the current instruction
     );
 
-    reg        _rom_ready;     // The ROM has returned its first instruction.
-    reg        _load_pending;  // The held LW has issued its RAM read.
-    reg [31:0] _pc_r;
+    reg        _rom_ready;     // Instruction memory has returned the current instruction, only 0 when reset or a stall occurs.
+    reg        _load_pending;  // A load instruction has been issued to the RAM but the data has not yet returned. The CPU must stall until the data is available.
+    reg [31:0] _pc_r;          // Current program counter (PC) value, updated only when the instruction is committed.
 
-    wire _stall = _rom_ready && i_mem_read && !_load_pending;
-    wire _enabled = i_en && !i_rst;
+    wire _stall = _rom_ready && i_mem_read && !_load_pending; // Stall the CPU if a load instruction is issued and the data has not yet returned from RAM.
+    wire _enabled = i_en && !i_rst;                           // The CPU is enabled when the global enable is high and reset is low.
 
     assign o_commit     = _enabled && _rom_ready && !_stall;
     assign o_load_issue = _enabled && _stall;
