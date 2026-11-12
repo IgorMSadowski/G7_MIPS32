@@ -20,11 +20,11 @@ module data_memory(
     output wire [31:0] o_rdata      // Read data output
     );
 
-    wire [5:0] _addr_w;             // Word address to XPM
-    assign _addr_w = i_addr[7:2];   // 64 words × 4 bytes
+    wire [7:0] _addr_w;             // Word address to XPM
+    assign _addr_w = i_addr[9:2];  // 256 words x 4 bytes
 
     xpm_memory_spram #(
-        .ADDR_WIDTH_A(6),           // 6-bit word address
+        .ADDR_WIDTH_A(8),          // 8-bit word address
         .AUTO_SLEEP_TIME(0),        // no auto power-down
         .BYTE_WRITE_WIDTH_A(8),     // byte-granular writes → 4-bit wea
         .CASCADE_HEIGHT(0),         // no cascading
@@ -36,7 +36,7 @@ module data_memory(
         .MEMORY_INIT_PARAM("0"),    // all-zero init if file absent
         .MEMORY_OPTIMIZATION("true"),// allow init optimization
         .MEMORY_PRIMITIVE("block"), // ★ BRAM, not LUTRAM
-        .MEMORY_SIZE(2048),         // 64 words × 32 bits = 2 Kbit
+        .MEMORY_SIZE(8192),        // 256 words x 32 bits = 1 KiB
         .MESSAGE_CONTROL(0),        // quiet simulation
         .RAM_DECOMP("auto"),        // let Vivado choose decomposition
         .READ_DATA_WIDTH_A(32),     // 32-bit output

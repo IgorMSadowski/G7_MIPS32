@@ -68,10 +68,10 @@ As notas acima de cada `#include` explicam quais as funções e os tipos usados 
 
 ## Limites e estruturas de dados
 
-A ROM tem 64 palavras. Cada instrução ocupa 4 bytes, por isso o último endereço alinhado é 0xFC. Os restantes limites reservam espaço para ler uma linha, guardar um nome e registar até 128 labels.
+A ROM tem 256 palavras (1 KiB). Cada instrução ocupa 4 bytes, por isso o último endereço alinhado é 0x3FC. Os restantes limites reservam espaço para ler uma linha, guardar um nome e registar até 128 labels.
 
 ```c
-enum { ROM_WORDS = 64, LINE_SIZE = 512, LABEL_SIZE = 64, MAX_LABELS = 128 };
+enum { ROM_WORDS = 256, LINE_SIZE = 512, LABEL_SIZE = 64, MAX_LABELS = 128 };
 
 // Um Label associa um nome a um endereço em bytes. Um label como rotina:
 // assinala uma posição no programa sem ocupar uma palavra na ROM.
@@ -304,7 +304,7 @@ static void first_pass(FILE *source, Program *program)
             (text[4] == '\0' || isspace((unsigned char)text[4]))) {
             int64_t origin = number(trim(text + 4));
             if (origin < address || origin >= ROM_WORDS * 4 || origin % 4 != 0)
-                fail(".org must move forward to an aligned byte address in 0x00..0xFC");
+                fail(".org must move forward to an aligned byte address in 0x00000000..0x000003FC");
             address = (uint32_t)origin;
             program->word_count = address / 4;
             continue;
@@ -556,7 +556,7 @@ Os campos começam a zero. O switch decide quais usar. rs, rt e rd guardam índi
     case JUMP: {
         int64_t address = target(program, operands[0], instruction->address, 0);
         if (address < 0 || address >= ROM_WORDS * 4 || address % 4 != 0)
-            fail("jump target must be an aligned byte address in 0x00..0xFC");
+            fail("jump target must be an aligned byte address in 0x00000000..0x000003FC");
         return (definition->opcode << 26) | ((uint32_t)address >> 2);
     }
     // NOP tem o mesmo encoding que SLL $zero, $zero, 0.
@@ -636,7 +636,7 @@ int main(int argc, char **argv)
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             puts("Usage: asm input.asm [-o output.mem] [-l]");
-            puts("G7 ISA, labels and .org byte addresses. Maximum image: 64 words.");
+            puts("G7 ISA, labels and .org byte addresses. Maximum image: 256 words (1 KiB).");
             return EXIT_SUCCESS;
         }
         if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--listing") == 0)

@@ -19,11 +19,11 @@ module instruction_memory #(
     output wire [31:0] o_instr      // Instruction word output
     );
 
-    wire [5:0] _addr_w;             
-    assign _addr_w = i_addr[7:2];   // 64 words × 4 bytes → byte addr [7:2]
+    wire [7:0] _addr_w;
+    assign _addr_w = i_addr[9:2];  // 256 words x 4 bytes; byte address to word index
 
     xpm_memory_sprom #(
-        .ADDR_WIDTH_A(6),           // 6-bit word address = 64 words
+        .ADDR_WIDTH_A(8),          // 8-bit word address = 256 words
         .AUTO_SLEEP_TIME(0),        
         .CASCADE_HEIGHT(0),         
         .ECC_MODE("no_ecc"),        
@@ -33,7 +33,7 @@ module instruction_memory #(
         .MEMORY_INIT_PARAM("0"),    
         .MEMORY_OPTIMIZATION("true"),
         .MEMORY_PRIMITIVE("block"), // BRAM
-        .MEMORY_SIZE(2048),         // 64 words × 32 bits = 2 Kbit
+        .MEMORY_SIZE(8192),        // 256 words x 32 bits = 1 KiB
         .MESSAGE_CONTROL(0),        
         .RAM_DECOMP("auto"),        
         .READ_DATA_WIDTH_A(32),     

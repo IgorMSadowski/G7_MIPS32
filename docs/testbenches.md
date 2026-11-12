@@ -16,7 +16,7 @@ flanco de conclusão. A saída LD0 mostra o reset físico.
 | `tb_control_unit` | `control_unit` | Descodificação de instruções suportadas e rejeição de encodings inválidos. |
 | `tb_regfile` | `regfile` | Reset, leitura simultânea nas duas portas, escrita, proteção do registo zero e escritas consecutivas. |
 | `tb_primitives` | `component_tests` | `mux2_32bit`, `mux2_5bit`, `sign_extend` e `shift_left_two`. |
-| `tb_memories` | `component_tests` | Latência, enable e reset da ROM, escrita read-first, leitura e pausa da RAM. |
+| `tb_memories` | `component_tests` | Latência, enable e reset da ROM, escrita read-first, leitura e pausa da RAM; capacidade de 1 KiB e independência dos endereços 0x000, 0x100 e 0x3FC. |
 | `tb_cpu_memory` | `cpu_memory` | CPU e datapath com RAM, loads e stores, pausa e retoma, branches, reset e instruções inválidas. |
 | `tb_soc` | `soc` | Execução do programa completo a partir da ROM, hold do PC e da instrução durante o load e resultados dos registos. |
 
@@ -60,3 +60,7 @@ desalinhado pode selecionar uma palavra existente.
 O RTL e os testbenches usam caminhos absolutos para
 [Assembly/test.mem](../Assembly/test.mem). Se moveres a pasta do projeto,
 atualiza os parâmetros de inicialização da ROM.
+
+## Imagem de teste da capacidade de memória
+
+`tb_memories` utiliza `Assembly/memory_capacity.mem`, gerado pelo assembler C a partir de `Assembly/memory_capacity.asm`. A imagem tem 256 palavras e marcadores distintos em 0x000, 0x004, 0x100 e 0x3FC. O SoC continua a utilizar `Assembly/test.mem`.

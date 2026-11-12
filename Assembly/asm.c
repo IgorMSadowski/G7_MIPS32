@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-enum { ROM_WORDS = 64, LINE_SIZE = 512, LABEL_SIZE = 64, MAX_LABELS = 128 };
+enum { ROM_WORDS = 256, LINE_SIZE = 512, LABEL_SIZE = 64, MAX_LABELS = 128 };
 
 typedef struct {
     char name[LABEL_SIZE];
@@ -180,7 +180,7 @@ static void first_pass(FILE *source, Program *program)
             (text[4] == '\0' || isspace((unsigned char)text[4]))) {
             int64_t origin = number(trim(text + 4));
             if (origin < address || origin >= ROM_WORDS * 4 || origin % 4 != 0)
-                fail(".org must move forward to an aligned byte address in 0x00..0xFC");
+                fail(".org must move forward to an aligned byte address in 0x00000000..0x000003FC");
             address = (uint32_t)origin;
             program->word_count = address / 4;
             continue;
@@ -366,7 +366,7 @@ static uint32_t encode(const Program *program, const Instruction *instruction)
     case JUMP: {
         int64_t address = target(program, operands[0], instruction->address, 0);
         if (address < 0 || address >= ROM_WORDS * 4 || address % 4 != 0)
-            fail("jump target must be an aligned byte address in 0x00..0xFC");
+            fail("jump target must be an aligned byte address in 0x00000000..0x000003FC");
         return (definition->opcode << 26) | ((uint32_t)address >> 2);
     }
     case NOP:
@@ -415,7 +415,7 @@ int main(int argc, char **argv)
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             puts("Usage: asm input.asm [-o output.mem] [-l]");
-            puts("G7 ISA, labels and .org byte addresses. Maximum image: 64 words.");
+            puts("G7 ISA, labels and .org byte addresses. Maximum image: 256 words (1 KiB).");
             return EXIT_SUCCESS;
         }
         if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--listing") == 0)

@@ -1,0 +1,45 @@
+G7 MIPS32 - RESUMO DO MAPA DE MEMORIA
+
+ROM E RAM SEPARADAS
+O PC acede a ROM. LW/SW acedem ao espaco de dados.
+O mesmo endereco numerico na ROM e na RAM identifica memorias diferentes.
+
+ROM - 1 KiB
+256 palavras de 32 bits = 1024 bytes = 8192 bits.
+Intervalo: 0x00000000 a 0x000003FF.
+Ultima palavra alinhada: 0x000003FC.
+
+Organizacao planeada:
+0x00000000-0x00000003   Reset: j main
+0x00000004-0x00000007   Entrada comum de IRQ: j irq_handler
+0x00000008-0x0000001F   Reservado
+0x00000020-0x000003FF   Programa, funcoes e corpo da ISR
+
+O corpo da ISR fica na ROM, numa posicao definida pela etiqueta
+irq_handler. Nao existe uma regiao de tamanho fixo so para a ISR.
+
+RAM - 1 KiB
+256 palavras de 32 bits = 1024 bytes = 8192 bits.
+Intervalo: 0x00000000 a 0x000003FF.
+
+Divisao planeada:
+0x00000000-0x000003BF   Variaveis e buffers: 960 bytes
+0x000003C0-0x000003FF   Stack: 64 bytes (16 palavras)
+
+Stack cresce para enderecos inferiores.
+$sp inicial: 0x00000400.
+Primeira palavra guardada, apos decrementar $sp: 0x000003FC.
+Guarda registos usados pela ISR e enderecos de retorno de funcoes.
+
+MMIO - ENDERECOS RESERVADOS PARA FUTUROS MODULOS
+0x10000000-0x100000FF   Controlador de interrupcoes
+0x10000100-0x100001FF   ParIO
+0x10000200-0x100002FF   Timer/Counter de 16 bits
+0x10000300-0x10000FFF   Expansao futura
+
+Estes blocos sao enderecos de registos de hardware, nao RAM adicional.
+
+ESTADO ATUAL
+ROM e RAM de 1 KiB ja implementadas.
+Entradas reset/IRQ acima, uso da stack e MMIO ainda sao planeados.
+A stack e uma divisao de software, sem protecao automatica de limites.
