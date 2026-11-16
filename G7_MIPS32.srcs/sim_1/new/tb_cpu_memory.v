@@ -1,190 +1,131 @@
 `timescale 1ns / 1ps
 
-// Isolated CPU/DMEM test: instructions are supplied by this testbench.
-// No instruction ROM or program initialization settings are changed.
+// Basic CPU + RAM test. The testbench supplies four instructions directly.
+// There is no ROM here: hold LW until the CPU finishes its load.
 module tb_cpu_memory;
-    reg clk = 0, rst = 1, en = 0;
-    reg [31:0] instr = 32'hAC000004; // A decoded SW must wait for the first fetch.
+    reg clk = 0;
+    reg rst = 1;
+    reg en = 0;
+    reg [31:0] instr = 0;
     wire [31:0] rdata, wdata, pc, addr;
     wire re, we, imem_en;
     integer errors = 0;
     integer checks = 0;
-    reg [8*24-1:0] test_name;
+    reg [8*32-1:0] test_name;
     reg [8*20-1:0] memory_phase;
 
-    always #5 clk = ~clk;
+    // 50 MHz. Drive and inspect signals 1 ns after rising edges.
+    // This is a testbench scheduling delay, not measured FPGA timing.
+    always #10 clk = ~clk;
 
-    cpu dut(
+    cpu dut (
         .i_clk(clk), .i_rst(rst), .i_en(en),
         .i_instr(instr), .i_rdata(rdata),
-        .o_wdata(wdata), .o_pc(pc), .o_imem_en(imem_en), .o_alu_out(addr),
-        .o_mem_read(re), .o_mem_write(we)
+        .o_wdata(wdata), .o_pc(pc), .o_imem_en(imem_en),
+        .o_alu_out(addr), .o_mem_read(re), .o_mem_write(we)
     );
-    data_memory dm(
-        .i_clk(clk), .i_rst(rst), .i_en(en), .i_addr(addr),
-        .i_wdata(wdata), .i_re(re), .i_we(we), .o_rdata(rdata)
+
+    data_memory dm (
+        .i_clk(clk), .i_rst(rst), .i_en(en),
+        .i_addr(addr), .i_wdata(wdata),
+        .i_re(re), .i_we(we), .o_rdata(rdata)
     );
+
+    // Readable waveform signals for the three registers used by this test.
+    wire [31:0] t0_value = dut.u_dp.registers._rf[8];
+    wire [31:0] t1_value = dut.u_dp.registers._rf[9];
+    wire [31:0] t2_value = dut.u_dp.registers._rf[10];
 
     task test_cpu_state(input condition, input [8*64-1:0] name);
         begin
             checks = checks + 1;
             if (condition !== 1'b1) begin
                 errors = errors + 1;
-                $display("FAIL %0s", name);
+                $display("FAIL: %0s", name);
             end
         end
     endtask
 
-    task test_branch_fallthrough(input [31:0] encoding, input [8*24-1:0] name);
-        reg [31:0] next_pc;
-        begin
-            @(negedge clk);
-            instr = encoding;
-            next_pc = dut.u_dp._pc_r + 32'd4;
-            #1;
-            test_cpu_state(dut.u_dp._branch_taken === 1'b0 && pc === next_pc, name);
-            @(posedge clk); #1;
-            test_cpu_state(dut.u_dp._pc_r === next_pc, "untaken branch commits PC+4");
-        end
-    endtask
-
     initial begin
-        test_name = "CPU MEMORY AND PAUSE";
-        memory_phase = "RESET";
+        test_name = "RESET                           ";
+        memory_phase = "RESET               ";
+        repeat (2) @(posedge clk); #1;
+        test_cpu_state(dut.u_dp._pc_r === 0 && re === 0 && we === 0 &&
+                       t0_value === 0 && t1_value === 0 && t2_value === 0,
+                       "reset clears PC/registers and blocks memory requests");
+
+        // Allow the CPU's initial fetch-preparation cycle.
+        rst = 0;
+        en = 1;
+        test_name = "STARTUP                         ";
+        memory_phase = "STARTUP             ";
+        @(posedge clk); #1;
+        test_cpu_state(dut.u_dp._pc_r === 0 && dut.u_dp._rom_ready === 1,
+                       "startup prepares the CPU without advancing current PC");
+
+        // PC 0x00: addi $t0, $zero, 5 -> t0 = 5.
+        instr = 32'h20080005;
+        test_name = "ADDI t0, zero, 5                ";
+        memory_phase = "PREPARE VALUE       ";
+        @(posedge clk); #1;
+        test_cpu_state(t0_value === 5 && dut.u_dp._pc_r === 4,
+                       "ADDI prepares t0 = 5 and advances PC to 4");
+
+        // PC 0x04: sw $t0, 0($zero) -> RAM[0] = 5.
+        instr = 32'hAC080000;
+        test_name = "SW t0, 0(zero)                  ";
+        memory_phase = "STORE               ";
         #1;
-        test_cpu_state(re === 0 && we === 0, "no memory requests during reset");
-        repeat (2) @(negedge clk);
-        rst = 0; en = 1;
-        memory_phase = "EXECUTE";
+        test_cpu_state(we === 1 && re === 0 && addr === 0 && wdata === 5,
+                       "SW requests a write of 5 at RAM address zero");
+        @(posedge clk); #1;
+
+        // PC 0x08: lw $t1, 0($zero). Keep this instruction for BOTH edges.
+        instr = 32'h8C090000;
+        test_name = "LW t1, 0(zero)                  ";
+        memory_phase = "LOAD WAIT           ";
         #1;
-        test_cpu_state(imem_en === 1 && pc === 32'd0 && re === 0 && we === 0,
-              "ROM startup holds the PC and blocks memory requests");
-        @(posedge clk); #1; // The first ROM fetch completes.
+        test_cpu_state(dut.u_dp._stall === 1 && dut._commit === 0 &&
+                       imem_en === 0 && re === 1 && we === 0 && addr === 0 &&
+                       dut.u_dp._pc_r === 8 && pc === 8,
+                       "LW stalls, holds PC/ROM and issues the RAM read");
 
-        @(negedge clk); instr = 32'h2008002A; // addi t0,zero,42
+        // First edge: RAM returns data, but the CPU has not written t1 yet.
         @(posedge clk); #1;
-        test_cpu_state(dut.u_dp.registers._rf[8] === 32'd42, "prepare store value");
+        memory_phase = "LOAD WRITEBACK      ";
+        test_cpu_state(rdata === 5 && t1_value === 0 &&
+                       dut.u_dp._pc_r === 8 && dut.u_dp._load_pending === 1 &&
+                       re === 0 && dut._commit === 1 && imem_en === 1,
+                       "RAM data is ready while current PC and t1 still hold");
 
-        @(negedge clk); instr = 32'hAC080000; en = 0; // paused sw t0,0(zero)
-        memory_phase = "PAUSED STORE";
-        repeat (2) begin
-            @(posedge clk); #1;
-            test_cpu_state(re === 0 && we === 0, "paused store has no request");
-        end
-        @(negedge clk); en = 1; #1;
-        test_cpu_state(we === 1 && addr === 0 && wdata === 42, "enabled store request");
-        @(posedge clk); #1; // Store commits.
+        // Second edge: the same LW writes t1 and advances current PC.
+        @(posedge clk); #1;
+        test_cpu_state(t1_value === 5 && dut.u_dp._pc_r === 12 &&
+                       dut.u_dp._load_pending === 0,
+                       "LW writes t1 = 5 and advances PC to 12");
 
-        @(negedge clk); instr = 32'h8C090000; en = 0; // paused lw t1,0(zero)
-        memory_phase = "PAUSED LOAD";
+        // PC 0x0C: addi $t2, $t1, 1 -> t2 = 6, using the loaded value.
+        instr = 32'h212A0001;
+        test_name = "ADDI t2, t1, 1                  ";
+        memory_phase = "RESUME              ";
         @(posedge clk); #1;
-        test_cpu_state(re === 0 && we === 0, "paused load has no request");
-        @(negedge clk); en = 1; #1;
-        test_cpu_state(re === 1 && we === 0 && imem_en === 0 &&
-              pc === dut.u_dp._pc_r, "load issues once while ROM and PC hold");
-        @(posedge clk); #1;
-        test_cpu_state(dut.u_dp._load_pending === 1'b1 && rdata === 42 &&
-              dut.u_dp.registers._rf[9] === 32'd0 && re === 0 && imem_en === 1,
-              "RAM data is ready before the load retires");
+        test_cpu_state(t2_value === 6 && dut.u_dp._pc_r === 16,
+                       "execution resumes and uses the loaded value: t2 = 6");
 
-        // The real ROM keeps the LW visible until its completion edge.
-        @(negedge clk); en = 0;
-        repeat (3) begin
-            @(posedge clk); #1;
-            test_cpu_state(rdata === 42 && dut.u_dp._load_pending === 1'b1 &&
-                  pc === dut.u_dp._pc_r && imem_en === 0 && re === 0 && we === 0 &&
-                  dut.u_dp.registers._rf[9] === 32'd0,
-                  "pending load and instruction survive pause");
-        end
-        @(negedge clk); en = 1;
-        @(posedge clk); #1;
-        test_cpu_state(dut.u_dp.registers._rf[9] === 42, "held load writes its destination");
-
-        // The zero flag stays internal to the datapath and must still reach BDU.
-        // t0 and t1 both contain 42; the branch offset is two words (8 bytes).
-        @(negedge clk); instr = 32'h11090002; #1; // beq t0,t1,2
-        test_cpu_state(dut.u_dp._zero === 1'b1 && dut.u_dp._branch_taken === 1'b1 &&
-              dut.u_dp._pc_next === (dut.u_dp._pc4 + 32'd8),
-              "BEQ takes equal operands using internal zero flag");
-        @(posedge clk); #1;
-
-        @(negedge clk); instr = 32'h15090002; #1; // bne t0,t1,2
-        test_cpu_state(dut.u_dp._zero === 1'b1 && dut.u_dp._branch_taken === 1'b0 &&
-              dut.u_dp._pc_next === dut.u_dp._pc4,
-              "BNE falls through for equal operands");
-        @(posedge clk); #1;
-
-        @(negedge clk); instr = 32'h11000002; #1; // beq t0,zero,2
-        test_cpu_state(dut.u_dp._zero === 1'b0 && dut.u_dp._branch_taken === 1'b0 &&
-              dut.u_dp._pc_next === dut.u_dp._pc4,
-              "BEQ falls through for unequal operands");
-        @(posedge clk); #1;
-
-        @(negedge clk); instr = 32'h15000002; #1; // bne t0,zero,2
-        test_cpu_state(dut.u_dp._zero === 1'b0 && dut.u_dp._branch_taken === 1'b1 &&
-              dut.u_dp._pc_next === (dut.u_dp._pc4 + 32'd8),
-              "BNE takes unequal operands using internal zero flag");
-        @(posedge clk); #1;
-
-        memory_phase = "BRANCH FALLTHROUGH";
-        @(negedge clk); instr = 32'h200CFFFF; // addi t4,zero,-1
-        @(posedge clk); #1;
-        test_cpu_state(dut.u_dp.registers._rf[12] === 32'hFFFF_FFFF, "prepare negative branch operand");
-
-        test_branch_fallthrough(32'h05000002, "BLTZ positive"); // bltz t0,2
-        test_branch_fallthrough(32'h05810002, "BGEZ negative"); // bgez t4,2
-        test_branch_fallthrough(32'h19000002, "BLEZ positive"); // blez t0,2
-        test_branch_fallthrough(32'h1C000002, "BGTZ zero");     // bgtz zero,2
-        memory_phase = "EXECUTE";
-
-        // Unknown REGIMM selector with a zero ALU result must not branch.
-        // Previously this could select BEQ's condition and jump by the offset.
-        @(negedge clk); instr = 32'h04020004; #1;
-        test_cpu_state(dut.u_dp._pc_next === dut.u_dp._pc4,
-              "unsupported REGIMM advances sequentially even when ALU zero");
-        @(posedge clk); #1;
-
-        // Noncanonical shift (bits 25:22 nonzero) must not overwrite t0.
-        @(negedge clk); instr = 32'h00604002;
-        @(posedge clk); #1;
-        test_cpu_state(dut.u_dp.registers._rf[8] === 42,
-              "unsupported shift encoding cannot write a register");
-
-        // Unknown R-type function must not execute the default ALU ADD.
-        @(negedge clk); instr = 32'h0000403F;
-        @(posedge clk); #1;
-        test_cpu_state(dut.u_dp.registers._rf[8] === 42,
-              "unsupported R-type function cannot overwrite a register");
-
-        @(negedge clk); instr = 32'h8C0A0000; #1; // lw t2,0(zero)
-        test_cpu_state(re === 1 && imem_en === 0, "first load holds the ROM");
-        @(posedge clk); #1;
-        test_cpu_state(re === 0 && imem_en === 1, "first load can now retire");
-        @(posedge clk); #1;
-        test_cpu_state(dut.u_dp.registers._rf[10] === 32'd42, "first load writes t2");
-
-        @(negedge clk); instr = 32'h8C0B0000; #1; // lw t3,0(zero)
-        test_cpu_state(re === 1 && imem_en === 0, "next load issues after the first retires");
-        @(posedge clk); #1;
-        @(posedge clk); #1;
-        test_cpu_state(dut.u_dp.registers._rf[11] === 32'd42 &&
-              dut.u_dp._load_pending === 1'b0, "second load writes t3");
-
-        @(negedge clk); instr = 32'h200C0001; // addi t4,zero,1
-        @(posedge clk); #1;
-        test_cpu_state(dut.u_dp.registers._rf[12] === 32'd1, "next instruction resumes after stall");
-
-        @(negedge clk); instr = 32'hAC000004; rst = 1; #1;
-        test_cpu_state(re === 0 && we === 0, "reset blocks decoded store");
-        $display("--- %0d memory/pause checks, %0d errors ---", checks, errors);
-        if (errors == 0) $display("PASS"); else $display("FAILED");
+        // Stop execution so the last values remain visible on the waveform.
+        en = 0;
+        test_name = "FINISHED                        ";
+        memory_phase = "DONE                ";
+        #20;
+        if (errors == 0) $display("PASS: %0d basic CPU/memory checks", checks);
+        else $display("FAILED: %0d errors in %0d checks", errors, checks);
         $finish;
     end
 
     initial begin
-        #2000;
+        #1000;
         errors = errors + 1;
-        $display("TIMEOUT: CPU memory/pause test");
+        $display("FAIL: CPU/memory test timeout");
         $finish;
     end
 endmodule

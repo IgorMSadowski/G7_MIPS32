@@ -76,7 +76,6 @@ if {[llength $component_set] == 0} {
 set component_dir [file join $regression_dir G7_MIPS32.srcs sim_1 new]
 foreach tb_name {
     tb_memories.v
-    tb_primitives.v
 } {
     set tb_path [file join $component_dir $tb_name]
     if {![file exists $tb_path]} {
@@ -88,7 +87,7 @@ foreach tb_name {
 }
 
 # tb_soc is a waveform demonstration without an errors counter.
-# Run it manually; the seven automatic benches below report actual checks.
+# Run it manually; the six automatic benches below report actual checks.
 
 set regression_results {}
 set regression_failed 0
@@ -97,7 +96,6 @@ foreach {simset tb} {
     regfile      tb_regfile
     control_unit tb_control_unit
     bdu          tb_bdu
-    component_tests tb_primitives
     component_tests tb_memories
     cpu_memory   tb_cpu_memory
 } {

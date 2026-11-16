@@ -13,7 +13,7 @@ module soc #(
 )(
     input  wire        i_clk,       // 125 MHz board clock on K17
     input  wire        i_rst,       // Reset button on the Zybo (Btn_0)
-    output wire [0:0]  o_led        // LD0 shows the last CPU write to RAM word zero
+    output wire [0:0]  o_led        // LD0 reset indicator
     );
 
     wire clk_50mhz;
@@ -26,8 +26,24 @@ module soc #(
         .locked(clock_locked)
     );
 
-    // Direct reset while the button is pressed or the clock is not locked.
-    wire soc_reset = i_rst | ~clock_locked;
+    // Request reset while the button is pressed or the clock is not ready.
+    wire reset_request = i_rst | ~clock_locked;
+
+    // Two flip-flops synchronize reset release to the internal clock.
+    (* ASYNC_REG = "TRUE" *) reg reset_stage1;
+    (* ASYNC_REG = "TRUE" *) reg reset_stage2;
+
+    always @(posedge clk_50mhz or posedge reset_request) begin
+        if (reset_request) begin
+            reset_stage1 <= 1'b1;
+            reset_stage2 <= 1'b1;
+        end else begin
+            reset_stage1 <= 1'b0;
+            reset_stage2 <= reset_stage1;
+        end
+    end
+
+    wire soc_reset = reset_stage2;
 
     // CPU memory bus wires
     wire        _imem_en;       // CPU-controlled ROM advance
@@ -77,20 +93,7 @@ module soc #(
         .o_mem_write(_mem_write)
     );
 
-    // Diagnostic output: observe a normal RAM write without changing the RAM.
-    // RAM byte address 0 is still ordinary memory, not an MMIO register.
-    // A nonzero word lights LD0; writing zero turns it off.
-    // All 32 data bits contribute to the visible result.
-    localparam [31:0] LED_RAM_ADDRESS = 32'h0000_0000;
-    reg led_value;
-
-    always @(posedge clk_50mhz or posedge soc_reset) begin
-        if (soc_reset)
-            led_value <= 1'b0;
-        else if (_mem_write && (_alu_out == LED_RAM_ADDRESS))
-            led_value <= | _wdata;
-    end
-
-    assign o_led[0] = led_value;
+    // LD0 indicates the physical reset input.
+    assign o_led[0] = i_rst;
 
 endmodule

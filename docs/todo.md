@@ -6,7 +6,7 @@ peripherals. Keep nesting and additional exception mechanisms for later.
 Current baseline:
 
 - [x] ROM and RAM sized to 1 KiB each; C assembler limited to 256 words.
-- [x] Behavioral regression passed 8/8 benches for the 1 KiB revision.
+- [x] Historical 1 KiB baseline passed 8/8 benches; rerun the current six-test regression after subsequent changes.
 - [x] Memory plan documented: 960 bytes of data and 64 bytes of stack in RAM.
   IRQ/MMIO layout and stack initialization remain planned, not implemented.
 
@@ -20,8 +20,8 @@ Current baseline:
 - [ ] Verify the RAM-only SoC. `SW` writes once. `LW` holds PC and the ROM word
   until write-back. Dependent instructions and consecutive loads resume.
   Check reset, pause/resume and the current address-aliasing behavior.
-- [ ] Review tb_alu, tb_bdu, tb_control_unit, tb_regfile, tb_primitives,
-  tb_memories, tb_cpu_memory and tb_soc. Record expected outcomes,
+- [ ] Review tb_alu, tb_bdu, tb_control_unit, tb_regfile,
+  tb_memories, tb_cpu_memory and the waveform demonstration tb_soc. Record expected outcomes,
   waveforms, uncovered cases and the Vivado regression result.
 - [ ] Keep behavioral pass, coverage review, routed timing and board
   validation as separate evidence.

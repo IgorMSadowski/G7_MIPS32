@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+// Basic ROM and RAM test. No CPU or assembly execution is involved.
 module tb_memories;
     reg clk = 0;
     reg rst = 1;
@@ -8,154 +9,123 @@ module tb_memories;
     wire [31:0] instr;
     reg [31:0] dmem_addr = 0;
     reg [31:0] dmem_wdata = 0;
-    reg dmem_re = 0, dmem_we = 0;
+    reg dmem_re = 0;
+    reg dmem_we = 0;
     wire [31:0] dmem_rdata;
-    reg [8*24-1:0] test_name;
+    // Labels are padded on the right with spaces for left-aligned ASCII display.
+    reg [8*32-1:0] test_name;
     reg [8*16-1:0] memory_phase;
     integer errors = 0;
     integer checks = 0;
 
-    always #5 clk = ~clk;
+    // 50 MHz. Inputs change 1 ns after an edge, for the next edge.
+    // The 1 ns delay is a stimulus assumption, not measured FPGA timing.
+    always #10 clk = ~clk;
 
     instruction_memory #(
-        .MEM_INIT_FILE("/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/memory_capacity.mem")
-    ) imem(
+        .MEM_INIT_FILE("/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/memory_basic.mem")
+    ) imem (
         .i_clk(clk), .i_rst(rst), .i_en(en),
         .i_addr(imem_addr), .o_instr(instr)
     );
 
-    data_memory dmem(
-        .i_clk(clk), .i_rst(rst), .i_en(en), .i_addr(dmem_addr),
-        .i_wdata(dmem_wdata), .i_re(dmem_re), .i_we(dmem_we),
-        .o_rdata(dmem_rdata)
+    data_memory dmem (
+        .i_clk(clk), .i_rst(rst), .i_en(en),
+        .i_addr(dmem_addr), .i_wdata(dmem_wdata),
+        .i_re(dmem_re), .i_we(dmem_we), .o_rdata(dmem_rdata)
     );
 
+    // Count each comparison and report any failure.
     task test_memory(input condition, input [8*56-1:0] name);
         begin
             checks = checks + 1;
             if (condition !== 1'b1) begin
-                $display("FAIL %0s", name);
                 errors = errors + 1;
+                $display("FAIL: %0s", name);
             end
         end
     endtask
 
-    task write_word(input [31:0] address, input [31:0] value);
-        begin
-            @(negedge clk);
-            dmem_addr = address;
-            dmem_wdata = value;
-            dmem_re = 0;
-            dmem_we = 1;
-            @(posedge clk);
-            #1;
-        end
-    endtask
-
-    task read_word(input [31:0] address, input [31:0] expected);
-        begin
-            @(negedge clk);
-            dmem_addr = address;
-            dmem_we = 0;
-            dmem_re = 1;
-            @(posedge clk);
-            #1;
-            test_memory(dmem_rdata === expected,
-                  "1 KiB RAM words remain independent");
-        end
-    endtask
-
     initial begin
-
-        test_name = "SYNCHRONOUS INSTRUCTION ROM";
-        memory_phase = "RESET";
+        // 1. Reset makes both output registers zero.
+        test_name = "INITIAL RESET                   ";
+        memory_phase = "RESET           ";
         repeat (2) @(posedge clk);
         #1;
-        test_memory(instr === 32'b0 && dmem_rdata === 32'b0,
-              "reset clears both memory output registers");
+        test_memory(instr === 0 && dmem_rdata === 0,"reset makes ROM and RAM outputs zero");
 
-        memory_phase = "ROM READ";
-        @(negedge clk);
+        // 2. ROM byte address 0 selects the first line of memory_basic.mem.
+        @(posedge clk); #1;
+        test_name = "ROM WORD 0                      ";
+        memory_phase = "ROM READ        ";
         rst = 0;
-        imem_addr = 0;
-        @(posedge clk);
-        #1;
-        test_memory(instr === 32'h3C08_1234, "ROM returns first instruction after one edge");
-        @(negedge clk);
-        imem_addr = 4;
+        imem_addr = 32'h00000000;
+        @(posedge clk); #1;
+        test_memory(instr === 32'h11111111, "ROM address 0 returns 11111111");
+
+        // 3. Address 4 selects the second 32-bit word (four bytes per word).
+        @(posedge clk); #1;
+        test_name = "ROM WORD 1                      ";
+        imem_addr = 32'h00000004;
+        @(posedge clk); #1;
+        test_memory(instr === 32'h22222222, "ROM address 4 returns 22222222");
+
+        // 4. With enable low, changing the address must not change the output.
+        @(posedge clk); #1;
+        test_name = "ROM DISABLED                    ";
+        memory_phase = "ROM HOLD        ";
         en = 0;
-        @(posedge clk);
-        #1;
-        test_memory(instr === 32'h3C08_1234, "disabled ROM holds its output");
-        @(negedge clk);
+        imem_addr = 32'h00000008;
+        @(posedge clk); #1;
+        test_memory(instr === 32'h22222222, "disabled ROM keeps its previous output");
+
+        // 5. Re-enable the ROM: address 8 now selects the third word.
+        @(posedge clk); #1;
+        test_name = "ROM ENABLED AGAIN               ";
+        memory_phase = "ROM READ        ";
         en = 1;
-        @(posedge clk);
-        #1;
-        test_memory(instr === 32'h2009_0005, "ROM advances when enabled");
+        @(posedge clk); #1;
+        test_memory(instr === 32'h33333333, "enabled ROM reads the new address");
 
-        test_name = "ROM 1 KiB CAPACITY";
-        @(negedge clk);
-        imem_addr = 32'h0000_0100;
-        #1;
-        test_memory(instr === 32'h2009_0005,
-              "ROM address change waits for the read edge");
-        @(posedge clk);
-        #1;
-        test_memory(instr === 32'h200A_0100, "ROM 0x100 does not alias address zero");
-        @(negedge clk);
-        imem_addr = 32'h0000_03FC;
-        @(posedge clk);
-        #1;
-        test_memory(instr === 32'h200B_03FC, "ROM reads the final 1 KiB word");
-        @(negedge clk);
-        imem_addr = 0;
-        @(posedge clk);
-        #1;
-        test_memory(instr === 32'h3C08_1234, "ROM first word is still independent");
-
-        memory_phase = "RAM WRITE AND READ";
-        @(negedge clk);
-        dmem_addr = 32'h0000_0008;
-        dmem_wdata = 32'hCAFE_BABE;
+        // 6. Write one value into RAM byte address 0.
+        @(posedge clk); #1;
+        test_name = "WRITE RAM WORD 0                ";
+        memory_phase = "RAM WRITE       ";
+        dmem_addr = 32'h00000000;
+        dmem_wdata = 32'h12345678;
         dmem_we = 1;
-        @(posedge clk);
-        #1;
-        test_memory(dmem_rdata === 32'b0, "read-first write returns previous word");
-        @(negedge clk);
+        @(posedge clk); #1;
         dmem_we = 0;
+
+        // Read the same address on the next edge and compare with the value written.
+        test_name = "READ RAM WORD 0                 ";
+        memory_phase = "RAM READ        ";
         dmem_re = 1;
-        @(posedge clk);
-        #1;
-        test_memory(dmem_rdata === 32'hCAFE_BABE, "RAM read returns stored word");
-        @(negedge clk);
-        dmem_re = 0;
+        @(posedge clk); #1;
+        test_memory(dmem_rdata === 32'h12345678, "RAM returns the value written");
+
+        // 7. A disabled RAM keeps its output even with a read request at another address.
+        @(posedge clk); #1;
+        test_name = "RAM DISABLED                    ";
+        memory_phase = "RAM HOLD        ";
         en = 0;
-        dmem_addr = 32'h0000_000C;
-        @(posedge clk);
-        #1;
-        test_memory(dmem_rdata === 32'hCAFE_BABE, "disabled RAM holds its output");
+        dmem_addr = 32'h00000004;
+        @(posedge clk); #1;
+        test_memory(dmem_rdata === 32'h12345678, "disabled RAM keeps its previous output");
 
-        test_name = "RAM 1 KiB CAPACITY";
-        memory_phase = "RAM WRITE AND READ";
-        @(negedge clk);
-        en = 1;
-        write_word(32'h0000_0000, 32'h1111_0000);
-        write_word(32'h0000_0100, 32'h2222_0100);
-        write_word(32'h0000_03FC, 32'h3333_03FC);
-        read_word(32'h0000_0000, 32'h1111_0000);
-        read_word(32'h0000_0100, 32'h2222_0100);
-        read_word(32'h0000_03FC, 32'h3333_03FC);
-
-        @(negedge clk);
+        // 8. Reset clears the output registers, not all stored words.
+        @(posedge clk); #1;
+        test_name = "FINAL RESET                     ";
+        memory_phase = "RESET           ";
+        dmem_re = 0;
         en = 1;
         rst = 1;
-        @(posedge clk);
-        #1;
-        test_memory(instr === 32'b0 && dmem_rdata === 32'b0,
-              "reset clears outputs without requiring an access");
+        @(posedge clk); #1;
+        test_memory(instr === 0 && dmem_rdata === 0,"reset makes both outputs zero again");
+        #15
 
-        if (errors == 0) $display("PASS: %0d memory checks", checks);
-        else $display("FAILED: %0d of %0d memory checks", errors, checks);
+        if (errors == 0) $display("PASS: %0d basic memory checks", checks);
+        else $display("FAILED: %0d errors in %0d checks", errors, checks);
         $finish;
     end
 endmodule

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_memories_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_memories" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="340.000 ns"></ZoomEndTime>
+      <Cursor1Time time="10.315 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="147"></NameColumnWidth>
+      <ValueColumnWidth column_width="188"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="18" />
+   <wvobject fp_name="divider_memories_1" type="divider">
+      <obj_property name="label">TEST STATUS</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#D2691E</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_memories/test_name">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">test_name[255:0]</obj_property>
+      <obj_property name="ObjectShortName">test_name[255:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+      <obj_property name="label">Test Name</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_memories/memory_phase">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">memory_phase[127:0]</obj_property>
+      <obj_property name="ObjectShortName">memory_phase[127:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+      <obj_property name="label">Mem Phase</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_memories/checks">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">checks[31:0]</obj_property>
+      <obj_property name="ObjectShortName">checks[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="label">Checks</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_memories/errors">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">errors[31:0]</obj_property>
+      <obj_property name="ObjectShortName">errors[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="label">Errors</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider_memories_2" type="divider">
+      <obj_property name="label">CLOCK AND CONTROL</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_memories/clk">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">Clock</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_memories/rst">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">Reset</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_memories/en">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">en</obj_property>
+      <obj_property name="ObjectShortName">en</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">Enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider_memories_3" type="divider">
+      <obj_property name="label">INSTRUCTION ROM</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_memories/imem_addr">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">imem_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">imem_addr[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">Adress</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_memories/instr">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">instr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instr[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">Instruction</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider_memories_4" type="divider">
+      <obj_property name="label">DATA RAM</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_memories/dmem_addr">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">dmem_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dmem_addr[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">Adress</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_memories/dmem_we">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">dmem_we</obj_property>
+      <obj_property name="ObjectShortName">dmem_we</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">Write Enable</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_memories/dmem_re">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">dmem_re</obj_property>
+      <obj_property name="ObjectShortName">dmem_re</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">Read Enable</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_memories/dmem_wdata">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">dmem_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dmem_wdata[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">WriteData</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_memories/dmem_rdata">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">dmem_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dmem_rdata[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">ReadData</obj_property>
+   </wvobject>
+</wave_config>

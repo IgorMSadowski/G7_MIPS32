@@ -102,12 +102,7 @@ module datapath(
     // Register write address
     // i_reg_dst 0 = write rt, 1 = write rd
     // WHERE to write
-    mux2_5bit reg_dst_mux(      
-        .i_a(i_instr[20:16]),   // I-Type rt field
-        .i_b(i_instr[15:11]),   // R-Type rd field
-        .i_sel(i_reg_dst),
-        .o_y(_wa)
-    );
+    assign _wa = i_reg_dst ? i_instr[15:11] : i_instr[20:16];
 
     // Write Address: If its a JAL the link forces the write address to be the reg 31 all '1's 
     assign _wa_final = (i_link && !i_jump_reg) ? 5'd31 : _wa;
@@ -142,12 +137,7 @@ module datapath(
     // if i_alu_src = 1, ALU operand B = sign-extended immediate (from instruction)
     // sign
     // -------------------------------------------------------------------------
-    mux2_32bit alu_src_mux(
-        .i_a(_rd2_v),         
-        .i_b(_imm_ext),     
-        .i_sel(i_alu_src),
-        .o_y(_src_b)        // Source B to ALU (rt or immediate)
-    );
+    assign _src_b = i_alu_src ? _imm_ext : _rd2_v;
 
     // -------------------------------------------------------------------------
     // ALU
@@ -178,12 +168,7 @@ module datapath(
     // WHAT to write back to the register file: ALU result, memory read data
     // -------------------------------------------------------------------------
     wire [31:0] _alu_mem;
-    mux2_32bit mem_to_reg_mux(
-        .i_a(o_alu_out),        // ALU result
-        .i_b(i_rdata),          // memory read data
-        .i_sel(i_mem_to_reg),
-        .o_y(_alu_mem)
-    );
+    assign _alu_mem = i_mem_to_reg ? i_rdata : o_alu_out;
 
     assign _wb = i_link ? _ret_addr : _alu_mem;
 

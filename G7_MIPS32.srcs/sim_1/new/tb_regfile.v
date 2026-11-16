@@ -7,7 +7,7 @@ module tb_regfile;
     reg  [31:0] wdata;
     wire [31:0] rd1, rd2;
 
-    // Simulation-only labels: display these signals with ASCII radix.
+    // Simulation labels
     reg [8*32-1:0] test_name;
     reg [8*16-1:0] write_action;
     always @(*) begin
@@ -42,15 +42,19 @@ module tb_regfile;
 
     task write_reg(input [4:0] r, input [31:0] v);
         begin
-            wa=r; wdata=v; we=1;
-            @(posedge clk); #1;
+            wa=r; 
+            wdata=v; 
+            we=1;
+            @(posedge clk); 
+            #1;
             we=0;
         end
     endtask
 
     task test_register(input [4:0] r, input [31:0] expected, input [8*28-1:0] name);
         begin
-            ra1=r; #1;
+            ra1=r; 
+            #1;
             if (rd1 !== expected) begin
                 $display("FAIL %0s: r%0d = %h, expected %h", name, r, rd1, expected);
                 errors = errors + 1;

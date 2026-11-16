@@ -9,7 +9,7 @@
 # Adding/removing instructions changes addresses: check the assembler listing (-l).
 # The address loaded into $t8 is a literal and must match func_jalr.
 _start:          # ROM 0x00000000
-        # --- 1. Test Common ISA ---
+        #  1. Test Common ISA 
         lui     $t0, 0x1234             # ROM 0x00000000: $t0 = 0x12340000
         addi    $t1, $zero, 5           # ROM 0x00000004: $t1 = 5
         addi    $t2, $zero, -3          # ROM 0x00000008: $t2 = -3 (0xFFFFFFFD)
@@ -23,10 +23,10 @@ _start:          # ROM 0x00000000
         sll     $s1, $t1, 2             # ROM 0x00000024: $s1 = 5 << 2 = 20
         srl     $s2, $s1, 1             # ROM 0x00000028: $s2 = 20 >> 1 = 10
 
-        sw      $t3, 0($zero)           # ROM 0x0000002C: RAM[0x00000000] = 2; this normal store also lights LD0
+        sw      $t3, 0($zero)           # ROM 0x0000002C: RAM[0x00000000] = 2; LD0 is connected only to the physical reset input
         lw      $s3, 0($zero)           # ROM 0x00000030: $s3 = RAM[0x00000000] = 2
 
-        # --- 2. Test G7 ISA ---
+        #  2. Test G7 ISA 
         # wsbh: swap bytes in halfwords of $t0 (0x12340000 -> 0x34120000)
         wsbh    $s4, $t0                # ROM 0x00000034: $s4 = 0x34120000
 
@@ -54,7 +54,7 @@ bgtz_ok:         # ROM 0x00000064
 blez_ok:         # ROM 0x0000006C
         addi    $s6, $zero, 1           # ROM 0x0000006C: $s6 = 1; all branch guards were skipped
 
-        # --- 3. Test Jumps and JALR ---
+        #  3. Test Jumps and JALR 
         # Load a small address into $t8 to test jalr
         addi    $t8, $zero, 0x8C        # ROM 0x00000070: $t8 = 0x0000008C, the byte address of func_jalr
         jalr    $ra, $t8                # ROM 0x00000074: jump -> $t8 = func_jalr (0x0000008C); $ra = PC+4 = 0x00000078

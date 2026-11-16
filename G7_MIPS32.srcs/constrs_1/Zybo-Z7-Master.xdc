@@ -29,7 +29,7 @@ set_property -dict { PACKAGE_PIN K18   IOSTANDARD LVCMOS33 } [get_ports { i_rst 
 #set_property -dict { PACKAGE_PIN Y16   IOSTANDARD LVCMOS33 } [get_ports { i_btn[3] }]; #IO_L7P_T1_34 Sch=btn[3]
 
 
-## CPU diagnostic LED (observes normal RAM writes at byte address zero)
+## LD0 reset indicator (follows the physical i_rst input)
 set_property -dict { PACKAGE_PIN M14   IOSTANDARD LVCMOS33 } [get_ports { o_led[0] }]; #IO_L23P_T3_35 Sch=led[0]
 
 ##LEDs

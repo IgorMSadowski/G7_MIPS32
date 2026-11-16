@@ -7,7 +7,7 @@ source {/home/igor/Documents/Vivado_Projects/G7_MIPS32/run_regression.tcl}
 ## 1. Regressão comportamental
 
 Cola o comando acima na consola Tcl do Vivado com G7_MIPS32.xpr
-aberto e sem uma simulação ativa. A regressão corre 7 testbenches automáticos,
+aberto e sem uma simulação ativa. A regressão corre 6 testbenches automáticos,
 um de cada vez, e lê o contador errors de cada um no fim.
 O resultado esperado é `PASS: all testbenches passed.`
 
@@ -20,36 +20,33 @@ close_sim
 ## 2. Base de simulação atual
 
 O topo `soc` liga o CPU diretamente à ROM e à RAM. A ROM de arranque
-usa [Assembly/test.mem](../Assembly/test.mem). LD0 guarda a indicação de uma
-escrita normal da CPU na RAM no endereço de byte zero: dado diferente de zero
-acende, dado zero apaga. O reset apaga o LED. A RAM continua a receber a escrita;
-isto é uma saída de diagnóstico, sem um novo periférico ou mapa MMIO.
+usa [Assembly/test.mem](../Assembly/test.mem). LD0 acompanha diretamente o botão
+físico: `o_led[0] = i_rst`. Não indica resultados do programa.
+O pedido de reset é `reset_request = i_rst | ~clock_locked`. No `soc.v`, dois
+flip-flops (`reset_stage1` e `reset_stage2`) ativam o reset imediatamente e
+sincronizam a libertação com dois flancos de subida de `clk_50mhz`. A saída
+`reset_stage2` é `soc_reset`, usado pelo CPU e pelas duas memórias. Ambos os
+estágios têm o atributo `ASYNC_REG`. O Clock Wizard recebe diretamente `i_rst`.
+O clock externo é 125 MHz; o Clock Wizard gera os 50 MHz internos.
 
-## 2.1. Preparar o teste externo para timing
+## 2.1. Waveform e simulação com atrasos
 
-Guarda a waveform e fecha a simulação ativa. Com o projeto aberto, executa uma vez:
+Usa `soc / tb_soc` para estudar a execução na simulação comportamental.
+O teste gera clock de 8 ns, mantém reset durante 25 flancos de subida e termina
+após mais 600 flancos, a 4996 ns. Não tem contador de erros nem declara PASS.
+Guarda a waveform e fecha a simulação antes de iniciar outra.
 
-~~~tcl
-source {/home/igor/Documents/Vivado_Projects/G7_MIPS32/setup_soc_timing.tcl}
-~~~
+Para simular os atrasos calculados, com `soc` como topo de síntese:
 
-O script acrescenta e ativa `soc_timing / tb_soc_timing`, com uma waveform que só
-usa os sinais externos e o estado do teste. Guarda o projeto no Vivado.
+1. Executa Run Synthesis e Run Implementation para o RTL atual.
+2. Seleciona `soc / tb_soc` como conjunto/topo de simulação.
+3. Usa Run Simulation → Run Post-Implementation Timing Simulation → Run All.
 
-1. Run Simulation → Run Behavioral Simulation → Run All.
-2. Run Synthesis novamente, pois `soc.v` mudou; depois Run Implementation.
-3. Open Implemented Design → Report Timing Summary, para a análise estática.
-4. Fecha qualquer simulação ativa. Run Simulation → Run Post-Implementation
-   Timing Simulation → Run All, para simular os atrasos calculados.
-
-O resultado esperado é `PASS: CPU RAM write drives LED; reset and restart work`.
-O clock externo continua a ser 125 MHz; o Clock Wizard gera os 50 MHz internos.
-Este teste usa a mesma `Assembly/test.mem` da síntese, espera o reset inicial do
-FPGA e verifica LED apagado, resultado da CPU, reset e nova execução.
-É um teste de integração observável, não uma prova de todas as instruções.
-Usa `soc / tb_soc` para estudar a waveform sem tasks nem comparações.
-A antiga `tb_soc_regression` foi retirada. A demonstração `tb_soc` é observada
-manualmente e não faz parte dos sete testes automáticos.
+A `tb_soc` só liga as portas externas, mas os sinais internos da netlist podem
+ter nomes diferentes dos da waveform RTL. LD0 só segue reset. Antes de avaliar
+o timing do processador, confirma que a síntese preservou CPU e memórias:
+sem uma saída observável da execução, essa lógica pode ser eliminada.
+Não existe um teste automático dedicado de timing nesta base.
 
 ## 3. Relatório de timing estático
 
@@ -71,8 +68,8 @@ report_timing -delay_type max -max_paths 5
 Confirma um período de 8 ns na entrada e 20 ns na saída do Clocking
 Wizard. Na Timing Summary, WNS e WHS devem ser zero ou positivos.
 Para medir timing do CPU e das memórias, confirma no relatório hierárquico que
-a síntese os preserva. LD0 agora depende de uma escrita calculada pela CPU;
-antes, a ligação exclusiva ao reset permitia eliminar a lógica de execução.
+a síntese os preserva. Como LD0 só depende do reset, a síntese pode eliminar
+a lógica de execução; nesse caso, o WNS não caracteriza o CPU.
 
 Estes comandos mostram o estado dos runs do projeto.
 
@@ -99,4 +96,4 @@ A opção `0ns` deixa o simulador aberto no início. `run all` avança
 até ao `$finish`. Para abrir uma waveform de um novo teste, acrescenta
 os sinais na janela Objects e usa Restart antes de repetir o run.
 
-Os oito testes e os respetivos conjuntos de simulação estão no [guia de testbenches](testbenches.md).
+Os sete testbenches atuais (seis automáticos e uma demonstração visual) e os respetivos conjuntos de simulação estão no [guia de testbenches](testbenches.md).
