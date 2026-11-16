@@ -31,7 +31,7 @@ module tb_soc;
         end
     end
 
-    task check_reg;
+    task test_register;
         input [4:0] index;
         input [31:0] expected;
         input [8*32-1:0] name;
@@ -70,28 +70,28 @@ module tb_soc;
         #1;
         cpu_phase = "CHECK RESULTS";
 
-        check_reg(8,  32'h1234_0000, "lui");
-        check_reg(9,  32'h0000_0005, "addi positive");
-        check_reg(10, 32'hFFFF_FFFD, "addi negative");
-        check_reg(11, 32'h0000_0002, "add");
-        check_reg(12, 32'h0000_0008, "sub");
-        check_reg(13, 32'h0000_0005, "and");
-        check_reg(14, 32'hFFFF_FFFD, "or");
-        check_reg(15, 32'hFFFF_FFF8, "xor");
-        check_reg(16, 32'h0000_0001, "slt");
-        check_reg(17, 32'h0000_0014, "sll");
-        check_reg(18, 32'h0000_000A, "srl");
-        check_reg(19, 32'h0000_0002, "lw");
-        check_reg(20, 32'h3412_0000, "wsbh");
-        check_reg(21, 32'h0012_3400, "rotr");
-        check_reg(22, 32'h0000_0001, "conditional branches");
-        check_reg(26, 32'h0000_0000, "branch fall-through guard");
-        check_reg(23, 32'h0000_002A, "jalr return");
-        check_reg(4,  32'h0000_0007, "jalr function");
-        check_reg(5,  32'h0000_0008, "jal function");
-        check_reg(24, 32'h0000_008C, "jalr source");
-        check_reg(25, 32'h0000_004D, "jal return");
-        check_reg(31, 32'h0000_0080, "jal link address");
+        test_register(8,  32'h1234_0000, "lui");
+        test_register(9,  32'h0000_0005, "addi positive");
+        test_register(10, 32'hFFFF_FFFD, "addi negative");
+        test_register(11, 32'h0000_0002, "add");
+        test_register(12, 32'h0000_0008, "sub");
+        test_register(13, 32'h0000_0005, "and");
+        test_register(14, 32'hFFFF_FFFD, "or");
+        test_register(15, 32'hFFFF_FFF8, "xor");
+        test_register(16, 32'h0000_0001, "slt");
+        test_register(17, 32'h0000_0014, "sll");
+        test_register(18, 32'h0000_000A, "srl");
+        test_register(19, 32'h0000_0002, "lw");
+        test_register(20, 32'h3412_0000, "wsbh");
+        test_register(21, 32'h0012_3400, "rotr");
+        test_register(22, 32'h0000_0001, "conditional branches");
+        test_register(26, 32'h0000_0000, "branch fall-through guard");
+        test_register(23, 32'h0000_002A, "jalr return");
+        test_register(4,  32'h0000_0007, "jalr function");
+        test_register(5,  32'h0000_0008, "jal function");
+        test_register(24, 32'h0000_008C, "jalr source");
+        test_register(25, 32'h0000_004D, "jal return");
+        test_register(31, 32'h0000_0080, "jal link address");
 
         if (errors != 0) begin
             $display("FAILED: %0d register checks failed", errors);

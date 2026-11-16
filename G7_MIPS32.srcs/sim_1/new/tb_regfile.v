@@ -48,7 +48,7 @@ module tb_regfile;
         end
     endtask
 
-    task check(input [4:0] r, input [31:0] expected, input [8*28-1:0] name);
+    task test_register(input [4:0] r, input [31:0] expected, input [8*28-1:0] name);
         begin
             ra1=r; #1;
             if (rd1 !== expected) begin
@@ -66,24 +66,24 @@ module tb_regfile;
 
         // $zero reads 0 immediately
         test_name = "CHECK R0 AFTER RESET";
-        check(0, 32'd0, "r0 is zero after reset");
+        test_register(0, 32'd0, "r0 is zero after reset");
 
         // Write r5, read back
         test_name = "WRITE AND READ R5";
         write_reg(5, 32'h1234_5678);
-        check(5, 32'h1234_5678, "r5 write/read");
+        test_register(5, 32'h1234_5678, "r5 write/read");
 
         // Try to write r0 — must be ignored
         test_name = "CHECK R0 WRITE PROTECTION";
         write_reg(0, 32'hFFFF_FFFF);
-        check(0, 32'd0, "r0 write ignored ($zero protection)");
+        test_register(0, 32'd0, "r0 write ignored ($zero protection)");
 
         // Two consecutive writes — second wins
         test_name = "WRITE R7 FIRST VALUE";
         write_reg(7, 32'h1111_1111);
         test_name = "WRITE R7 SECOND VALUE";
         write_reg(7, 32'h2222_2222);
-        check(7, 32'h2222_2222, "consecutive writes");
+        test_register(7, 32'h2222_2222, "consecutive writes");
 
         // The two asynchronous read ports can read different registers together.
         test_name = "READ R5 AND R7 TOGETHER";
@@ -106,7 +106,7 @@ module tb_regfile;
         test_name = "CHECK WRITE DISABLED";
         wa=8; wdata=32'hAAAA_AAAA; we=0;
         @(posedge clk); #1;
-        check(8, 32'd0, "we=0 no write");
+        test_register(8, 32'd0, "we=0 no write");
 
         $display("--- %0d errors ---", errors);
         if (errors==0) $display("PASS"); else $display("FAILED");

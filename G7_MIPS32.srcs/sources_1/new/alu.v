@@ -18,7 +18,10 @@ module alu(
     input  wire [31:0] i_b,     // Operand B
     input  wire [3:0]  i_ctrl,  // Operation select
     output reg  [31:0] o_y,     // Result
-    output wire        o_zero   // 1 when result == 0
+    output wire        o_zero,   // 1 when result == 0
+    output wire        o_overflow, // 1 when overflow occurs (for add/sub)
+    output wire        o_negative, // Sign bit of the result
+    output wire        o_carry     // Unsigned carry, valid only for ADD
     );
     always @(*) begin
         case (i_ctrl)
@@ -36,5 +39,37 @@ module alu(
             default: o_y = 32'b0;
         endcase
     end
+    
+    wire is_add;
+    wire is_sub;
+    wire add_overflow;
+    wire sub_overflow;
+    wire [32:0] extended_sum;
+
+    assign is_add = (i_ctrl == 4'b0000);
+    assign is_sub = (i_ctrl == 4'b0001);
+
+    // ADD: same operand signs, different result sign.
+    assign add_overflow =
+        (i_a[31] == i_b[31]) &&
+        (o_y[31] != i_a[31]);
+
+    // SUB: different operand signs, result sign differs from A.
+    assign sub_overflow =
+        (i_a[31] != i_b[31]) &&
+        (o_y[31] != i_a[31]);
+
+    // Overflow is only meaningful for ADD and SUB.
+    assign o_overflow =
+        (is_add && add_overflow) ||
+        (is_sub && sub_overflow);
+
     assign o_zero = (o_y == 32'b0);
+    assign o_negative = o_y[31];
+
+    // Keep the extra bit of the unsigned sum; other operations report no carry.
+    assign extended_sum = {1'b0, i_a} + {1'b0, i_b};
+    assign o_carry = is_add && extended_sum[32];
+    
+
 endmodule

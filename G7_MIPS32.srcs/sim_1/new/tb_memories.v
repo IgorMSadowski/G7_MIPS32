@@ -30,7 +30,7 @@ module tb_memories;
         .o_rdata(dmem_rdata)
     );
 
-    task check(input condition, input [8*56-1:0] name);
+    task test_memory(input condition, input [8*56-1:0] name);
         begin
             checks = checks + 1;
             if (condition !== 1'b1) begin
@@ -60,7 +60,7 @@ module tb_memories;
             dmem_re = 1;
             @(posedge clk);
             #1;
-            check(dmem_rdata === expected,
+            test_memory(dmem_rdata === expected,
                   "1 KiB RAM words remain independent");
         end
     endtask
@@ -71,7 +71,7 @@ module tb_memories;
         memory_phase = "RESET";
         repeat (2) @(posedge clk);
         #1;
-        check(instr === 32'b0 && dmem_rdata === 32'b0,
+        test_memory(instr === 32'b0 && dmem_rdata === 32'b0,
               "reset clears both memory output registers");
 
         memory_phase = "ROM READ";
@@ -80,38 +80,38 @@ module tb_memories;
         imem_addr = 0;
         @(posedge clk);
         #1;
-        check(instr === 32'h3C08_1234, "ROM returns first instruction after one edge");
+        test_memory(instr === 32'h3C08_1234, "ROM returns first instruction after one edge");
         @(negedge clk);
         imem_addr = 4;
         en = 0;
         @(posedge clk);
         #1;
-        check(instr === 32'h3C08_1234, "disabled ROM holds its output");
+        test_memory(instr === 32'h3C08_1234, "disabled ROM holds its output");
         @(negedge clk);
         en = 1;
         @(posedge clk);
         #1;
-        check(instr === 32'h2009_0005, "ROM advances when enabled");
+        test_memory(instr === 32'h2009_0005, "ROM advances when enabled");
 
         test_name = "ROM 1 KiB CAPACITY";
         @(negedge clk);
         imem_addr = 32'h0000_0100;
         #1;
-        check(instr === 32'h2009_0005,
+        test_memory(instr === 32'h2009_0005,
               "ROM address change waits for the read edge");
         @(posedge clk);
         #1;
-        check(instr === 32'h200A_0100, "ROM 0x100 does not alias address zero");
+        test_memory(instr === 32'h200A_0100, "ROM 0x100 does not alias address zero");
         @(negedge clk);
         imem_addr = 32'h0000_03FC;
         @(posedge clk);
         #1;
-        check(instr === 32'h200B_03FC, "ROM reads the final 1 KiB word");
+        test_memory(instr === 32'h200B_03FC, "ROM reads the final 1 KiB word");
         @(negedge clk);
         imem_addr = 0;
         @(posedge clk);
         #1;
-        check(instr === 32'h3C08_1234, "ROM first word is still independent");
+        test_memory(instr === 32'h3C08_1234, "ROM first word is still independent");
 
         memory_phase = "RAM WRITE AND READ";
         @(negedge clk);
@@ -120,20 +120,20 @@ module tb_memories;
         dmem_we = 1;
         @(posedge clk);
         #1;
-        check(dmem_rdata === 32'b0, "read-first write returns previous word");
+        test_memory(dmem_rdata === 32'b0, "read-first write returns previous word");
         @(negedge clk);
         dmem_we = 0;
         dmem_re = 1;
         @(posedge clk);
         #1;
-        check(dmem_rdata === 32'hCAFE_BABE, "RAM read returns stored word");
+        test_memory(dmem_rdata === 32'hCAFE_BABE, "RAM read returns stored word");
         @(negedge clk);
         dmem_re = 0;
         en = 0;
         dmem_addr = 32'h0000_000C;
         @(posedge clk);
         #1;
-        check(dmem_rdata === 32'hCAFE_BABE, "disabled RAM holds its output");
+        test_memory(dmem_rdata === 32'hCAFE_BABE, "disabled RAM holds its output");
 
         test_name = "RAM 1 KiB CAPACITY";
         memory_phase = "RAM WRITE AND READ";
@@ -151,7 +151,7 @@ module tb_memories;
         rst = 1;
         @(posedge clk);
         #1;
-        check(instr === 32'b0 && dmem_rdata === 32'b0,
+        test_memory(instr === 32'b0 && dmem_rdata === 32'b0,
               "reset clears outputs without requiring an access");
 
         if (errors == 0) $display("PASS: %0d memory checks", checks);

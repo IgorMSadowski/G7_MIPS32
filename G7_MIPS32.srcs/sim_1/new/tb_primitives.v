@@ -18,7 +18,7 @@ module tb_primitives;
     sign_extend sign_ext(.i_imm(imm), .o_ext(sign_out));
     shift_left_two shift(.i_in(shift_in), .o_out(shift_out));
 
-    task check(input condition, input [8*56-1:0] name);
+    task test_result(input condition, input [8*56-1:0] name);
         begin
             checks = checks + 1;
             if (condition !== 1'b1) begin
@@ -40,18 +40,18 @@ module tb_primitives;
         imm = 16'h7FFF;
         shift_in = 32'h0000_0003;
         #1;
-        check(mux32_out === a32 && mux5_out === a5, "muxes select input A");
-        check(sign_out === 32'h0000_7FFF, "sign extension preserves positive value");
-        check(shift_out === 32'h0000_000C, "branch offset shifts left by two");
+        test_result(mux32_out === a32 && mux5_out === a5, "muxes select input A");
+        test_result(sign_out === 32'h0000_7FFF, "sign extension preserves positive value");
+        test_result(shift_out === 32'h0000_000C, "branch offset shifts left by two");
 
         primitive_phase = "MUX HIGH";
         sel = 1;
         imm = 16'h8001;
         shift_in = 32'h4000_0001;
         #1;
-        check(mux32_out === b32 && mux5_out === b5, "muxes select input B");
-        check(sign_out === 32'hFFFF_8001, "sign extension propagates sign bit");
-        check(shift_out === 32'h0000_0004, "left shift drops the upper two bits");
+        test_result(mux32_out === b32 && mux5_out === b5, "muxes select input B");
+        test_result(sign_out === 32'hFFFF_8001, "sign extension propagates sign bit");
+        test_result(shift_out === 32'h0000_0004, "left shift drops the upper two bits");
 
         if (errors == 0) $display("PASS: %0d primitive checks", checks);
         else $display("FAILED: %0d of %0d primitive checks", errors, checks);
