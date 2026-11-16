@@ -36,8 +36,8 @@ module tb_alu;
                 $display("FAIL %0s: negative = %b, expected %b", name, negative, expected[31]);
                 errors = errors + 1;
             end
-            if (ctrl != 4'b0000 && carry !== 1'b0) begin
-                $display("FAIL %0s: carry must be 0 outside ADD", name);
+            if (ctrl != 4'b0000 && ctrl != 4'b0001 && carry !== 1'b0) begin
+                $display("FAIL %0s: carry/borrow must be 0 outside ADD/SUB", name);
                 errors = errors + 1;
             end
         end
@@ -84,30 +84,23 @@ module tb_alu;
     end
 
     initial begin
-        // AND
-        a=32'hFF00FF00; b=32'h0FF00FF0; ctrl=4'b0010;
-        test_result(32'h0F000F00, "and mask");
+        // Run operations in ascending control-code order.
+        // test_flags arguments: zero, negative, carry, overflow.
 
-        // OR
-        a=32'hFF00FF00; b=32'h0FF00FF0; ctrl=4'b0011;
-        test_result(32'hFFF0_FFF0, "or merge");
-
-        // ADD (wraps on overflow, no trap)
+        // 0 - ADD
         a=32'd10; b=32'd20; ctrl=4'b0000;
         test_result(32'd30, "add 10+20");
         if (carry !== 1'b0) begin
             $display("FAIL: expected ADD carry = 0");
             errors = errors + 1;
         end
-        a=32'hFFFFFFFF; b=32'd1; ctrl=4'b0000;
+        a=32'hFFFFFFFF; b=32'd1;
         test_result(32'h0, "add overflow wraps to 0");
         if (carry !== 1'b1) begin
             $display("FAIL: expected ADD carry = 1");
             errors = errors + 1;
         end
-
-        // ADD: positive signed overflow.
-        a=32'h7FFFFFFF; b=32'h00000001; ctrl=4'b0000;
+        a=32'h7FFFFFFF; b=32'h00000001;
         test_result(32'h80000000, "add signed overflow");
         if (carry !== 1'b0) begin
             $display("FAIL: signed overflow must not imply carry");
@@ -117,30 +110,92 @@ module tb_alu;
             $display("FAIL: expected ADD overflow = 1");
             errors = errors + 1;
         end
+        a=32'h80000000; b=32'hFFFFFFFF;
+        test_result(32'h7FFFFFFF, "add negative overflow");
+        test_flags(0, 0, 1, 1);
+        a=32'hFFFFFFFF; b=32'h00000001;
+        test_result(32'h00000000, "add carry, no overflow");
+        test_flags(1, 0, 1, 0);
+        a=32'hFFFFFFFF; b=32'hFFFFFFFF;
+        test_result(32'hFFFFFFFE, "add negative result");
+        test_flags(0, 1, 1, 0);
+        a=32'h7FFFFFFF; b=32'h00000001;
+        test_result(32'h80000000, "ADD overflow flags");
+        test_flags(0, 1, 0, 1);
+        a=32'hFFFFFFFF; b=32'h00000001;
+        test_result(32'h00000000, "ADD carry flags");
+        test_flags(1, 0, 1, 0);
 
-        // SUB
+        // 1 - SUB
         a=32'd20; b=32'd10; ctrl=4'b0001;
         test_result(32'd10, "sub 20-10");
-        a=32'd10; b=32'd20; ctrl=4'b0001;
+        test_flags(0, 0, 0, 0); // No unsigned borrow: 20 >= 10.
+        a=32'd10; b=32'd20;
         test_result(32'hFFFFFFF6, "sub 10-20 = -10");
+        test_flags(0, 1, 1, 0); // Unsigned borrow: 10 < 20.
+        a=32'h80000000; b=32'h00000001;
+        test_result(32'h7FFFFFFF, "sub negative overflow");
+        test_flags(0, 0, 0, 1);
+        a=32'h80000000; b=32'hFFFFFFFF;
+        test_result(32'h80000001, "sub without overflow");
+        test_flags(0, 1, 1, 0); // Unsigned borrow, but no signed overflow.
+        a=32'd5; b=32'd5;
+        test_result(32'h00000000, "sub zero flags");
+        test_flags(1, 0, 0, 0);
+        // Additional zero-flag check kept with SUB.
+        a=32'd5; b=32'd5;
+        #1;
+        if (zero !== 1'b1) begin
+            $display("FAIL zero flag on 5-5"); errors=errors+1;
+        end
+        a=32'h00000000; b=32'h00000001;
+        test_result(32'hFFFFFFFF, "sub 0-1 borrow");
+        test_flags(0, 1, 1, 0);
+        a=32'hFFFFFFFF; b=32'h00000000;
+        test_result(32'hFFFFFFFF, "sub max-0 no borrow");
+        test_flags(0, 1, 0, 0);
+        a=32'h7FFFFFFF; b=32'hFFFFFFFF;
+        test_result(32'h80000000, "sub positive overflow");
+        test_flags(0, 1, 1, 1); // Both unsigned borrow and signed overflow.
 
-        // SLT signed
-        a=32'hFFFFFFFF; b=32'd1; ctrl=4'b1010;
-        test_result(32'd1, "slt -1 < 1 (true)");
-        a=32'd1; b=32'hFFFFFFFF; ctrl=4'b1010;
-        test_result(32'd0, "slt 1 < -1 (false)");
-        a=32'd5; b=32'd5; ctrl=4'b1010;
-        test_result(32'd0, "slt 5 < 5 (false)");
+        // 2 - AND. The preceding SUB asserted borrow/overflow; AND clears both.
+        a=32'h7FFFFFFF; b=32'h00000001; ctrl=4'b0010;
+        test_result(32'h00000001, "AND clears overflow");
+        test_flags(0, 0, 0, 0);
+        a=32'hFF00FF00; b=32'h0FF00FF0;
+        test_result(32'h0F000F00, "and mask");
+        a=32'd1; b=32'd1;
+        #1;
+        if (zero !== 1'b0) begin
+            $display("FAIL zero flag on 1&1 (result=1)"); errors=errors+1;
+        end
 
-        // XOR
+        // 3 - OR. Carry and overflow must both be zero for logical operations.
+        a=32'hFF00FF00; b=32'h0FF00FF0; ctrl=4'b0011;
+        test_result(32'hFFF0_FFF0, "or merge");
+        a=32'hFFFFFFFF; b=32'h00000001;
+        test_result(32'hFFFFFFFF, "OR carry is zero");
+        test_flags(0, 1, 0, 0);
+
+        // 4 - LUI
+        a=32'h00000000; b=32'h00001234; ctrl=4'b0100;
+        test_result(32'h12340000, "lui immediate");
+        b=32'hFFFF8001;
+        test_result(32'h80010000, "lui negative immediate");
+
+        // 5 - SLL (A is the shift amount)
+        a=32'd2; b=32'h0000_0005; ctrl=4'b0101;
+        test_result(32'h0000_0014, "sll 5 by 2");
+
+        // 6 - SRL
+        a=32'd1; b=32'h0000_0014; ctrl=4'b0110;
+        test_result(32'h0000_000A, "srl 20 by 1");
+
+        // 7 - XOR
         a=32'hA5A5_0F0F; b=32'hFFFF_00FF; ctrl=4'b0111;
         test_result(32'h5A5A_0FF0, "xor");
 
-        // Shifts and rotate (A is the shift amount)
-        a=32'd2; b=32'h0000_0005; ctrl=4'b0101;
-        test_result(32'h0000_0014, "sll 5 by 2");
-        a=32'd1; b=32'h0000_0014; ctrl=4'b0110;
-        test_result(32'h0000_000A, "srl 20 by 1");
+        // 8 - ROTR
         a=32'd8; b=32'h1234_5678; ctrl=4'b1000;
         test_result(32'h7812_3456, "rotr wraps low byte");
         a=32'd0;
@@ -148,80 +203,17 @@ module tb_alu;
         a=32'd31; b=32'h8000_0001;
         test_result(32'h0000_0003, "rotr by 31");
 
-        // WSBH
+        // 9 - WSBH
         a=0; b=32'h1234_5678; ctrl=4'b1001;
         test_result(32'h3412_7856, "wsbh");
 
-        // LUI
-        a = 32'h00000000; b=32'h00001234; ctrl=4'b0100;
-        test_result(32'h12340000, "lui immediate");
-        b=32'hFFFF8001;
-        test_result(32'h80010000, "lui negative immediate");
-
-        // test_flags arguments: zero, negative, carry, overflow.
-
-        // Two negative operands overflow towards a positive result.
-        a=32'h80000000; b=32'hFFFFFFFF; ctrl=4'b0000;
-        test_result(32'h7FFFFFFF, "add negative overflow");
-        test_flags(0, 0, 1, 1);
-
-        // Unsigned carry does not mean signed overflow: -1 + 1 = 0.
-        a=32'hFFFFFFFF; b=32'h00000001; ctrl=4'b0000;
-        test_result(32'h00000000, "add carry, no overflow");
-        test_flags(1, 0, 1, 0);
-
-        // Negative result and carry, without signed overflow: -1 + -1 = -2.
-        a=32'hFFFFFFFF; b=32'hFFFFFFFF; ctrl=4'b0000;
-        test_result(32'hFFFFFFFE, "add negative result");
-        test_flags(0, 1, 1, 0);
-
-        // Minimum signed value minus 1: signed overflow.
-        a=32'h80000000; b=32'h00000001; ctrl=4'b0001;
-        test_result(32'h7FFFFFFF, "sub negative overflow");
-        test_flags(0, 0, 0, 1);
-
-        // Maximum signed value minus -1: signed overflow.
-        a=32'h7FFFFFFF; b=32'hFFFFFFFF; ctrl=4'b0001;
-        test_result(32'h80000000, "sub positive overflow");
-        test_flags(0, 1, 0, 1);
-
-        // Minimum signed value minus -1: valid negative result.
-        a=32'h80000000; b=32'hFFFFFFFF; ctrl=4'b0001;
-        test_result(32'h80000001, "sub without overflow");
-        test_flags(0, 1, 0, 0);
-
-        // Equal operands: zero result, no carry or overflow.
-        a=32'd5; b=32'd5; ctrl=4'b0001;
-        test_result(32'h00000000, "sub zero flags");
-        test_flags(1, 0, 0, 0);
-
-        // First assert overflow, then verify that AND clears it.
-        a=32'h7FFFFFFF; b=32'h00000001; ctrl=4'b0000;
-        test_result(32'h80000000, "set overflow before AND");
-        test_flags(0, 1, 0, 1);
-        ctrl=4'b0010;
-        test_result(32'h00000001, "AND clears overflow");
-        test_flags(0, 0, 0, 0);
-
-        // First assert carry, then verify that OR clears it.
-        a=32'hFFFFFFFF; b=32'h00000001; ctrl=4'b0000;
-        test_result(32'h00000000, "set carry before OR");
-        test_flags(1, 0, 1, 0);
-        ctrl=4'b0011;
-        test_result(32'hFFFFFFFF, "OR clears carry");
-        test_flags(0, 1, 0, 0);
-
-        // Zero flag
-        a=32'd5; b=32'd5; ctrl=4'b0001;
-        #1;
-        if (zero !== 1'b1) begin
-            $display("FAIL zero flag on 5-5"); errors=errors+1;
-        end
-        a=32'd1; b=32'd1; ctrl=4'b0010;
-        #1;
-        if (zero !== 1'b0) begin
-            $display("FAIL zero flag on 1&1 (result=1)"); errors=errors+1;
-        end
+        // 10 - SLT (signed)
+        a=32'hFFFFFFFF; b=32'd1; ctrl=4'b1010;
+        test_result(32'd1, "slt -1 < 1 (true)");
+        a=32'd1; b=32'hFFFFFFFF;
+        test_result(32'd0, "slt 1 < -1 (false)");
+        a=32'd5; b=32'd5;
+        test_result(32'd0, "slt 5 < 5 (false)");
 
         $display("--- %0d tests, %0d errors ---", tests, errors);
         if (errors == 0) $display("PASS"); else $display("FAILED");

@@ -21,7 +21,7 @@ module alu(
     output wire        o_zero,   // 1 when result == 0
     output wire        o_overflow, // 1 when overflow occurs (for add/sub)
     output wire        o_negative, // Sign bit of the result
-    output wire        o_carry     // Unsigned carry, valid only for ADD
+    output wire        o_carry     // ADD carry-out / SUB borrow (1 when A < B unsigned)
     );
     always @(*) begin
         case (i_ctrl)
@@ -67,9 +67,11 @@ module alu(
     assign o_zero = (o_y == 32'b0);
     assign o_negative = o_y[31];
 
-    // Keep the extra bit of the unsigned sum; other operations report no carry.
+    // ADD reports the extra sum bit. SUB reports unsigned borrow.
+    // Other operations report zero. SUB does not consume a previous carry.
     assign extended_sum = {1'b0, i_a} + {1'b0, i_b};
-    assign o_carry = is_add && extended_sum[32];
+    assign o_carry = is_add ? extended_sum[32] :
+                     is_sub ? (i_a < i_b) : 1'b0;
     
 
 endmodule

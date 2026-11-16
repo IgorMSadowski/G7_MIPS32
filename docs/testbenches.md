@@ -16,9 +16,9 @@ estágios têm o atributo `ASYNC_REG`. O Clock Wizard recebe diretamente `i_rst`
 
 | Testbench | Simulation Set | O que verifica |
 | --- | --- | --- |
-| `tb_alu` | `alu` | Operações aritméticas e lógicas, shifts, rotação e sinais zero, negativo, carry de ADD e overflow de ADD/SUB. |
+| `tb_alu` | `alu` | Operações aritméticas e lógicas, shifts, rotação e sinais zero, negativo, carry em ADD, empréstimo em SUB e overflow de ADD/SUB. |
 | `tb_bdu` | `bdu` | Condições de branch, casos com sinal e códigos sem condição associada. |
-| `tb_control_unit` | `control_unit` | Descodificação de instruções suportadas e rejeição de encodings inválidos. |
+| `tb_control_unit` | `control_unit` | 26 casos: uma verificação de cada uma das 24 instruções suportadas, mais um opcode e uma função R-type não suportados. Sem varrimentos exaustivos. |
 | `tb_regfile` | `regfile` | Reset, leitura simultânea nas duas portas, escrita, proteção do registo zero e escritas consecutivas. |
 | `tb_memories` | `component_tests` | 8 verificações básicas: reset das saídas, leituras da ROM, pausa/retoma da ROM, escrita/leitura de uma palavra da RAM e manutenção da saída com enable desativado. |
 | `tb_cpu_memory` | `cpu_memory` | 8 verificações básicas: reset, ADDI, SW, espera de LW com PC/ROM parados, escrita do valor carregado e execução da instrução seguinte. |
@@ -123,3 +123,14 @@ e os sinais da RAM. Clock de 50 MHz, estímulos/observações após o flanco de
 subida. XSim: 8 verificações passaram, terminando a 171 ns.
 Esta versão básica não inclui os antigos testes de branches, encodings
 inválidos, loads consecutivos ou pausa global a meio de um load.
+
+## Teste simples da unidade de controlo
+
+`tb_control_unit` apresenta 26 instruções/casos, um de cada vez, durante 10 ns.
+Não existe clock: a unidade de controlo é combinacional. Depois de mudar os
+campos, a testbench espera 1 ns, verifica os controlos principais e espera mais
+9 ns para tornar cada exemplo legível na waveform. Estes atrasos não são
+uma medição do circuito físico. A testbench verifica a descodificação, não
+executa as instruções nem decide se um branch será tomado.
+A cobertura é representativa; foram removidos os ciclos que percorriam todos
+os seletores inválidos e todas as funções não implementadas.

@@ -12,64 +12,103 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="22.257 ns"></ZoomEndTime>
-      <Cursor1Time time="4.382 ns"></Cursor1Time>
+      <ZoomEndTime time="35.000 ns"></ZoomEndTime>
+      <Cursor1Time time="0.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="112"></NameColumnWidth>
-      <ValueColumnWidth column_width="121"></ValueColumnWidth>
+      <NameColumnWidth column_width="136"></NameColumnWidth>
+      <ValueColumnWidth column_width="105"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="11" />
+   <WVObjectSize size="14" />
    <wvobject fp_name="divider548" type="divider">
       <obj_property name="label">CNTRL</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#A52A2A</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_alu/ctrl">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">ctrl[3:0]</obj_property>
       <obj_property name="ObjectShortName">ctrl[3:0]</obj_property>
+      <obj_property name="label">CNTRL</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_alu/operation">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">operation[63:0]</obj_property>
       <obj_property name="ObjectShortName">operation[63:0]</obj_property>
       <obj_property name="Radix">ASCIIRADIX</obj_property>
+      <obj_property name="label">Operation</obj_property>
    </wvobject>
    <wvobject fp_name="divider549" type="divider">
       <obj_property name="label">Operators</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_alu/a">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">a[31:0]</obj_property>
       <obj_property name="ObjectShortName">a[31:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="label">A</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_alu/b">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">b[31:0]</obj_property>
       <obj_property name="ObjectShortName">b[31:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="label">B</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_alu/y">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">y[31:0]</obj_property>
       <obj_property name="ObjectShortName">y[31:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="label">Output</obj_property>
    </wvobject>
    <wvobject fp_name="divider550" type="divider">
       <obj_property name="label">Flags and Debug</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="BkColor">#00FF00</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_alu/zero">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">zero</obj_property>
       <obj_property name="ObjectShortName">zero</obj_property>
+      <obj_property name="label">Zero (Z)</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_alu/negative">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">negative</obj_property>
+      <obj_property name="ObjectShortName">negative</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">Negative (N)</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_alu/carry">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">carry</obj_property>
+      <obj_property name="ObjectShortName">carry</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">Carry / Borrow (C)</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_alu/overflow">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">overflow</obj_property>
+      <obj_property name="ObjectShortName">overflow</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">Overflow (V)</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_alu/tests">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">tests[31:0]</obj_property>
       <obj_property name="ObjectShortName">tests[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="label">Test</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_alu/errors">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">errors[31:0]</obj_property>
       <obj_property name="ObjectShortName">errors[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="label">Error</obj_property>
    </wvobject>
 </wave_config>

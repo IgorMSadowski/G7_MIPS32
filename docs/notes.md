@@ -97,3 +97,16 @@ até ao `$finish`. Para abrir uma waveform de um novo teste, acrescenta
 os sinais na janela Objects e usa Restart antes de repetir o run.
 
 Os sete testbenches atuais (seis automáticos e uma demonstração visual) e os respetivos conjuntos de simulação estão no [guia de testbenches](testbenches.md).
+
+## Indicadores da ALU: carry e borrow
+
+A saída `o_carry` tem dois significados conforme a operação:
+
+- ADD: carry-out, o bit extra da soma sem sinal.
+- SUB: borrow (empréstimo), igual a 1 quando `A < B` sem sinal.
+- Restantes operações: zero.
+
+`SUB` continua a calcular `A - B`; não subtrai um carry anterior como o `SUBB`
+do 8051. Não foi acrescentado um registo de flags nem uma exceção.
+Exemplos: `20 - 10` dá C=0; `10 - 20` dá C=1; `5 - 5` dá C=0.
+Overflow continua independente: em ADD/SUB indica resultado com sinal fora do intervalo.
