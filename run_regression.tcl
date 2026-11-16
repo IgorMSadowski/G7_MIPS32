@@ -87,6 +87,9 @@ foreach tb_name {
     }
 }
 
+# tb_soc is a waveform demonstration without an errors counter.
+# Run it manually; the seven automatic benches below report actual checks.
+
 set regression_results {}
 set regression_failed 0
 foreach {simset tb} {
@@ -97,7 +100,6 @@ foreach {simset tb} {
     component_tests tb_primitives
     component_tests tb_memories
     cpu_memory   tb_cpu_memory
-    soc          tb_soc
 } {
     if {[catch {run_one $tb $simset} message]} {
         incr regression_failed
