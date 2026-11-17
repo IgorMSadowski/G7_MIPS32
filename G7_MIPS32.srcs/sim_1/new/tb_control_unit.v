@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// Decoder test: each of the 24 supported instructions once, plus two unsupported cases.
+// 24 instructions and two unsupported encodings.
 // The control unit is combinational, so no clock is needed.
 module tb_control_unit;
     reg [5:0] op = 0, funct = 0;
@@ -11,7 +11,6 @@ module tb_control_unit;
     integer errors = 0;
     integer checks = 0;
 
-    // Right-padded text keeps the waveform labels left-aligned.
     reg [8*32-1:0] test_name;
     reg [8*8-1:0] alu_operation, writeback_source, branch_name;
 
@@ -25,7 +24,7 @@ module tb_control_unit;
         .o_alu_ctrl(alu_ctrl)
     );
 
-    // Display readable names for the actual decoder outputs.
+    // Waveform labels.
     always @(*) begin
         case (alu_ctrl)
             0: alu_operation = "ADD     ";
@@ -59,9 +58,6 @@ module tb_control_unit;
         else writeback_source = "ALU     ";
     end
 
-    // Call after #1 so the combinational outputs have updated.
-    // Another #9 keeps each instruction visible for a total of 10 ns.
-    // These waits organize the test; they are not measured FPGA delays.
     task test_controls(input condition);
         begin
             checks = checks + 1;
@@ -78,159 +74,140 @@ module tb_control_unit;
         test_name = "ADD                             ";
         op=6'h00; funct=6'h20;
         #1;
-        test_controls(reg_dst === 1 && reg_write === 1 &&
-                      alu_src === 0 && alu_ctrl === 0);
+        test_controls(reg_dst == 1 && reg_write == 1 && alu_src == 0 && alu_ctrl == 0);
 
         test_name = "SUB                             ";
         funct=6'h22;
         #1;
-        test_controls(reg_dst === 1 && reg_write === 1 && alu_ctrl === 1);
+        test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 1);
 
         test_name = "AND                             ";
         funct=6'h24;
         #1;
-        test_controls(reg_dst === 1 && reg_write === 1 && alu_ctrl === 2);
+        test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 2);
 
         test_name = "OR                              ";
         funct=6'h25;
         #1;
-        test_controls(reg_dst === 1 && reg_write === 1 && alu_ctrl === 3);
+        test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 3);
 
         test_name = "XOR                             ";
         funct=6'h26;
         #1;
-        test_controls(reg_dst === 1 && reg_write === 1 && alu_ctrl === 7);
+        test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 7);
 
         test_name = "SLT                             ";
         funct=6'h2A;
         #1;
-        test_controls(reg_dst === 1 && reg_write === 1 && alu_ctrl === 10);
+        test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 10);
 
         test_name = "SLL                             ";
         funct=6'h00; shamt=3;
         #1;
-        test_controls(reg_dst === 1 && reg_write === 1 && alu_ctrl === 5);
+        test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 5);
 
         // Immediate arithmetic: destination rt, immediate operand.
         test_name = "ADDI                            ";
         op=6'h08; funct=0; shamt=0;
         #1;
-        test_controls(reg_dst === 0 && reg_write === 1 &&
-                      alu_src === 1 && alu_ctrl === 0);
+        test_controls(reg_dst == 0 && reg_write == 1 && alu_src == 1 && alu_ctrl == 0);
 
         test_name = "LUI                             ";
         op=6'h0F;
         #1;
-        test_controls(reg_dst === 0 && reg_write === 1 &&
-                      alu_src === 1 && alu_ctrl === 4 && mem_to_reg === 0);
+        test_controls(reg_dst == 0 && reg_write == 1 && alu_src == 1 && alu_ctrl == 4 && mem_to_reg == 0);
 
         // Load writes RAM data to a register; store only writes memory.
         test_name = "LW                              ";
         op=6'h23;
         #1;
-        test_controls(mem_read === 1 && mem_write === 0 &&
-                      reg_write === 1 && mem_to_reg === 1 &&
-                      reg_dst === 0 && alu_src === 1 && alu_ctrl === 0);
+        test_controls(mem_read == 1 && mem_write == 0 && reg_write == 1 && mem_to_reg == 1 && reg_dst == 0 && alu_src == 1 && alu_ctrl == 0);
 
         test_name = "SW                              ";
         op=6'h2B;
         #1;
-        test_controls(mem_write === 1 && mem_read === 0 &&
-                      reg_write === 0 && alu_src === 1 && alu_ctrl === 0);
+        test_controls(mem_write == 1 && mem_read == 0 && reg_write == 0 && alu_src == 1 && alu_ctrl == 0);
 
         // BEQ requests comparison by subtraction. BDU decides taken/not taken.
         test_name = "BEQ                             ";
         op=6'h04;
         #1;
-        test_controls(branch === 1 && branch_cond === 0 &&
-                      alu_ctrl === 1 && alu_src === 0 && reg_write === 0 &&
-                      mem_write === 0 && mem_read === 0 && jump === 0);
+        test_controls(branch == 1 && branch_cond == 0 && alu_ctrl == 1 && alu_src == 0 && reg_write == 0 && mem_write == 0 && mem_read == 0 && jump == 0);
 
         test_name = "BNE                             ";
         op=6'h05;
         #1;
-        test_controls(branch === 1 && branch_cond === 1 &&
-                      alu_ctrl === 1 && reg_write === 0 && jump === 0);
+        test_controls(branch == 1 && branch_cond == 1 && alu_ctrl == 1 && reg_write == 0 && jump == 0);
 
         // REGIMM uses rt to distinguish BLTZ from BGEZ.
         test_name = "BLTZ                            ";
         op=6'h01; rt=0;
         #1;
-        test_controls(branch === 1 && branch_cond === 2 &&
-                      reg_write === 0 && jump === 0);
+        test_controls(branch == 1 && branch_cond == 2 && reg_write == 0 && jump == 0);
 
         test_name = "BGEZ                            ";
         rt=1;
         #1;
-        test_controls(branch === 1 && branch_cond === 3 &&
-                      reg_write === 0 && jump === 0);
+        test_controls(branch == 1 && branch_cond == 3 && reg_write == 0 && jump == 0);
 
         test_name = "BLEZ                            ";
         op=6'h06; rt=0;
         #1;
-        test_controls(branch === 1 && branch_cond === 4 &&
-                      alu_ctrl === 1 && reg_write === 0 && jump === 0);
+        test_controls(branch == 1 && branch_cond == 4 && alu_ctrl == 1 && reg_write == 0 && jump == 0);
 
         test_name = "BGTZ                            ";
         op=6'h07;
         #1;
-        test_controls(branch === 1 && branch_cond === 5 &&
-                      alu_ctrl === 1 && reg_write === 0 && jump === 0);
+        test_controls(branch == 1 && branch_cond == 5 && alu_ctrl == 1 && reg_write == 0 && jump == 0);
 
         // Jump, jump-and-link, and jump through a register.
         test_name = "J                               ";
         op=6'h02;
         #1;
-        test_controls(jump === 1 && jump_reg === 0 && link === 0 &&
-                      reg_write === 0 && branch === 0);
+        test_controls(jump == 1 && jump_reg == 0 && link == 0 && reg_write == 0 && branch == 0);
 
         test_name = "JAL                             ";
         op=6'h03;
         #1;
-        test_controls(jump === 1 && jump_reg === 0 && link === 1 &&
-                      reg_write === 1 && mem_to_reg === 0);
+        test_controls(jump == 1 && jump_reg == 0 && link == 1 && reg_write == 1 && mem_to_reg == 0);
 
         test_name = "JR                              ";
         op=6'h00; funct=6'h08;
         #1;
-        test_controls(jump === 1 && jump_reg === 1 && link === 0 && reg_write === 0);
+        test_controls(jump == 1 && jump_reg == 1 && link == 0 && reg_write == 0);
 
         test_name = "JALR                            ";
         funct=6'h09;
         #1;
-        test_controls(jump === 1 && jump_reg === 1 && link === 1 &&
-                      reg_write === 1 && reg_dst === 1);
+        test_controls(jump == 1 && jump_reg == 1 && link == 1 && reg_write == 1 && reg_dst == 1);
 
         // SRL and ROTR share funct=2; rs selects the operation.
         test_name = "SRL                             ";
         funct=6'h02; rs=0;
         #1;
-        test_controls(alu_ctrl === 6 && reg_write === 1 &&
-                      reg_dst === 1 && jump === 0 && jump_reg === 0);
+        test_controls(alu_ctrl == 6 && reg_write == 1 && reg_dst == 1 && jump == 0 && jump_reg == 0);
 
         test_name = "ROTR                            ";
         rs=1;
         #1;
-        test_controls(alu_ctrl === 8 && reg_write === 1);
+        test_controls(alu_ctrl == 8 && reg_write == 1);
 
         // One valid WSBH encoding: opcode=1F, funct=20, shamt=2, rs=0.
         test_name = "WSBH                            ";
         op=6'h1F; funct=6'h20; shamt=2; rs=0;
         #1;
-        test_controls(alu_ctrl === 9 && reg_dst === 1 && reg_write === 1);
+        test_controls(alu_ctrl == 9 && reg_dst == 1 && reg_write == 1);
 
         // One unsupported opcode: no writes, memory requests or control transfer.
         test_name = "UNSUPPORTED OPCODE              ";
         op=6'h3F; funct=0; shamt=0;
         #1;
-        test_controls(reg_write === 0 && mem_read === 0 && mem_write === 0 &&
-                      branch === 0 && jump === 0 && jump_reg === 0 && link === 0);
+        test_controls(reg_write == 0 && mem_read == 0 && mem_write == 0 && branch == 0 && jump == 0 && jump_reg == 0 && link == 0);
 
         test_name = "UNSUPPORTED R FUNCTION          ";
         op=6'h00; funct=6'h3F;
         #1;
-        test_controls(reg_write === 0 && mem_read === 0 && mem_write === 0 &&
-                      branch === 0 && jump === 0 && jump_reg === 0 && link === 0);
+        test_controls(reg_write == 0 && mem_read == 0 && mem_write == 0 && branch == 0 && jump == 0 && jump_reg == 0 && link == 0);
 
         if (errors == 0) $display("PASS: %0d basic control-unit checks", checks);
         else $display("FAILED: %0d errors in %0d checks", errors, checks);

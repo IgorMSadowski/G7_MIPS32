@@ -2,11 +2,11 @@
 
 module tb_bdu;
 
-    reg        branch;
-    reg [3:0]  cond;
+    reg branch;
+    reg [3:0] cond;
     reg [31:0] rs;
-    reg        zero;
-    wire       taken;
+    reg zero;
+    wire taken;
 
     bdu dut(
         .i_branch(branch), .i_branch_cond(cond),
@@ -16,7 +16,7 @@ module tb_bdu;
     integer errors = 0;
     integer checks = 0;
     integer code;
-    
+
     reg [8*8-1:0] condition_name;
     always @(*) begin
         if (!branch)
@@ -39,8 +39,7 @@ module tb_bdu;
             #1;
             checks = checks + 1;
             if (taken !== exp_taken) begin
-                $display("FAIL %0s: branch=%b cond=%h rs=%h zero=%b, got %b expected %b",
-                         name, branch, cond, rs, zero, taken, exp_taken);
+                $display("FAIL %0s: branch=%b cond=%h rs=%h zero=%b, got %b expected %b", name, branch, cond, rs, zero, taken, exp_taken);
                 errors = errors + 1;
             end
         end

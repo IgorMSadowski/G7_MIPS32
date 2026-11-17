@@ -2,12 +2,11 @@
 
 module tb_regfile;
 
-    reg         clk, rst, we;
-    reg  [4:0]  ra1, ra2, wa;
-    reg  [31:0] wdata;
+    reg clk, rst, we;
+    reg [4:0] ra1, ra2, wa;
+    reg [31:0] wdata;
     wire [31:0] rd1, rd2;
 
-    // Simulation labels
     reg [8*32-1:0] test_name;
     reg [8*16-1:0] write_action;
     always @(*) begin
@@ -42,10 +41,10 @@ module tb_regfile;
 
     task write_reg(input [4:0] r, input [31:0] v);
         begin
-            wa=r; 
-            wdata=v; 
+            wa=r;
+            wdata=v;
             we=1;
-            @(posedge clk); 
+            @(posedge clk);
             #1;
             we=0;
         end
@@ -53,7 +52,7 @@ module tb_regfile;
 
     task test_register(input [4:0] r, input [31:0] expected, input [8*28-1:0] name);
         begin
-            ra1=r; 
+            ra1=r;
             #1;
             if (rd1 !== expected) begin
                 $display("FAIL %0s: r%0d = %h, expected %h", name, r, rd1, expected);

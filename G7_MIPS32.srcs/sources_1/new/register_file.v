@@ -28,9 +28,9 @@ module register_file(
             for (_index = 0; _index < 32; _index = _index + 1)
                 _rf[_index] <= 32'b0;
         end 
-        else if (i_we && (i_wa != 5'b00000)) 
+        else if (i_we && (i_wa != 5'b00000)) // $zero (r0) is hardwired: writes ignored
             begin
-            _rf[i_wa] <= i_wdata;   // $zero (r0) is hardwired: writes ignored
+            _rf[i_wa] <= i_wdata;   
         end
     end
 

@@ -2,8 +2,8 @@
 
 module tb_soc;
 
-    reg        clk;
-    reg        rst;
+    reg clk;
+    reg rst;
     wire [0:0] led;
 
     // Board input: 125 MHz (8 ns period).
@@ -25,11 +25,12 @@ module tb_soc;
         rst = 1'b0;
 
         // Wait until the clock is ready and the internal reset is released.
-        wait (dut.soc_reset === 1'b0);
+        wait (dut.soc_reset == 1'b0);
 
         // Observe 50 CPU cycles after startup (50 MHz internal clock).
         repeat (50) @(posedge dut.clk_50mhz);
-        #1; // Let the final registered updates settle before finishing.
+    // Let the final registered updates settle before finishing.
+        #1;
 
         $finish;
     end

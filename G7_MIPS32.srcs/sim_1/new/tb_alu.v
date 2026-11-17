@@ -2,13 +2,13 @@
 
 module tb_alu;
 
-    reg  [31:0] a, b;
-    reg  [3:0]  ctrl;
+    reg [31:0] a, b;
+    reg [3:0] ctrl;
     wire [31:0] y;
-    wire        zero;
-    wire        overflow;
-    wire        negative;
-    wire        carry;
+    wire zero;
+    wire overflow;
+    wire negative;
+    wire carry;
 
     alu dut(
         .i_a(a), 
@@ -22,7 +22,7 @@ module tb_alu;
     );
 
     integer errors = 0;
-    integer tests  = 0;
+    integer tests = 0;
 
     task test_result(input [31:0] expected, input [8*24-1:0] name);
         begin
@@ -42,23 +42,11 @@ module tb_alu;
             end
         end
     endtask
-    
-    task test_flags(
-        input expected_zero,
-        input expected_negative,
-        input expected_carry,
-        input expected_overflow
-    );
+
+    task test_flags( input expected_zero, input expected_negative, input expected_carry, input expected_overflow );
         begin
-            // Call immediately after test_result(), which already waits #1.
-            if (zero !== expected_zero ||
-                negative !== expected_negative ||
-                carry !== expected_carry ||
-                overflow !== expected_overflow) begin
-                $display("FAIL flags: got Z=%b N=%b C=%b V=%b; expected Z=%b N=%b C=%b V=%b",
-                         zero, negative, carry, overflow,
-                         expected_zero, expected_negative,
-                         expected_carry, expected_overflow);
+            if (zero !== expected_zero || negative !== expected_negative || carry !== expected_carry || overflow !== expected_overflow) begin
+                $display("FAIL flags: got Z=%b N=%b C=%b V=%b; expected Z=%b N=%b C=%b V=%b", zero, negative, carry, overflow, expected_zero, expected_negative, expected_carry, expected_overflow);
                 errors = errors + 1;
             end
         end
@@ -84,8 +72,6 @@ module tb_alu;
     end
 
     initial begin
-        // Run operations in ascending control-code order.
-        // test_flags arguments: zero, negative, carry, overflow.
 
         // 0 - ADD
         a=32'd10; b=32'd20; ctrl=4'b0000;
@@ -129,20 +115,23 @@ module tb_alu;
         // 1 - SUB
         a=32'd20; b=32'd10; ctrl=4'b0001;
         test_result(32'd10, "sub 20-10");
-        test_flags(0, 0, 0, 0); // No unsigned borrow: 20 >= 10.
+    // No unsigned borrow: 20 >= 10.
+        test_flags(0, 0, 0, 0);
         a=32'd10; b=32'd20;
         test_result(32'hFFFFFFF6, "sub 10-20 = -10");
-        test_flags(0, 1, 1, 0); // Unsigned borrow: 10 < 20.
+    // Unsigned borrow: 10 < 20.
+        test_flags(0, 1, 1, 0);
         a=32'h80000000; b=32'h00000001;
         test_result(32'h7FFFFFFF, "sub negative overflow");
         test_flags(0, 0, 0, 1);
         a=32'h80000000; b=32'hFFFFFFFF;
         test_result(32'h80000001, "sub without overflow");
-        test_flags(0, 1, 1, 0); // Unsigned borrow, but no signed overflow.
+    // Unsigned borrow, but no signed overflow.
+        test_flags(0, 1, 1, 0);
         a=32'd5; b=32'd5;
         test_result(32'h00000000, "sub zero flags");
         test_flags(1, 0, 0, 0);
-        // Additional zero-flag check kept with SUB.
+        // Zero flag.
         a=32'd5; b=32'd5;
         #1;
         if (zero !== 1'b1) begin
@@ -156,9 +145,10 @@ module tb_alu;
         test_flags(0, 1, 0, 0);
         a=32'h7FFFFFFF; b=32'hFFFFFFFF;
         test_result(32'h80000000, "sub positive overflow");
-        test_flags(0, 1, 1, 1); // Both unsigned borrow and signed overflow.
+    // Both unsigned borrow and signed overflow.
+        test_flags(0, 1, 1, 1);
 
-        // 2 - AND. The preceding SUB asserted borrow/overflow; AND clears both.
+        // 2 - AND; clears carry and overflow.
         a=32'h7FFFFFFF; b=32'h00000001; ctrl=4'b0010;
         test_result(32'h00000001, "AND clears overflow");
         test_flags(0, 0, 0, 0);
@@ -170,7 +160,7 @@ module tb_alu;
             $display("FAIL zero flag on 1&1 (result=1)"); errors=errors+1;
         end
 
-        // 3 - OR. Carry and overflow must both be zero for logical operations.
+        // 3 - OR.
         a=32'hFF00FF00; b=32'h0FF00FF0; ctrl=4'b0011;
         test_result(32'hFFF0_FFF0, "or merge");
         a=32'hFFFFFFFF; b=32'h00000001;

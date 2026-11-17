@@ -15,7 +15,7 @@ module tb_cpu_memory;
     reg [8*20-1:0] memory_phase;
 
     // 50 MHz. Drive and inspect signals 1 ns after rising edges.
-    // This is a testbench scheduling delay, not measured FPGA timing.
+    // #1 separates stimulus from the clock edge.
     always #10 clk = ~clk;
 
     cpu dut (
@@ -31,7 +31,6 @@ module tb_cpu_memory;
         .i_re(re), .i_we(we), .o_rdata(rdata)
     );
 
-    // Readable waveform signals for the three registers used by this test.
     wire [31:0] t0_value = dut.u_dp.registers._rf[8];
     wire [31:0] t1_value = dut.u_dp.registers._rf[9];
     wire [31:0] t2_value = dut.u_dp.registers._rf[10];
@@ -50,9 +49,7 @@ module tb_cpu_memory;
         test_name = "RESET                           ";
         memory_phase = "RESET               ";
         repeat (2) @(posedge clk); #1;
-        test_cpu_state(dut.u_dp._pc_r === 0 && re === 0 && we === 0 &&
-                       t0_value === 0 && t1_value === 0 && t2_value === 0,
-                       "reset clears PC/registers and blocks memory requests");
+        test_cpu_state(dut.u_dp._pc_r == 0 && re == 0 && we == 0 && t0_value == 0 && t1_value == 0 && t2_value == 0, "reset clears PC/registers and blocks memory requests");
 
         // Allow the CPU's initial fetch-preparation cycle.
         rst = 0;
@@ -60,24 +57,21 @@ module tb_cpu_memory;
         test_name = "STARTUP                         ";
         memory_phase = "STARTUP             ";
         @(posedge clk); #1;
-        test_cpu_state(dut.u_dp._pc_r === 0 && dut.u_dp._rom_ready === 1,
-                       "startup prepares the CPU without advancing current PC");
+        test_cpu_state(dut.u_dp._pc_r == 0 && dut.u_dp._rom_ready == 1, "startup prepares the CPU without advancing current PC");
 
         // PC 0x00: addi $t0, $zero, 5 -> t0 = 5.
         instr = 32'h20080005;
         test_name = "ADDI t0, zero, 5                ";
         memory_phase = "PREPARE VALUE       ";
         @(posedge clk); #1;
-        test_cpu_state(t0_value === 5 && dut.u_dp._pc_r === 4,
-                       "ADDI prepares t0 = 5 and advances PC to 4");
+        test_cpu_state(t0_value == 5 && dut.u_dp._pc_r == 4, "ADDI prepares t0 = 5 and advances PC to 4");
 
         // PC 0x04: sw $t0, 0($zero) -> RAM[0] = 5.
         instr = 32'hAC080000;
         test_name = "SW t0, 0(zero)                  ";
         memory_phase = "STORE               ";
         #1;
-        test_cpu_state(we === 1 && re === 0 && addr === 0 && wdata === 5,
-                       "SW requests a write of 5 at RAM address zero");
+        test_cpu_state(we == 1 && re == 0 && addr == 0 && wdata == 5, "SW requests a write of 5 at RAM address zero");
         @(posedge clk); #1;
 
         // PC 0x08: lw $t1, 0($zero). Keep this instruction for BOTH edges.
@@ -85,32 +79,23 @@ module tb_cpu_memory;
         test_name = "LW t1, 0(zero)                  ";
         memory_phase = "LOAD WAIT           ";
         #1;
-        test_cpu_state(dut.u_dp._stall === 1 && dut._commit === 0 &&
-                       imem_en === 0 && re === 1 && we === 0 && addr === 0 &&
-                       dut.u_dp._pc_r === 8 && pc === 8,
-                       "LW stalls, holds PC/ROM and issues the RAM read");
+        test_cpu_state(dut.u_dp._stall == 1 && dut._commit == 0 && imem_en == 0 && re == 1 && we == 0 && addr == 0 && dut.u_dp._pc_r == 8 && pc == 8, "LW stalls, holds PC/ROM and issues the RAM read");
 
         // First edge: RAM returns data, but the CPU has not written t1 yet.
         @(posedge clk); #1;
         memory_phase = "LOAD WRITEBACK      ";
-        test_cpu_state(rdata === 5 && t1_value === 0 &&
-                       dut.u_dp._pc_r === 8 && dut.u_dp._load_pending === 1 &&
-                       re === 0 && dut._commit === 1 && imem_en === 1,
-                       "RAM data is ready while current PC and t1 still hold");
+        test_cpu_state(rdata == 5 && t1_value == 0 && dut.u_dp._pc_r == 8 && dut.u_dp._load_pending == 1 && re == 0 && dut._commit == 1 && imem_en == 1, "RAM data is ready while current PC and t1 still hold");
 
         // Second edge: the same LW writes t1 and advances current PC.
         @(posedge clk); #1;
-        test_cpu_state(t1_value === 5 && dut.u_dp._pc_r === 12 &&
-                       dut.u_dp._load_pending === 0,
-                       "LW writes t1 = 5 and advances PC to 12");
+        test_cpu_state(t1_value == 5 && dut.u_dp._pc_r == 12 && dut.u_dp._load_pending == 0, "LW writes t1 = 5 and advances PC to 12");
 
         // PC 0x0C: addi $t2, $t1, 1 -> t2 = 6, using the loaded value.
         instr = 32'h212A0001;
         test_name = "ADDI t2, t1, 1                  ";
         memory_phase = "RESUME              ";
         @(posedge clk); #1;
-        test_cpu_state(t2_value === 6 && dut.u_dp._pc_r === 16,
-                       "execution resumes and uses the loaded value: t2 = 6");
+        test_cpu_state(t2_value == 6 && dut.u_dp._pc_r == 16, "execution resumes and uses the loaded value: t2 = 6");
 
         // Stop execution so the last values remain visible on the waveform.
         en = 0;
