@@ -24,8 +24,12 @@ module tb_soc;
         repeat (25) @(posedge clk);
         rst = 1'b0;
 
-        // Allow Clock Wizard startup and execution of the ROM program.
-        repeat (600) @(posedge clk);
+        // Wait until the clock is ready and the internal reset is released.
+        wait (dut.soc_reset === 1'b0);
+
+        // Observe 50 CPU cycles after startup (50 MHz internal clock).
+        repeat (50) @(posedge dut.clk_50mhz);
+        #1; // Let the final registered updates settle before finishing.
 
         $finish;
     end

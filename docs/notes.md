@@ -7,7 +7,7 @@ source {/home/igor/Documents/Vivado_Projects/G7_MIPS32/run_regression.tcl}
 ## 1. Regressão comportamental
 
 Cola o comando acima na consola Tcl do Vivado com G7_MIPS32.xpr
-aberto e sem uma simulação ativa. A regressão corre 6 testbenches automáticos,
+aberto e sem uma simulação ativa. A regressão corre 7 testbenches automáticos,
 um de cada vez, e lê o contador errors de cada um no fim.
 O resultado esperado é `PASS: all testbenches passed.`
 
@@ -32,21 +32,18 @@ O clock externo é 125 MHz; o Clock Wizard gera os 50 MHz internos.
 ## 2.1. Waveform e simulação com atrasos
 
 Usa `soc / tb_soc` para estudar a execução na simulação comportamental.
-O teste gera clock de 8 ns, mantém reset durante 25 flancos de subida e termina
-após mais 600 flancos, a 4996 ns. Não tem contador de erros nem declara PASS.
+O teste gera clock de 8 ns e mantém reset durante 25 flancos de subida.
+Depois usa `wait (dut.soc_reset === 1'b0)` para esperar pelo clock pronto e
+pela libertação do reset interno. Observa mais 50 flancos de subida de
+`dut.clk_50mhz`, espera 1 ns e termina. Não tem contador de erros nem declara PASS.
 Guarda a waveform e fecha a simulação antes de iniciar outra.
 
-Para simular os atrasos calculados, com `soc` como topo de síntese:
-
-1. Executa Run Synthesis e Run Implementation para o RTL atual.
-2. Seleciona `soc / tb_soc` como conjunto/topo de simulação.
-3. Usa Run Simulation → Run Post-Implementation Timing Simulation → Run All.
-
-A `tb_soc` só liga as portas externas, mas os sinais internos da netlist podem
-ter nomes diferentes dos da waveform RTL. LD0 só segue reset. Antes de avaliar
-o timing do processador, confirma que a síntese preservou CPU e memórias:
-sem uma saída observável da execução, essa lógica pode ser eliminada.
-Não existe um teste automático dedicado de timing nesta base.
+Esta versão usa caminhos internos do RTL para a espera. Para uma simulação
+com atrasos, os estímulos têm de ser compatíveis com a netlist gerada; não
+assumas que `dut.soc_reset` ou `dut.clk_50mhz` mantêm os mesmos nomes após síntese.
+Não existe um teste automático dedicado de timing nesta base. O LED só segue
+reset, pelo que é necessário confirmar que CPU e memórias foram preservados
+antes de interpretar resultados de timing como resultados do processador.
 
 ## 3. Relatório de timing estático
 
@@ -96,7 +93,7 @@ A opção `0ns` deixa o simulador aberto no início. `run all` avança
 até ao `$finish`. Para abrir uma waveform de um novo teste, acrescenta
 os sinais na janela Objects e usa Restart antes de repetir o run.
 
-Os sete testbenches atuais (seis automáticos e uma demonstração visual) e os respetivos conjuntos de simulação estão no [guia de testbenches](testbenches.md).
+Os oito testbenches atuais (sete automáticos e uma demonstração visual) e os respetivos conjuntos de simulação estão no [guia de testbenches](testbenches.md).
 
 ## Indicadores da ALU: carry e borrow
 

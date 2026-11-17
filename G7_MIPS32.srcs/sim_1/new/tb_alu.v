@@ -27,7 +27,7 @@ module tb_alu;
     task test_result(input [31:0] expected, input [8*24-1:0] name);
         begin
             tests = tests + 1;
-            #1;
+            #20;
             if (y !== expected) begin
                 $display("FAIL %0s: got %h, expected %h", name, y, expected);
                 errors = errors + 1;

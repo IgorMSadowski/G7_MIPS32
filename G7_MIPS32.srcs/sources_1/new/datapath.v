@@ -10,7 +10,7 @@
 module datapath(
     input  wire        i_clk,           
     input  wire        i_rst,           
-    input  wire        i_en,            
+    input  wire        i_en,            // Run enable; must be 0 while i_rst is 1.
     input  wire [31:0] i_instr,         // Current instruction word (from IMEM)
     input  wire [31:0] i_rdata,         // Data from DMEM (valid one cycle after address)
     input  wire        i_reg_dst,       // 0 = write rt, 1 = write rd
@@ -41,11 +41,11 @@ module datapath(
     reg [31:0] _pc_r;          // Current program counter (PC) value, updated only when the instruction is committed.
 
     wire _stall = _rom_ready && i_mem_read && !_load_pending; // Stall the CPU if a load instruction is issued and the data has not yet returned from RAM.
-    wire _enabled = i_en && !i_rst;                           // The CPU is enabled when the global enable is high and reset is low.
 
-    assign o_commit     = _enabled && _rom_ready && !_stall;
-    assign o_load_issue = _enabled && _stall;
-    assign o_imem_en    = _enabled && (!_rom_ready || o_commit);
+    // The caller qualifies i_en with reset (soc.v uses i_en = ~soc_reset).
+    assign o_commit     = i_en && _rom_ready && !_stall;
+    assign o_load_issue = i_en && _stall;
+    assign o_imem_en    = i_en && (!_rom_ready || o_commit);
 
     // Intermediate signals
     wire [31:0] _pc4;            // PC + 4 (next sequential address)
@@ -70,8 +70,7 @@ module datapath(
     assign _pc4 = _pc_r + 32'd4;
 
     // Priority: jump > branch taken > sequential
-    assign _pc_next = i_jump ? (i_jump_reg ? _rd1_v : _jmp_tgt) :
-                      (i_branch && _branch_taken) ? _br_tgt : _pc4;
+    assign _pc_next = i_jump ? (i_jump_reg ? _rd1_v : _jmp_tgt) : (i_branch && _branch_taken) ? _br_tgt : _pc4;
 
     // The ROM holds the LW until its RAM result is ready.
     assign o_pc = o_commit ? _pc_next : _pc_r;
@@ -85,16 +84,11 @@ module datapath(
                      i_alu_ctrl == 4'b1000)
                     ? {27'b0, i_instr[10:6]} : _rd1_v;
 
-    // Immediate / branch target
-    sign_extend immediate_extend(
-        .i_imm(i_instr[15:0]),
-        .o_ext(_imm_ext)
-    );
+    // Extend the immediate to 32 bits, preserving its sign.
+    assign _imm_ext = {{16{i_instr[15]}}, i_instr[15:0]};
 
-    shift_left_two branch_shift(
-        .i_in(_imm_ext),
-        .o_out(_imm_sl2)
-    );
+    // Branch offsets count words; shift left two bits to obtain a byte offset.
+    assign _imm_sl2 = _imm_ext << 2;
 
     assign _br_tgt  = _pc4 + _imm_sl2;                                  // PC+4 + (imm<<2)
     assign _jmp_tgt = {_pc4[31:28], i_instr[25:0], 2'b00};              // {PC+4[31:28], target, 00}
@@ -114,9 +108,7 @@ module datapath(
     // The held instruction still supplies its own destination and controls.
     assign _do_rf_we = o_commit && i_reg_write;
 
-    // -------------------------------------------------------------------------
     // Register file
-    // -------------------------------------------------------------------------
     register_file registers(
         .i_clk(i_clk),
         .i_rst(i_rst),
@@ -131,19 +123,15 @@ module datapath(
 
     assign o_wdata = _rd2_v;        // store data path (rt value for sw)
 
-    // -------------------------------------------------------------------------
     // ALU operand select
     // if i_alu_src = 0, ALU operand B = rt value (from RF)
     // if i_alu_src = 1, ALU operand B = sign-extended immediate (from instruction)
     // sign
-    // -------------------------------------------------------------------------
     assign _src_b = i_alu_src ? _imm_ext : _rd2_v;
 
-    // -------------------------------------------------------------------------
     // ALU
     // Performs arithmetic and logic operations on two 32-bit operands, producing a 32-bit result and a zero flag.
     // The operation is determined by the 4-bit control signal i_alu_ctrl.
-    // -------------------------------------------------------------------------
     alu execution_unit(
         .i_a(_src_a),
         .i_b(_src_b),        // ALU operand B, takes the alu_src_mux output (rt or immediate)
@@ -152,9 +140,7 @@ module datapath(
         .o_zero(_zero)        // Internal ALU-to-BDU connection
     );
 
-    // -------------------------------------------------------------------------
     // Branch decision unit
-    // -------------------------------------------------------------------------
     bdu branch_decision_unit(
         .i_branch(i_branch),
         .i_branch_cond(i_branch_cond),
@@ -163,10 +149,8 @@ module datapath(
         .o_branch_taken(_branch_taken)
     );
 
-    // -------------------------------------------------------------------------
     // Write-back mux
     // WHAT to write back to the register file: ALU result, memory read data
-    // -------------------------------------------------------------------------
     wire [31:0] _alu_mem;
     assign _alu_mem = i_mem_to_reg ? i_rdata : o_alu_out;
 

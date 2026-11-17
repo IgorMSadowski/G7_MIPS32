@@ -29,21 +29,18 @@ module soc #(
     // Request reset while the button is pressed or the clock is not ready.
     wire reset_request = i_rst | ~clock_locked;
 
-    // Two flip-flops synchronize reset release to the internal clock.
-    (* ASYNC_REG = "TRUE" *) reg reset_stage1;
-    (* ASYNC_REG = "TRUE" *) reg reset_stage2;
+    // UG949 single-bit CDC: asynchronously assert reset, synchronously release it.
+    wire soc_reset;
 
-    always @(posedge clk_50mhz or posedge reset_request) begin
-        if (reset_request) begin
-            reset_stage1 <= 1'b1;
-            reset_stage2 <= 1'b1;
-        end else begin
-            reset_stage1 <= 1'b0;
-            reset_stage2 <= reset_stage1;
-        end
-    end
-
-    wire soc_reset = reset_stage2;
+    xpm_cdc_async_rst #(
+        .DEST_SYNC_FF(2),
+        .INIT_SYNC_FF(0),
+        .RST_ACTIVE_HIGH(1)
+    ) u_reset_sync (
+        .src_arst(reset_request),
+        .dest_clk(clk_50mhz),
+        .dest_arst(soc_reset)
+    );
 
     // CPU memory bus wires
     wire        _imem_en;       // CPU-controlled ROM advance

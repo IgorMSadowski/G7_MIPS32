@@ -23,10 +23,13 @@ module register_file(
     integer    _index;              // Reset loop counter
 
     always @(posedge i_clk) begin
-        if (i_rst) begin
+        if (i_rst) 
+        begin
             for (_index = 0; _index < 32; _index = _index + 1)
                 _rf[_index] <= 32'b0;
-        end else if (i_we && (i_wa != 5'b00000)) begin
+        end 
+        else if (i_we && (i_wa != 5'b00000)) 
+            begin
             _rf[i_wa] <= i_wdata;   // $zero (r0) is hardwired: writes ignored
         end
     end

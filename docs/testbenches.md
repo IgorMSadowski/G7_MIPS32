@@ -21,8 +21,9 @@ estágios têm o atributo `ASYNC_REG`. O Clock Wizard recebe diretamente `i_rst`
 | `tb_control_unit` | `control_unit` | 26 casos: uma verificação de cada uma das 24 instruções suportadas, mais um opcode e uma função R-type não suportados. Sem varrimentos exaustivos. |
 | `tb_regfile` | `regfile` | Reset, leitura simultânea nas duas portas, escrita, proteção do registo zero e escritas consecutivas. |
 | `tb_memories` | `component_tests` | 8 verificações básicas: reset das saídas, leituras da ROM, pausa/retoma da ROM, escrita/leitura de uma palavra da RAM e manutenção da saída com enable desativado. |
+| `tb_datapath` | `datapath` | Controlos aplicados diretamente: muxes dos operandos/destino/write-back, extensão de sinal, shamt, PC sequencial, branch tomado/não tomado, JAL/JR/JALR, enable e stall de LW. A resposta de memória devolve 42 após um flanco de leitura. |
 | `tb_cpu_memory` | `cpu_memory` | 8 verificações básicas: reset, ADDI, SW, espera de LW com PC/ROM parados, escrita do valor carregado e execução da instrução seguinte. |
-| `tb_soc` | `soc` | Demonstração simples para estudar a waveform: gera clock/reset e deixa o programa da ROM executar durante 5 us. Não faz verificações automáticas nem declara PASS. |
+| `tb_soc` | `soc` | Demonstração simples para estudar a waveform: gera clock/reset, espera `soc_reset=0` e observa mais 50 ciclos do CPU. Não faz verificações automáticas nem declara PASS. |
 
 ## Regressão comportamental no Vivado
 
@@ -34,7 +35,7 @@ estágios têm o atributo `ASYNC_REG`. O Clock Wizard recebe diretamente `i_rst`
 source {/home/igor/Documents/Vivado_Projects/G7_MIPS32/run_regression.tcl}
 ~~~
 
-O [script de regressão](../run_regression.tcl) executa os seis testbenches de
+O [script de regressão](../run_regression.tcl) executa os sete testbenches de
 verificação automática dos módulos e da interface CPU/memória. A demonstração
 `tb_soc` é observada manualmente na waveform, sem uma task de verificação.
 Se alguma verificação falhar, o resumo identifica o teste e o script
@@ -52,19 +53,42 @@ Na janela **Scopes**, expande o testbench. Na janela **Objects**, acrescenta
 `dut`, podes ver os sinais internos do bloco testado. A consola Tcl
 mostra as mensagens de resultado e os nomes das verificações que falham.
 
+### Datapath isolado
+
+A regressão cria o conjunto `datapath` e acrescenta `tb_datapath.v` e
+[tb_datapath_behav.wcfg](../tb_datapath_behav.wcfg) quando ainda não existem
+nesse conjunto. Para adicionar manualmente no GUI, usa **Add Sources → Add
+or Create Simulation Sources**, cria o conjunto `datapath` e seleciona
+`G7_MIPS32.srcs/sim_1/new/tb_datapath.v`. Define `tb_datapath` como top.
+
+Executa **Run Behavioral Simulation → Run All**. Usa **File → Simulation
+Waveform → Open Configuration** para abrir a configuração, se necessário.
+Os separadores são Test Status, Clock and Control, Mux Controls, Operands and
+Writeback, PC and Load Stall e Register Results. Os nomes dos testes são ASCII.
+
+É uma testbench comportamental de 50 MHz: os estímulos e as observações são
+feitos depois dos flancos de subida. As instruções fornecem os campos, mas
+os sinais de controlo são definidos explicitamente; não existe control unit
+nem RAM real neste teste. O modelo devolve sempre 42 quando recebe um pedido
+de leitura. A `tb_cpu_memory` continua a verificar a integração CPU/RAM.
+As referências a sinais internos do RTL não são portáveis para uma netlist
+de timing.
+
 `tb_soc` é intencionalmente simples: clock externo de 125 MHz, reset durante
-25 flancos de subida (libertado a 196 ns) e execução até cerca de 5 us. O clock interno de 50 MHz vem do Clock Wizard.
+25 flancos de subida (libertado a 196 ns), espera por `dut.soc_reset=0` e
+observa mais 50 flancos de subida do clock interno de 50 MHz. Depois espera
+1 ns para as atualizações assentarem e termina.
 Usa **Run All** para chegar ao fim. `Current PC` na waveform é `_pc_r`;
 `ROM address (look-ahead)` é o endereço apresentado à ROM e pode já indicar
 a instrução seguinte no ciclo de conclusão.
 
-Como a nova `tb_soc` só liga portas externas e não faz verificações hierárquicas,
-também pode estimular uma netlist de timing. Nesse caso, observa primeiro
-`clk`, `rst` e `led`; os caminhos internos da waveform RTL podem mudar depois
-da síntese. O LED só mostra reset; não verifica a execução do CPU.
-Confirma na netlist que o CPU e as memórias foram preservados antes de atribuir
-resultados de timing ao processador. A demonstração simples nunca declara um PASS
-de regressão.
+A versão atual de `tb_soc` refere sinais internos (`dut.soc_reset` e
+`dut.clk_50mhz`) para mostrar explicitamente o arranque do RTL. Não se deve
+assumir que esses caminhos existem numa netlist de timing: essa simulação
+precisa de estímulos compatíveis com os nomes/portas da netlist.
+A análise estática de timing não precisa de testbench. LD0 só mostra reset;
+confirma que a síntese preservou CPU e memórias antes de atribuir o WNS ao CPU.
+A demonstração simples não declara um PASS de regressão.
 
 O XSim gera os executáveis e as waveforms dentro de `G7_MIPS32.sim`.
 Os comandos Tcl para um teste individual estão nas [notas](notes.md).

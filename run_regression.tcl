@@ -86,8 +86,29 @@ foreach tb_name {
     }
 }
 
+# Register the standalone datapath test without replacing CPU + RAM verification.
+set datapath_tb [file join $regression_dir G7_MIPS32.srcs sim_1 new tb_datapath.v]
+if {![file exists $datapath_tb]} {
+    error "Datapath testbench not found: $datapath_tb"
+}
+set datapath_set [get_filesets -quiet datapath]
+if {[llength $datapath_set] == 0} {
+    create_fileset -simset datapath
+    set datapath_set [get_filesets datapath]
+    set_property SOURCE_SET sources_1 $datapath_set
+    set_property top tb_datapath $datapath_set
+}
+if {[lsearch -exact [get_files -quiet -of_objects $datapath_set] $datapath_tb] < 0} {
+    add_files -fileset datapath -norecurse $datapath_tb
+}
+set datapath_wave [file join $regression_dir tb_datapath_behav.wcfg]
+if {[file exists $datapath_wave] &&
+    [lsearch -exact [get_files -quiet -of_objects $datapath_set] $datapath_wave] < 0} {
+    add_files -fileset datapath -norecurse $datapath_wave
+}
+
 # tb_soc is a waveform demonstration without an errors counter.
-# Run it manually; the six automatic benches below report actual checks.
+# Run it manually; the seven automatic benches below report actual checks.
 
 set regression_results {}
 set regression_failed 0
@@ -97,6 +118,7 @@ foreach {simset tb} {
     control_unit tb_control_unit
     bdu          tb_bdu
     component_tests tb_memories
+    datapath     tb_datapath
     cpu_memory   tb_cpu_memory
 } {
     if {[catch {run_one $tb $simset} message]} {

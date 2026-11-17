@@ -49,7 +49,6 @@
 //(SPECIAL3 format: rd = swap_bytes(rt))
 //   rotr     -> opcode 0x00, funct 0x02   [DONE], rotates the bits in a register to the right by a specified number of bits
 //(SPECIAL format: rs = 1, rd = rotate(rt))
-// -----------------------------------------------------------------------------
 
 
 module control_unit(
@@ -90,20 +89,15 @@ module control_unit(
         o_branch_cond = 4'b0000; // branch condition code (4 bits)
         o_alu_ctrl    = 4'b0000;// alu function control (default to add)
 
-        // ---------------------------------------------------------------------
         // Decode table by instruction format
-        // ---------------------------------------------------------------------
         // MIPS instruction formats:
         //   - R-type:  op = 0x00, funct decides the exact operation
         //   - I-type:  op gives the operation, immediate is used in the instruction
         //   - J-type:  op gives the operation, target is encoded in the address field
-        // ---------------------------------------------------------------------
         case (i_op)
-            // -----------------------------------------------------------------
             // R-type format (opcode = 000000)
             // Format: [op=6][rs=5][rt=5][rd=5][shamt=5][funct=6]
             // Here, the funct field selects the ALU operation.
-            // -----------------------------------------------------------------
             6'b000000: begin
                 o_reg_dst   = 1'b1;     // Write result to rd
                 o_reg_write = 1'b1;     // General register write enable
@@ -147,12 +141,10 @@ module control_unit(
                 end
             end
 
-            // -----------------------------------------------------------------
             // I-type format (opcode = immediate-based instructions)
             // Format: [op=6][rs=5][rt=5][imm=16]
             // The operation is determined by the opcode, while the lower bits
             // carry the sign-extended immediate value.
-            // -----------------------------------------------------------------
             6'h04: begin    // beq   rs, rt, offset
                 o_branch    = 1'b1;
                 o_alu_ctrl  = 4'b0001;  // subtract to compare rs - rt
@@ -212,13 +204,11 @@ module control_unit(
                 o_alu_ctrl  = 4'b0100;  // LUI operation (shift left by 16)
             end
 
-            // -----------------------------------------------------------------
             // J-type format (opcode = jump instructions)
             // Format: [op=6][target=26]
             // The final target address is formed from the upper bits of PC+4 and
             // the 26-bit jump field, shifted left by 2 bits to keep word alignment.
             // This gives a jump region of 256 MB in the MIPS address space.
-            // -----------------------------------------------------------------
             6'h02: begin    // j    target
                 o_jump = 1'b1;
             end
