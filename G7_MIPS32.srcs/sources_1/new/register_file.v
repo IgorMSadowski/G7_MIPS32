@@ -11,8 +11,8 @@ module register_file(
     input  wire        i_clk,       
     input  wire        i_rst,       
     input  wire        i_we,        // Write enable
-    input  wire [4:0]  i_ra1,       // Read address 1 (rs)
-    input  wire [4:0]  i_ra2,       // Read address 2 (rt)
+    input  wire [4:0]  i_ra1,       // Read address 1
+    input  wire [4:0]  i_ra2,       // Read address 2
     input  wire [4:0]  i_wa,        // Write address
     input  wire [31:0] i_wdata,     // Write data
     output wire [31:0] o_rd1,       // Read data 1

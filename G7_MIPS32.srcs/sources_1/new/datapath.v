@@ -105,7 +105,7 @@ module datapath(
     // Link address used by jal and jalr.
     assign _ret_addr = _pc4;
 
-    // The held instruction still supplies its own destination and controls.
+    // Register file write enable
     assign _do_rf_we = o_commit && i_reg_write;
 
     // Register file

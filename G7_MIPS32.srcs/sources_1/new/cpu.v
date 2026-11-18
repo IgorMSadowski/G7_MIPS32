@@ -62,8 +62,8 @@ module cpu(
         .o_alu_src(_alu_src),
         .o_mem_to_reg(_mem_to_reg),
         .o_reg_write(_reg_write),
-        .o_mem_read(_mem_read),        // Connected to internal wire _mem_read
-        .o_mem_write(_mem_write_raw),   // captured raw; gated below
+        .o_mem_read(_mem_read),        
+        .o_mem_write(_mem_write_raw),  
         .o_branch(_branch),
         .o_jump(_jump),
         .o_jump_reg(_jump_reg),
