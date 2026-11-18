@@ -2,7 +2,6 @@
         lui     $t0, 0x1234             # ROM 0x00000000: $t0 = 0x12340000
         addi    $t1, $zero, 5           # ROM 0x00000004: $t1 = 5
         addi    $t2, $zero, -3          # ROM 0x00000008: $t2 = -3 (0xFFFFFFFD)
-
         add     $t3, $t1, $t2           # ROM 0x0000000C: $t3 = 5 + (-3) = 2
         sub     $t4, $t1, $t2           # ROM 0x00000010: $t4 = 5 - (-3) = 8
         and     $t5, $t1, $t2           # ROM 0x00000014: $t5 = 5 AND -3 = 5
@@ -11,17 +10,14 @@
         slt     $s0, $t2, $t1           # ROM 0x00000020: $s0 = 1 because -3 < 5 (signed)
         sll     $s1, $t1, 2             # ROM 0x00000024: $s1 = 5 << 2 = 20
         srl     $s2, $s1, 1             # ROM 0x00000028: $s2 = 20 >> 1 = 10
-
-        sw      $t3, 0($zero)           # ROM 0x0000002C: RAM[0x00000000] = 2; LD0 is connected only to the physical reset input
+        sw      $t3, 0($zero)           # ROM 0x0000002C: RAM[0x00000000] = 2;
         lw      $s3, 0($zero)           # ROM 0x00000030: $s3 = RAM[0x00000000] = 2
 
 #  2. Test G7 ISA 
         # wsbh: swap bytes in halfwords of $t0 (0x12340000 -> 0x34120000)
         wsbh    $s4, $t0                # ROM 0x00000034: $s4 = 0x34120000
-
         # rotr: rotate $t0 right by 8 (0x12340000 -> 0x00123400)
         rotr    $s5, $t0, 8             # ROM 0x00000038: $s5 = 0x00123400
-
         # branches
         beq     $s3, $t3, beq_ok        # ROM 0x0000003C: taken: branch -> beq_ok (0x00000044); 0x40 + (1 << 2)
         addi    $k0, $zero, 99          # ROM 0x00000040: guard: skipped by BEQ; would set $k0 = 99
@@ -48,21 +44,16 @@ blez_ok:         # ROM 0x0000006C
         addi    $t8, $zero, 0x8C        # ROM 0x00000070: $t8 = 0x0000008C, the byte address of func_jalr
         jalr    $ra, $t8                # ROM 0x00000074: jump -> $t8 = func_jalr (0x0000008C); $ra = PC+4 = 0x00000078
         addi    $s7, $zero, 42          # ROM 0x00000078: return destination of JR at 0x00000090; $s7 = 42
-
         jal     func_jr                 # ROM 0x0000007C: jump -> func_jr (0x00000094); target field = 0x25; $ra = 0x00000080
         addi    $t9, $zero, 77          # ROM 0x00000080: return destination of JR at 0x00000098; $t9 = 77
-
         j       end                     # ROM 0x00000084: jump -> end (0x0000009C); target field = 0x27
         nop                             # ROM 0x00000088: skipped after J; this SoC has no branch/jump delay slots
-
 func_jalr:       # ROM 0x0000008C
         addi    $a0, $zero, 7           # ROM 0x0000008C: func_jalr entry: $a0 = 7
         jr      $ra                     # ROM 0x00000090: jump -> $ra; here $ra = 0x00000078, set by JALR at 0x00000074
-
 func_jr:         # ROM 0x00000094
         addi    $a1, $zero, 8           # ROM 0x00000094: func_jr entry: $a1 = 8
         jr      $ra                     # ROM 0x00000098: jump -> $ra; here $ra = 0x00000080, set by JAL at 0x0000007C
-
 end:             # ROM 0x0000009C
         j       end                     # ROM 0x0000009C: jump -> end (0x0000009C); infinite self-loop; target field = 0x27
         nop                             # ROM 0x000000A0: skipped after the self-loop J; no delay slot
