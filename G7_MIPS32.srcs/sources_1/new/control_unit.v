@@ -147,13 +147,13 @@ module control_unit(
             // carry the sign-extended immediate value.
             6'h04: begin    // beq   rs, rt, offset
                 o_branch    = 1'b1;
-                o_alu_ctrl  = 4'b0001;  // subtract to compare rs - rt
+                o_alu_ctrl  = 4'b0001;  // ALU subtraction result for debug
                 o_branch_cond = 4'b0000; // branch if equal
             end
 
             6'h05: begin    // bne   rs, rt, offset
                 o_branch    = 1'b1;
-                o_alu_ctrl  = 4'b0001;  // subtract to compare rs - rt
+                o_alu_ctrl  = 4'b0001;  // ALU subtraction result for debug
                 o_branch_cond = 4'b0001; // branch if not equal
             end
 

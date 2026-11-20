@@ -128,7 +128,7 @@ module tb_control_unit;
         #1;
         test_controls(mem_write == 1 && mem_read == 0 && reg_write == 0 && alu_src == 1 && alu_ctrl == 0);
 
-        // BEQ requests comparison by subtraction. BDU decides taken/not taken.
+        // BEQ selects the equality condition. The datapath compares rs and rt.
         test_name = "BEQ                             ";
         op=6'h04;
         #1;

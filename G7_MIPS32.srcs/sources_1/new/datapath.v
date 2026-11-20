@@ -62,7 +62,8 @@ module datapath(
     wire [4:0]  _wa;             // RF write address from reg_dst mux (rt or rd)
     wire [4:0]  _wa_final;       // _wa with $ra override for jal
     wire        _branch_taken;   // Branch condition evaluated
-    wire        _zero;           // Internal ALU zero flag for BEQ/BNE
+    wire        _zero;           // ALU result is zero (debug)
+    wire        equal = (_rd1_v == _rd2_v);
     wire [31:0] _pc_next;        // Next PC value
     wire        _do_rf_we;       // Register file write enable
 
@@ -137,7 +138,7 @@ module datapath(
         .i_b(_src_b),        // ALU operand B, takes the alu_src_mux output (rt or immediate)
         .i_ctrl(i_alu_ctrl),  // ALU control signals from CU
         .o_y(o_alu_out),      // ALU result (to DMEM address and/or WB )
-        .o_zero(_zero)        // Internal ALU-to-BDU connection
+        .o_zero(_zero)
     );
 
     // Branch decision unit
@@ -145,7 +146,7 @@ module datapath(
         .i_branch(i_branch),
         .i_branch_cond(i_branch_cond),
         .i_rs(_rd1_v),
-        .i_zero(_zero),
+        .i_equal(equal),
         .o_branch_taken(_branch_taken)
     );
 

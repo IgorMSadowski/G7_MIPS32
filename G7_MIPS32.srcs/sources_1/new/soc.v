@@ -5,15 +5,17 @@
 // 
 // Module Name: System on Chip (SoC)
 // Description: SoC for MIPS processor
-//              Connects the CPU directly to instruction and data memories.
+//              Connects the CPU to instruction ROM, data RAM, and board GPIO.
 //////////////////////////////////////////////////////////////////////////////////
 
 module soc #(
-    parameter IMEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/test.mem"
+    parameter IMEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/gpio_demo.mem"
 )(
     input  wire        i_clk,       // 125 MHz board clock on K17
     input  wire        i_rst,       // Reset button on the Zybo (Btn_0)
-    output wire [0:0]  o_led        // LD0 reset indicator
+    input  wire [1:0]  i_sw,        // SW0 and SW1
+    input  wire        i_btn1,      // BTN1
+    output wire [3:0]  o_led        // LD0 reset, LD3-LD1 program output
     );
 
     wire clk_50mhz;
@@ -48,12 +50,50 @@ module soc #(
     wire [31:0] _pc;            // Program counter / IMEM address from CPU
     wire [31:0] _alu_out;       // ALU result - doubles as DMEM address
     wire [31:0] _wdata;         // Write data for DMEM (rt register value for sw)
-    wire [31:0] _rdata;         // Read data returned by DMEM
-    wire        _mem_read;      // CPU requests DMEM read (1 = lw)
-    wire        _mem_write;     // CPU requests DMEM write (1 = sw)
+    wire [31:0] _rdata;         // Read data returned to the CPU
+    wire        _mem_read;      // CPU issues a read (lw)
+    wire        _mem_write;     // CPU commits a write (sw)
     wire        _en;            // Global CPU enable (active-high, derived from reset)
 
     assign _en = ~soc_reset;        // CPU runs while reset is deasserted
+
+    localparam [11:0] SWITCH_OFFSET = 12'h100;  // 0x10000100
+    localparam [11:0] BUTTON_OFFSET = 12'h104;  // 0x10000104
+    localparam [11:0] LED_OFFSET    = 12'h108;  // 0x10000108
+
+    wire peripheral_selected = _alu_out[28];
+    wire [11:0] register_offset = _alu_out[11:0];
+    wire [31:0] ram_rdata;
+    reg  [1:0]  gpio_rdata;
+    reg  [2:0]  led_pattern;
+
+    (* ASYNC_REG = "TRUE" *) reg [2:0] gpio_meta, gpio_sync;
+
+    always @(posedge clk_50mhz) begin
+        gpio_meta <= {i_btn1, i_sw};
+        gpio_sync <= gpio_meta;
+    end
+
+    always @(posedge clk_50mhz) begin
+        if (soc_reset) begin
+            gpio_rdata  <= 2'b00;
+            led_pattern <= 3'b000;
+        end else begin
+            if (_mem_read && peripheral_selected) begin
+                case (register_offset)
+                    SWITCH_OFFSET: gpio_rdata <= gpio_sync[1:0];
+                    BUTTON_OFFSET: gpio_rdata <= {1'b0, gpio_sync[2]};
+                    default:       gpio_rdata <= 2'b00;
+                endcase
+            end
+
+            if (_mem_write && peripheral_selected && (register_offset == LED_OFFSET))
+                led_pattern <= _wdata[2:0];
+        end
+    end
+
+    // The load holds the same address from read request to write-back.
+    assign _rdata = peripheral_selected ? {30'b0, gpio_rdata} : ram_rdata;
 
     instruction_memory #(
         .MEM_INIT_FILE(IMEM_INIT_FILE)
@@ -71,9 +111,9 @@ module soc #(
         .i_en(_en),
         .i_addr(_alu_out),
         .i_wdata(_wdata),
-        .i_re(_mem_read),
-        .i_we(_mem_write),
-        .o_rdata(_rdata)
+        .i_re(_mem_read  && !peripheral_selected),
+        .i_we(_mem_write && !peripheral_selected),
+        .o_rdata(ram_rdata)
     );
 
     cpu u_cpu(
@@ -92,5 +132,6 @@ module soc #(
 
     // LD0 indicates the physical reset input.
     assign o_led[0] = i_rst;
+    assign o_led[3:1] = led_pattern;
 
 endmodule

@@ -66,11 +66,11 @@
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_bdu/zero">
+   <wvobject type="logic" fp_name="/tb_bdu/equal">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">zero</obj_property>
-      <obj_property name="ObjectShortName">zero</obj_property>
-      <obj_property name="label">Is zero?</obj_property>
+      <obj_property name="ElementShortName">equal</obj_property>
+      <obj_property name="ObjectShortName">equal</obj_property>
+      <obj_property name="label">RS = RT?</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_bdu/taken">
       <obj_property name="DisplayName">label</obj_property>

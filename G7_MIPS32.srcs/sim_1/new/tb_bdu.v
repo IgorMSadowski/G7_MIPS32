@@ -5,12 +5,12 @@ module tb_bdu;
     reg branch;
     reg [3:0] cond;
     reg [31:0] rs;
-    reg zero;
+    reg equal;
     wire taken;
 
     bdu dut(
         .i_branch(branch), .i_branch_cond(cond),
-        .i_rs(rs), .i_zero(zero), .o_branch_taken(taken)
+        .i_rs(rs), .i_equal(equal), .o_branch_taken(taken)
     );
 
     integer errors = 0;
@@ -39,40 +39,40 @@ module tb_bdu;
             #1;
             checks = checks + 1;
             if (taken !== exp_taken) begin
-                $display("FAIL %0s: branch=%b cond=%h rs=%h zero=%b, got %b expected %b", name, branch, cond, rs, zero, taken, exp_taken);
+                $display("FAIL %0s: branch=%b cond=%h rs=%h equal=%b, got %b expected %b", name, branch, cond, rs, equal, taken, exp_taken);
                 errors = errors + 1;
             end
         end
     endtask
 
-    // These cases must give the same decision for either ALU zero flag value.
+    // These cases depend only on rs, regardless of equality with rt.
     task test_rs_condition(input [31:0] rs_value, input exp_taken, input [8*32-1:0] name);
         begin
             rs = rs_value;
-            zero = 0; test_branch(exp_taken, name);
-            zero = 1; test_branch(exp_taken, name);
+            equal = 0; test_branch(exp_taken, name);
+            equal = 1; test_branch(exp_taken, name);
         end
     endtask
 
     initial begin
         branch=1;
-        // beq (cond=0): taken if zero
+        // beq (cond=0): taken if equal
         cond=4'b0000;
         rs=32'h8000_0000;
-        zero=1; test_branch(1, "beq zero=1");
-        zero=0; test_branch(0, "beq zero=0");
+        equal=1; test_branch(1, "beq equal=1");
+        equal=0; test_branch(0, "beq equal=0");
         rs=32'd0;
-        test_branch(0, "beq zero=0 even with rs=0");
-        zero=1; test_branch(1, "beq zero=1 with rs=0");
+        test_branch(0, "beq equal=0 even with rs=0");
+        equal=1; test_branch(1, "beq equal=1 with rs=0");
 
-        // bne (cond=1): taken iff !zero
+        // bne (cond=1): taken if unequal
         cond=4'b0001;
         rs=32'h8000_0000;
-        zero=0; test_branch(1, "bne zero=0");
-        zero=1; test_branch(0, "bne zero=1");
+        equal=0; test_branch(1, "bne equal=0");
+        equal=1; test_branch(0, "bne equal=1");
         rs=32'd0;
-        test_branch(0, "bne zero=1 with rs=0");
-        zero=0; test_branch(1, "bne zero=0 even with rs=0");
+        test_branch(0, "bne equal=1 with rs=0");
+        equal=0; test_branch(1, "bne equal=0 even with rs=0");
 
         // bltz (cond=2): taken iff rs[31]=1
         cond=4'b0010;
