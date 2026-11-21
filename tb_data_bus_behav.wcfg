@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_data_bus_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_data_bus" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="250.000 ns"></ZoomEndTime>
+      <Cursor1Time time="62.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="166"></NameColumnWidth>
+      <ValueColumnWidth column_width="116"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="17" />
+   <wvobject fp_name="divider_bus_clock" type="divider">
+      <obj_property name="label">CLOCK AND RESET</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/clk">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+      <obj_property name="label">Clock (50 MHz)</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/rst">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+      <obj_property name="label">Reset</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider_bus_request" type="divider">
+      <obj_property name="label">CPU REQUEST</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_data_bus/addr">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">addr[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">Byte Address</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_data_bus/offset">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">offset[7:0]</obj_property>
+      <obj_property name="ObjectShortName">offset[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">MMIO Byte Offset</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/read_enable">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">read_enable</obj_property>
+      <obj_property name="ObjectShortName">read_enable</obj_property>
+      <obj_property name="label">Read Enable</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/write_enable">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">write_enable</obj_property>
+      <obj_property name="ObjectShortName">write_enable</obj_property>
+      <obj_property name="label">Write Enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider_bus_devices" type="divider">
+      <obj_property name="label">DEVICE ENABLES</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/ram_read">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">ram_read</obj_property>
+      <obj_property name="ObjectShortName">ram_read</obj_property>
+      <obj_property name="label">RAM Read</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/ram_write">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">ram_write</obj_property>
+      <obj_property name="ObjectShortName">ram_write</obj_property>
+      <obj_property name="label">RAM Write</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/irq_read">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">irq_read</obj_property>
+      <obj_property name="ObjectShortName">irq_read</obj_property>
+      <obj_property name="label">IRQ Read</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/irq_write">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">irq_write</obj_property>
+      <obj_property name="ObjectShortName">irq_write</obj_property>
+      <obj_property name="label">IRQ Write</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/i2s_read">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">i2s_read</obj_property>
+      <obj_property name="ObjectShortName">i2s_read</obj_property>
+      <obj_property name="label">I2S Read</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_data_bus/i2s_write">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">i2s_write</obj_property>
+      <obj_property name="ObjectShortName">i2s_write</obj_property>
+      <obj_property name="label">I2S Write</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider_bus_result" type="divider">
+      <obj_property name="label">READ RESULT</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_data_bus/read_data">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">read_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">read_data[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">Data to CPU</obj_property>
+   </wvobject>
+</wave_config>

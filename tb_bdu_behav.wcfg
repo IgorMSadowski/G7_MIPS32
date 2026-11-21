@@ -12,14 +12,14 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="178.022 ns"></ZoomEndTime>
-      <Cursor1Time time="0.000 ns"></Cursor1Time>
+      <ZoomEndTime time="720.001 ns"></ZoomEndTime>
+      <Cursor1Time time="188.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="165"></NameColumnWidth>
-      <ValueColumnWidth column_width="113"></ValueColumnWidth>
+      <ValueColumnWidth column_width="109"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="12" />
+   <WVObjectSize size="10" />
    <wvobject fp_name="divider803" type="divider">
       <obj_property name="label">Branch Flag</obj_property>
       <obj_property name="DisplayName">label</obj_property>
@@ -47,7 +47,7 @@
       <obj_property name="ElementShortName">condition_name[63:0]</obj_property>
       <obj_property name="ObjectShortName">condition_name[63:0]</obj_property>
       <obj_property name="Radix">ASCIIRADIX</obj_property>
-      <obj_property name="label">C Name</obj_property>
+      <obj_property name="label">Name</obj_property>
    </wvobject>
    <wvobject fp_name="divider807" type="divider">
       <obj_property name="label">Source register value</obj_property>
@@ -77,16 +77,5 @@
       <obj_property name="ElementShortName">taken</obj_property>
       <obj_property name="ObjectShortName">taken</obj_property>
       <obj_property name="label">Is Taken</obj_property>
-   </wvobject>
-   <wvobject fp_name="divider805" type="divider">
-      <obj_property name="label">Debug</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="BkColor">#800000</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_bdu/errors">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">errors[31:0]</obj_property>
-      <obj_property name="ObjectShortName">errors[31:0]</obj_property>
-      <obj_property name="label">Error</obj_property>
    </wvobject>
 </wave_config>

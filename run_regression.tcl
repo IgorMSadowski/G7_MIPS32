@@ -50,22 +50,6 @@ if {[current_sim -quiet] ne ""} {
 
 set regression_old_active [current_fileset -simset]
 set regression_dir [file dirname [file normalize [info script]]]
-# The files remain in this physical folder, independent of simulation-set names.
-set pause_tb [file join $regression_dir G7_MIPS32.srcs sim_1 new tb_cpu_memory.v]
-if {![file exists $pause_tb]} {
-    error "Memory/pause testbench not found: $pause_tb"
-}
-set pause_set [get_filesets -quiet cpu_memory]
-if {[llength $pause_set] == 0} {
-    create_fileset -simset cpu_memory
-    set pause_set [get_filesets cpu_memory]
-    set_property SOURCE_SET sources_1 $pause_set
-    set_property top tb_cpu_memory $pause_set
-}
-if {[lsearch -exact [get_files -quiet -of_objects $pause_set] $pause_tb] < 0} {
-    add_files -fileset cpu_memory -norecurse $pause_tb
-}
-
 set component_set [get_filesets -quiet component_tests]
 if {[llength $component_set] == 0} {
     create_fileset -simset component_tests
@@ -86,7 +70,7 @@ foreach tb_name {
     }
 }
 
-# Register the standalone datapath test without replacing CPU + RAM verification.
+# Register the standalone datapath test.
 set datapath_tb [file join $regression_dir G7_MIPS32.srcs sim_1 new tb_datapath.v]
 if {![file exists $datapath_tb]} {
     error "Datapath testbench not found: $datapath_tb"
@@ -107,9 +91,6 @@ if {[file exists $datapath_wave] &&
     add_files -fileset datapath -norecurse $datapath_wave
 }
 
-# tb_soc is a waveform demonstration without an errors counter.
-# Run it manually; the seven automatic benches below report actual checks.
-
 set regression_results {}
 set regression_failed 0
 foreach {simset tb} {
@@ -119,7 +100,8 @@ foreach {simset tb} {
     bdu          tb_bdu
     component_tests tb_memories
     datapath     tb_datapath
-    cpu_memory   tb_cpu_memory
+    data_bus     tb_data_bus
+    soc          tb_soc
 } {
     if {[catch {run_one $tb $simset} message]} {
         incr regression_failed

@@ -12,14 +12,14 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="35.000 ns"></ZoomEndTime>
-      <Cursor1Time time="0.000 ns"></Cursor1Time>
+      <ZoomEndTime time="662.001 ns"></ZoomEndTime>
+      <Cursor1Time time="157.422 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="136"></NameColumnWidth>
-      <ValueColumnWidth column_width="105"></ValueColumnWidth>
+      <ValueColumnWidth column_width="97"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="14" />
+   <WVObjectSize size="12" />
    <wvobject fp_name="divider548" type="divider">
       <obj_property name="label">CNTRL</obj_property>
       <obj_property name="DisplayName">label</obj_property>
@@ -30,7 +30,7 @@
       <obj_property name="ElementShortName">ctrl[3:0]</obj_property>
       <obj_property name="ObjectShortName">ctrl[3:0]</obj_property>
       <obj_property name="label">CNTRL</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_alu/operation">
       <obj_property name="DisplayName">label</obj_property>
@@ -63,10 +63,10 @@
       <obj_property name="ElementShortName">y[31:0]</obj_property>
       <obj_property name="ObjectShortName">y[31:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-      <obj_property name="label">Output</obj_property>
+      <obj_property name="label">Y</obj_property>
    </wvobject>
    <wvobject fp_name="divider550" type="divider">
-      <obj_property name="label">Flags and Debug</obj_property>
+      <obj_property name="label">Flags</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
@@ -96,19 +96,5 @@
       <obj_property name="ObjectShortName">overflow</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
       <obj_property name="label">Overflow (V)</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_alu/tests">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">tests[31:0]</obj_property>
-      <obj_property name="ObjectShortName">tests[31:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      <obj_property name="label">Test</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_alu/errors">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">errors[31:0]</obj_property>
-      <obj_property name="ObjectShortName">errors[31:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      <obj_property name="label">Error</obj_property>
    </wvobject>
 </wave_config>

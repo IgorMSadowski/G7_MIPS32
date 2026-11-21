@@ -11,103 +11,100 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="758.350 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,004.151 ns"></ZoomEndTime>
-      <Cursor1Time time="553.134 ns"></Cursor1Time>
+      <ZoomStartTime time="0.000 ns" />
+      <ZoomEndTime time="2920.000 ns" />
+      <Cursor1Time time="0.000 ns" />
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="165"></NameColumnWidth>
-      <ValueColumnWidth column_width="115"></ValueColumnWidth>
+      <NameColumnWidth column_width="177" />
+      <ValueColumnWidth column_width="157" />
    </column_width_setting>
-   <WVObjectSize size="13" />
-   <wave_markers>
-      <marker label="" time="536066" />
-      <marker label="" time="1000000" />
-      <marker label="" time="767703" />
-   </wave_markers>
-   <wvobject fp_name="divider_soc_simple_1" type="divider">
-      <obj_property name="label">EXECUTION</obj_property>
+   <WVObjectSize size="14" />
+   <wvobject fp_name="divider_soc_startup" type="divider">
+      <obj_property name="label">CLOCK AND RESET</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_soc/dut/clk_50mhz">
+   <wvobject type="logic" fp_name="/tb_soc/clk">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+      <obj_property name="label">Board Clock (125 MHz)</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/rst">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+      <obj_property name="label">Board Reset</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc/dut/clk_50mhz" type="logic">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">clk_50mhz</obj_property>
       <obj_property name="ObjectShortName">clk_50mhz</obj_property>
-      <obj_property name="label">Clock (50 MHz)</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">SoC Clock (50 MHz)</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_soc/dut/soc_reset">
+   <wvobject fp_name="/tb_soc/dut/soc_reset" type="logic">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">soc_reset</obj_property>
       <obj_property name="ObjectShortName">soc_reset</obj_property>
-      <obj_property name="label">Reset</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">SoC Reset</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_soc/dut/u_cpu/u_dp/_pc_r">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">_pc_r[31:0]</obj_property>
-      <obj_property name="ObjectShortName">_pc_r[31:0]</obj_property>
-      <obj_property name="label">PC</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="divider_soc_simple_2" type="divider">
-      <obj_property name="label">RESULTS</obj_property>
+   <wvobject fp_name="divider_soc_progress" type="divider">
+      <obj_property name="label">PROGRAM RESULT</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_soc/dut/u_cpu/u_dp/registers/_rf[11]">
+   <wvobject type="array" fp_name="/tb_soc/step">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">[11][31:0]</obj_property>
-      <obj_property name="ObjectShortName">[11][31:0]</obj_property>
-      <obj_property name="label">t3: calculated value</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="ElementShortName">step[159:0]</obj_property>
+      <obj_property name="ObjectShortName">step[159:0]</obj_property>
+      <obj_property name="label">Last Checkpoint</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_soc/dut/u_cpu/u_dp/registers/_rf[19]">
+   <wvobject type="array" fp_name="/tb_soc/checkpoint">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">[19][31:0]</obj_property>
-      <obj_property name="ObjectShortName">[19][31:0]</obj_property>
-      <obj_property name="label">s3: loaded value</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="ElementShortName">checkpoint[31:0]</obj_property>
+      <obj_property name="ObjectShortName">checkpoint[31:0]</obj_property>
+      <obj_property name="label">RAM Checkpoint</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="divider_soc_simple_3" type="divider">
-      <obj_property name="label">RAM ACCESS</obj_property>
+   <wvobject type="array" fp_name="/tb_soc/errors">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">errors</obj_property>
+      <obj_property name="ObjectShortName">errors</obj_property>
+      <obj_property name="label">Errors</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider_soc_memory" type="divider">
+      <obj_property name="label">DATA RAM</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_soc/dut/u_dmem/i_addr">
+   <wvobject fp_name="/tb_soc/dut/ram_write" type="logic">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">i_addr[31:0]</obj_property>
-      <obj_property name="ObjectShortName">i_addr[31:0]</obj_property>
-      <obj_property name="label">Address</obj_property>
+      <obj_property name="ElementShortName">ram_write</obj_property>
+      <obj_property name="ObjectShortName">ram_write</obj_property>
+      <obj_property name="label">RAM Write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc/dut/_alu_out" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">_alu_out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_alu_out[31:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">Data Byte Address</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_soc/dut/u_dmem/i_we">
+   <wvobject fp_name="/tb_soc/dut/_wdata" type="array">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">i_we</obj_property>
-      <obj_property name="ObjectShortName">i_we</obj_property>
-      <obj_property name="label">Write Enable</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_soc/dut/u_dmem/i_wdata">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">i_wdata[31:0]</obj_property>
-      <obj_property name="ObjectShortName">i_wdata[31:0]</obj_property>
-      <obj_property name="label">Write Data</obj_property>
+      <obj_property name="ElementShortName">_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_wdata[31:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">RAM Write Data</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_soc/dut/u_dmem/i_re">
+   <wvobject fp_name="/tb_soc/dut/ram_rdata" type="array">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">i_re</obj_property>
-      <obj_property name="ObjectShortName">i_re</obj_property>
-      <obj_property name="label">Read Enable</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_soc/dut/u_dmem/o_rdata">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">o_rdata[31:0]</obj_property>
-      <obj_property name="ObjectShortName">o_rdata[31:0]</obj_property>
-      <obj_property name="label">Read Data</obj_property>
+      <obj_property name="ElementShortName">ram_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_rdata[31:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="label">RAM Read Data</obj_property>
    </wvobject>
 </wave_config>

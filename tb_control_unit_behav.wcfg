@@ -11,177 +11,169 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000 ns" />
-      <ZoomEndTime time="265.000 ns" />
-      <Cursor1Time time="0.000 ns" />
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="520.001 ns"></ZoomEndTime>
+      <Cursor1Time time="0.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="200" />
-      <ValueColumnWidth column_width="220" />
+      <NameColumnWidth column_width="193"></NameColumnWidth>
+      <ValueColumnWidth column_width="72"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="25" />
-   <wvobject type="divider" fp_name="divider_control_basic_1">
+   <WVObjectSize size="24" />
+   <wvobject fp_name="divider_control_basic_1" type="divider">
       <obj_property name="label">TEST STATUS</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_control_unit/test_name">
-      <obj_property name="ElementShortName">test_name[255:0]</obj_property>
-      <obj_property name="ObjectShortName">test_name[255:0]</obj_property>
-      <obj_property name="Radix">ASCIIRADIX</obj_property>
+   <wvobject type="array" fp_name="/tb_control_unit/instruction">
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">instruction[255:0]</obj_property>
+      <obj_property name="ObjectShortName">instruction[255:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
       <obj_property name="label">Instruction</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_control_unit/checks">
-      <obj_property name="ElementShortName">checks[31:0]</obj_property>
-      <obj_property name="ObjectShortName">checks[31:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">Checks</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_control_unit/errors">
-      <obj_property name="ElementShortName">errors[31:0]</obj_property>
-      <obj_property name="ObjectShortName">errors[31:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">Errors</obj_property>
-   </wvobject>
-   <wvobject type="divider" fp_name="divider_control_basic_2">
+   <wvobject fp_name="divider_control_basic_2" type="divider">
       <obj_property name="label">INSTRUCTION FIELDS</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/op">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">op[5:0]</obj_property>
       <obj_property name="ObjectShortName">op[5:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Opcode</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/funct">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">funct[5:0]</obj_property>
       <obj_property name="ObjectShortName">funct[5:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Function</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/rs">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">rs[4:0]</obj_property>
       <obj_property name="ObjectShortName">rs[4:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">rs field</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/rt">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">rt[4:0]</obj_property>
       <obj_property name="ObjectShortName">rt[4:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">rt field</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/shamt">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">shamt[4:0]</obj_property>
       <obj_property name="ObjectShortName">shamt[4:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">shamt field</obj_property>
    </wvobject>
-   <wvobject type="divider" fp_name="divider_control_basic_3">
+   <wvobject fp_name="divider_control_basic_3" type="divider">
       <obj_property name="label">ALU AND WRITEBACK</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
+   <wvobject type="array" fp_name="/tb_control_unit/alu_ctrl">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">alu_ctrl[3:0]</obj_property>
+      <obj_property name="ObjectShortName">alu_ctrl[3:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="label">ALU Control</obj_property>
+   </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/alu_operation">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">alu_operation[63:0]</obj_property>
       <obj_property name="ObjectShortName">alu_operation[63:0]</obj_property>
       <obj_property name="Radix">ASCIIRADIX</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">ALU Operation</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/alu_src">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">alu_src</obj_property>
       <obj_property name="ObjectShortName">alu_src</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">ALUSrc: 1 = immediate</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/reg_dst">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">reg_dst</obj_property>
       <obj_property name="ObjectShortName">reg_dst</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">RegDst: 1 = rd</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_control_unit/reg_write">
-      <obj_property name="ElementShortName">reg_write</obj_property>
-      <obj_property name="ObjectShortName">reg_write</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">Register Write</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
-   </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/writeback_source">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">writeback_source[63:0]</obj_property>
       <obj_property name="ObjectShortName">writeback_source[63:0]</obj_property>
       <obj_property name="Radix">ASCIIRADIX</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Write-back Source</obj_property>
    </wvobject>
-   <wvobject type="divider" fp_name="divider_control_basic_4">
+   <wvobject type="logic" fp_name="/tb_control_unit/reg_write">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">reg_write</obj_property>
+      <obj_property name="ObjectShortName">reg_write</obj_property>
+      <obj_property name="label">Register Write</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider_control_basic_4" type="divider">
       <obj_property name="label">MEMORY CONTROL</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/mem_read">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">mem_read</obj_property>
       <obj_property name="ObjectShortName">mem_read</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Memory Read</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/mem_write">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">mem_write</obj_property>
       <obj_property name="ObjectShortName">mem_write</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Memory Write</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
-   <wvobject type="divider" fp_name="divider_control_basic_5">
+   <wvobject fp_name="divider_control_basic_5" type="divider">
       <obj_property name="label">BRANCH AND JUMP</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/branch">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">branch</obj_property>
       <obj_property name="ObjectShortName">branch</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Branch</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_control_unit/branch_name">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">branch_name[63:0]</obj_property>
       <obj_property name="ObjectShortName">branch_name[63:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Branch Condition</obj_property>
       <obj_property name="Radix">ASCIIRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/jump">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">jump</obj_property>
       <obj_property name="ObjectShortName">jump</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Jump</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/jump_reg">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">jump_reg</obj_property>
       <obj_property name="ObjectShortName">jump_reg</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Register Jump</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_control_unit/link">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">link</obj_property>
       <obj_property name="ObjectShortName">link</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">Link (PC+4)</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>

@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// ROM and RAM.
+// Test clocked reads from ROM and a write/read at RAM address 0.
 module tb_memories;
     reg clk = 0;
     reg rst = 1;
@@ -12,15 +12,14 @@ module tb_memories;
     reg dmem_re = 0;
     reg dmem_we = 0;
     wire [31:0] dmem_rdata;
-    reg [8*32-1:0] test_name;
-    reg [8*16-1:0] memory_phase;
+    reg [127:0] memory_phase;
     integer errors = 0;
     integer checks = 0;
 
     // 50 MHz; inputs change 1 ns after the rising edge.
-    // #1 separates stimulus from the clock edge.
     always #10 clk = ~clk;
 
+    // Load known words from memory_basic.mem at byte addresses 0, 4 and 8.
     instruction_memory #(
         .MEM_INIT_FILE("/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/memory_basic.mem")
     ) imem (
@@ -34,93 +33,88 @@ module tb_memories;
         .i_re(dmem_re), .i_we(dmem_we), .o_rdata(dmem_rdata)
     );
 
-    task test_memory(input condition, input [8*56-1:0] name);
+    // Count the checks and report the one that failed.
+    task test_memory(input condition, input [447:0] description);
         begin
             checks = checks + 1;
             if (condition !== 1'b1) begin
                 errors = errors + 1;
-                $display("FAIL: %0s", name);
+                $display("FAIL: %0s", description);
             end
         end
     endtask
 
     initial begin
-        // Reset output registers.
-        test_name = "INITIAL RESET                   ";
+        // rst = 1, en = 1 -> both outputs are zero after the rising edge.
         memory_phase = "RESET           ";
-        repeat (2) @(posedge clk);
+        @(posedge clk);
         #1;
-        test_memory(instr == 0 && dmem_rdata == 0,"reset makes ROM and RAM outputs zero");
-
-        // ROM word at byte address 0.
-        @(posedge clk); #1;
-        test_name = "ROM WORD 0                      ";
-        memory_phase = "ROM READ        ";
+        test_memory(instr == 0 && dmem_rdata == 0, "reset clears both outputs");
         rst = 0;
-        imem_addr = 32'h00000000;
-        @(posedge clk); #1;
-        test_memory(instr == 32'h11111111, "ROM address 0 returns 11111111");
 
-        // ROM word at byte address 4.
-        @(posedge clk); #1;
-        test_name = "ROM WORD 1                      ";
-        imem_addr = 32'h00000004;
-        @(posedge clk); #1;
-        test_memory(instr == 32'h22222222, "ROM address 4 returns 22222222");
+        // en = 1, imem_addr = 0x00 -> instr = 0x11111111
+        memory_phase = "ROM READ 0      ";
+        imem_addr = 32'h0000_0000;
+        @(posedge clk);
+        #1;
+        test_memory(instr == 32'h1111_1111, "ROM read at 0x00");
 
-        // ROM output holds when disabled.
-        @(posedge clk); #1;
-        test_name = "ROM DISABLED                    ";
+        // en = 1, imem_addr = 0x04 -> instr = 0x22222222
+        memory_phase = "ROM READ 4      ";
+        imem_addr = 32'h0000_0004;
+        @(posedge clk);
+        #1;
+        test_memory(instr == 32'h2222_2222, "ROM read at 0x04");
+
+        // en = 0, imem_addr = 0x08 -> instr holds 0x22222222
         memory_phase = "ROM HOLD        ";
         en = 0;
-        imem_addr = 32'h00000008;
-        @(posedge clk); #1;
-        test_memory(instr == 32'h22222222, "disabled ROM keeps its previous output");
+        imem_addr = 32'h0000_0008;
+        @(posedge clk);
+        #1;
+        test_memory(instr == 32'h2222_2222, "ROM holds when disabled");
 
-        // ROM word at byte address 8.
-        @(posedge clk); #1;
-        test_name = "ROM ENABLED AGAIN               ";
-        memory_phase = "ROM READ        ";
+        // en = 1, imem_addr = 0x08 -> instr = 0x33333333
+        memory_phase = "ROM READ 8      ";
         en = 1;
-        @(posedge clk); #1;
-        test_memory(instr == 32'h33333333, "enabled ROM reads the new address");
+        @(posedge clk);
+        #1;
+        test_memory(instr == 32'h3333_3333, "ROM reads after enable");
 
-        // Write RAM at byte address 0.
-        @(posedge clk); #1;
-        test_name = "WRITE RAM WORD 0                ";
+        // en = 1, dmem_we = 1, dmem_re = 0, dmem_addr = 0x00
+        // Write 0x12345678 at the next rising edge.
         memory_phase = "RAM WRITE       ";
-        dmem_addr = 32'h00000000;
-        dmem_wdata = 32'h12345678;
+        dmem_addr = 32'h0000_0000;
+        dmem_wdata = 32'h1234_5678;
         dmem_we = 1;
-        @(posedge clk); #1;
-        dmem_we = 0;
+        @(posedge clk);
+        #1;
 
-        // Read back RAM.
-        test_name = "READ RAM WORD 0                 ";
+        // dmem_we = 0, dmem_re = 1, dmem_addr = 0x00 -> dmem_rdata = 0x12345678
         memory_phase = "RAM READ        ";
+        dmem_we = 0;
         dmem_re = 1;
-        @(posedge clk); #1;
-        test_memory(dmem_rdata == 32'h12345678, "RAM returns the value written");
+        @(posedge clk);
+        #1;
+        test_memory(dmem_rdata == 32'h1234_5678, "RAM reads back the written word");
 
-        // RAM output holds when disabled.
-        @(posedge clk); #1;
-        test_name = "RAM DISABLED                    ";
+        // en = 0, dmem_addr = 0x04 -> dmem_rdata holds 0x12345678
         memory_phase = "RAM HOLD        ";
         en = 0;
-        dmem_addr = 32'h00000004;
-        @(posedge clk); #1;
-        test_memory(dmem_rdata == 32'h12345678, "disabled RAM keeps its previous output");
+        dmem_addr = 32'h0000_0004;
+        @(posedge clk);
+        #1;
+        test_memory(dmem_rdata == 32'h1234_5678, "RAM holds when disabled");
 
-        // Reset clears outputs, not memory contents.
-        @(posedge clk); #1;
-        test_name = "FINAL RESET                     ";
-        memory_phase = "RESET           ";
+        // rst = 1, en = 1 -> both output registers clear on the rising edge.
+        memory_phase = "RESET TEST      ";
         dmem_re = 0;
         en = 1;
         rst = 1;
-        @(posedge clk); #1;
-        test_memory(instr == 0 && dmem_rdata == 0,"reset makes both outputs zero again");
-        #15
+        @(posedge clk);
+        #1;
+        test_memory(instr == 0 && dmem_rdata == 0, "final reset clears both outputs");
+        #19;
 
         if (errors == 0) $display("PASS: %0d basic memory checks", checks);
         else $display("FAILED: %0d errors in %0d checks", errors, checks);

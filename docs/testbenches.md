@@ -2,8 +2,8 @@
 
 ## Base atual
 
-O CPU está ligado diretamente à ROM e à RAM. A ROM carrega
-[Assembly/test.mem](../Assembly/test.mem). Durante o stall de `LW`, o PC
+O CPU busca instruções na ROM e acede à RAM através do barramento de dados.
+Seleciona [Assembly/soc_board_demo.mem](../Assembly/soc_board_demo.mem) para sintetizar para a placa e `soc_test.mem` para verificar o SoC. Durante o stall de `LW`, o PC
 e a ROM conservam a instrução. O CPU grava o dado da RAM e avança no
 flanco de conclusão. LD0 acompanha diretamente o botão de reset: `o_led[0] = i_rst`.
 O pedido de reset é `reset_request = i_rst | ~clock_locked`. No `soc.v`, dois
@@ -22,22 +22,21 @@ estágios têm o atributo `ASYNC_REG`. O Clock Wizard recebe diretamente `i_rst`
 | `tb_regfile` | `regfile` | Reset, leitura simultânea nas duas portas, escrita, proteção do registo zero e escritas consecutivas. |
 | `tb_memories` | `component_tests` | 8 verificações básicas: reset das saídas, leituras da ROM, pausa/retoma da ROM, escrita/leitura de uma palavra da RAM e manutenção da saída com enable desativado. |
 | `tb_datapath` | `datapath` | Controlos aplicados diretamente: muxes dos operandos/destino/write-back, extensão de sinal, shamt, PC sequencial, branch tomado/não tomado, JAL/JR/JALR, enable e stall de LW. A resposta de memória devolve 42 após um flanco de leitura. |
-| `tb_cpu_memory` | `cpu_memory` | 8 verificações básicas: reset, ADDI, SW, espera de LW com PC/ROM parados, escrita do valor carregado e execução da instrução seguinte. |
-| `tb_soc` | `soc` | Demonstração simples para estudar a waveform: gera clock/reset, espera `soc_reset=0` e observa mais 50 ciclos do CPU. Não faz verificações automáticas nem declara PASS. |
+| `tb_data_bus` | `data_bus` | Descodificação de endereços, enables e seleção registada do destino de leitura. |
+| `tb_soc` | `soc` | Executa `soc_test.mem` e verifica seis resultados escritos no endereço RAM `0x000003F8`. |
 
 ## Regressão comportamental no Vivado
 
 1. Abre `G7_MIPS32.xpr` no Vivado.
-2. Guarda o projeto e fecha qualquer simulação ativa.
+2. Seleciona `soc_test.mem` em `soc.v`, guarda o projeto e fecha qualquer simulação ativa.
 3. Executa o comando na consola Tcl do Vivado.
 
 ~~~tcl
 source {/home/igor/Documents/Vivado_Projects/G7_MIPS32/run_regression.tcl}
 ~~~
 
-O [script de regressão](../run_regression.tcl) executa os sete testbenches de
-verificação automática dos módulos e da interface CPU/memória. A demonstração
-`tb_soc` é observada manualmente na waveform, sem uma task de verificação.
+O [script de regressão](../run_regression.tcl) executa os oito testbenches de
+verificação automática dos módulos e do SoC.
 Se alguma verificação falhar, o resumo identifica o teste e o script
 termina com erro.
 
@@ -70,25 +69,32 @@ Writeback, PC and Load Stall e Register Results. Os nomes dos testes são ASCII.
 feitos depois dos flancos de subida. As instruções fornecem os campos, mas
 os sinais de controlo são definidos explicitamente; não existe control unit
 nem RAM real neste teste. O modelo devolve sempre 42 quando recebe um pedido
-de leitura. A `tb_cpu_memory` continua a verificar a integração CPU/RAM.
+de leitura. A `tb_soc` verifica a integração CPU, barramento e RAM através do programa em ROM.
 As referências a sinais internos do RTL não são portáveis para uma netlist
 de timing.
 
-`tb_soc` é intencionalmente simples: clock externo de 125 MHz, reset durante
-25 flancos de subida (libertado a 196 ns), espera por `dut.soc_reset=0` e
-observa mais 50 flancos de subida do clock interno de 50 MHz. Depois espera
-1 ns para as atualizações assentarem e termina.
-Usa **Run All** para chegar ao fim. `Current PC` na waveform é `_pc_r`;
-`ROM address (look-ahead)` é o endereço apresentado à ROM e pode já indicar
-a instrução seguinte no ciclo de conclusão.
+### Integração do SoC com a ROM de teste
 
-A versão atual de `tb_soc` refere sinais internos (`dut.soc_reset` e
-`dut.clk_50mhz`) para mostrar explicitamente o arranque do RTL. Não se deve
-assumir que esses caminhos existem numa netlist de timing: essa simulação
-precisa de estímulos compatíveis com os nomes/portas da netlist.
-A análise estática de timing não precisa de testbench. LD0 só mostra reset;
-confirma que a síntese preservou CPU e memórias antes de atribuir o WNS ao CPU.
-A demonstração simples não declara um PASS de regressão.
+A [`tb_soc`](../G7_MIPS32.srcs/sim_1/new/tb_soc.v) usa o ficheiro
+que estiver selecionado em `MEM_INIT_FILE` no `soc.v`. Seleciona
+[`soc_test.mem`](../Assembly/soc_test.mem) para correr o teste. O
+[assembly](../Assembly/soc_test.asm) inclui o PC e a codificação de cada
+instrução. A testbench verifica os valores 1 a 6 que o programa escreve
+em `0x000003F8`. O valor 7 indica falha.
+
+- **Simulação comportamental:** seleciona o conjunto `soc` e executa
+  **Run Behavioral Simulation**. Para ver o PC, a instrução, `$t0` a
+  `$t2` e os acessos à RAM, abre [tb_soc_registers.wcfg](../tb_soc_registers.wcfg).
+- **Simulação de timing:** guarda o `soc.v`, volta a correr a síntese e
+  seleciona **Run Post-Synthesis Timing Simulation**. Os atributos
+  `KEEP` em `ram_write`, `_alu_out` e `_wdata` preservam os sinais que
+  a testbench observa. A waveform padrão mostra os checkpoints.
+- **Bitstream da placa:** seleciona `soc_board_demo.mem` em `soc.v`
+  antes de voltar a sintetizar. A análise estática de timing usa o design
+  implementado.
+
+Em qualquer simulação, usa **Run All** se parar antes de aparecer o
+resultado na consola.
 
 O XSim gera os executáveis e as waveforms dentro de `G7_MIPS32.sim`.
 Os comandos Tcl para um teste individual estão nas [notas](notes.md).
@@ -96,13 +102,12 @@ Os comandos Tcl para um teste individual estão nas [notas](notes.md).
 ## Endereçamento desta base
 
 O software usa endereços alinhados de `0x00000000` a `0x000003FC` para
-as 256 palavras da RAM de 1 KiB. A ligação direta usa `i_addr[9:2]` como índice.
-Os outros bits são ignorados, pelo que um acesso fora da faixa ou
-desalinhado pode selecionar uma palavra existente.
+as 256 palavras da RAM de 1 KiB. O barramento seleciona a RAM na faixa
+de `0x00000000` a `0x000003FF`. A RAM usa `i_addr[9:2]` como índice,
+pelo que os dois bits inferiores não alteram a palavra selecionada.
 
-O RTL e os testbenches usam caminhos absolutos para
-[Assembly/test.mem](../Assembly/test.mem). Se moveres a pasta do projeto,
-atualiza os parâmetros de inicialização da ROM.
+O SoC usa caminhos absolutos para os ficheiros de inicialização da ROM.
+Se moveres o projeto, atualiza o caminho em `MEM_INIT_FILE`.
 
 ## Imagem simples para o teste das memórias
 
@@ -122,31 +127,7 @@ O teste básico não verifica toda a capacidade nem o comportamento read-first.
 O clock é 50 MHz; as entradas são preparadas 1 ns após um flanco de subida
 para captura no seguinte, e os resultados são observados 1 ns após a captura.
 XSim: 8 verificações passaram, terminando a 331 ns.
-O SoC continua a utilizar `Assembly/test.mem`.
 
-
-## Teste simples CPU + RAM
-
-`tb_cpu_memory` fornece diretamente quatro instruções ao CPU, sem ROM ou ficheiro `.mem`:
-
-```assembly
-# PC 0x00
-addi $t0, $zero, 5  # t0 = 5
-# PC 0x04
-sw   $t0, 0($zero)  # RAM[0] = 5
-# PC 0x08
-lw   $t1, 0($zero)  # t1 = 5, após o stall
-# PC 0x0C
-addi $t2, $t1, 1    # t2 = 6: execução retomada
-```
-
-A testbench conserva LW nas duas etapas: primeiro a RAM devolve o dado com
-PC atual ainda em 0x08; depois o CPU escreve t1 e avança para 0x0C.
-A waveform mostra as instruções em texto, a fase, PC/stall, os três registos
-e os sinais da RAM. Clock de 50 MHz, estímulos/observações após o flanco de
-subida. XSim: 8 verificações passaram, terminando a 171 ns.
-Esta versão básica não inclui os antigos testes de branches, encodings
-inválidos, loads consecutivos ou pausa global a meio de um load.
 
 ## Teste simples da unidade de controlo
 

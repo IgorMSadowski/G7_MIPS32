@@ -21,7 +21,7 @@ Current baseline:
   until write-back. Dependent instructions and consecutive loads resume.
   Check reset, pause/resume and the current address-aliasing behavior.
 - [ ] Review tb_alu, tb_bdu, tb_control_unit, tb_regfile,
-  tb_memories, tb_cpu_memory and the waveform demonstration tb_soc. Record expected outcomes,
+  tb_memories, tb_datapath, tb_data_bus and tb_soc. Record expected outcomes,
   waveforms, uncovered cases and the Vivado regression result.
 - [ ] Keep behavioral pass, coverage review, routed timing and board
   validation as separate evidence.

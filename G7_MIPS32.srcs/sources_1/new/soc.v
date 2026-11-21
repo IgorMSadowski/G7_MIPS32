@@ -5,12 +5,14 @@
 // 
 // Module Name: System on Chip (SoC)
 // Description: SoC for MIPS processor
-//              Connects the CPU to instruction ROM, data RAM, and board GPIO.
+//              Connects the CPU to instruction ROM and the data bus.
 //////////////////////////////////////////////////////////////////////////////////
 
 module soc #(
-    parameter IMEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/gpio_demo.mem"
-)(
+    // Board bitstream: "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_board_demo.mem"
+    // SoC timing test: "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_test.mem"
+    parameter MEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_test.mem"
+) (
     input  wire        i_clk,       // 125 MHz board clock on K17
     input  wire        i_rst,       // Reset button on the Zybo (Btn_0)
     input  wire [1:0]  i_sw,        // SW0 and SW1
@@ -48,8 +50,8 @@ module soc #(
     wire        _imem_en;       // CPU-controlled ROM advance
     wire [31:0] _instr;         // Instruction word returned from IMEM
     wire [31:0] _pc;            // Program counter / IMEM address from CPU
-    wire [31:0] _alu_out;       // ALU result - doubles as DMEM address
-    wire [31:0] _wdata;         // Write data for DMEM (rt register value for sw)
+    (* KEEP = "TRUE" *) wire [31:0] _alu_out;       // ALU result - doubles as DMEM address
+    (* KEEP = "TRUE" *) wire [31:0] _wdata;         // Write data for DMEM (rt register value for sw)
     wire [31:0] _rdata;         // Read data returned to the CPU
     wire        _mem_read;      // CPU issues a read (lw)
     wire        _mem_write;     // CPU commits a write (sw)
@@ -57,46 +59,54 @@ module soc #(
 
     assign _en = ~soc_reset;        // CPU runs while reset is deasserted
 
-    localparam [11:0] SWITCH_OFFSET = 12'h100;  // 0x10000100
-    localparam [11:0] BUTTON_OFFSET = 12'h104;  // 0x10000104
-    localparam [11:0] LED_OFFSET    = 12'h108;  // 0x10000108
-
-    wire peripheral_selected = _alu_out[28];
-    wire [11:0] register_offset = _alu_out[11:0];
     wire [31:0] ram_rdata;
-    reg  [1:0]  gpio_rdata;
-    reg  [2:0]  led_pattern;
+    wire ram_read;
+    (* KEEP = "TRUE" *) wire        ram_write;
+    wire [31:0] demo_rdata;
+    wire        demo_read, demo_write;
+    wire [7:0]  mmio_offset;
 
-    (* ASYNC_REG = "TRUE" *) reg [2:0] gpio_meta, gpio_sync;
+    data_bus #(
+        .ENABLE_EXTRA_MMIO(1'b1)
+    ) u_data_bus (
+        .i_clk(clk_50mhz),
+        .i_rst(soc_reset),
+        .i_addr(_alu_out),
+        .i_re(_mem_read),
+        .i_we(_mem_write),
+        .i_ram_rdata(ram_rdata),
+        // Reserved pages until the I2S and IRQ register interfaces are connected.
+        .i_i2s_rdata(32'b0),
+        .i_irq_rdata(32'b0),
+        .i_extra_rdata(demo_rdata),
+        .o_ram_re(ram_read),
+        .o_ram_we(ram_write),
+        .o_i2s_re(),
+        .o_i2s_we(),
+        .o_irq_re(),
+        .o_irq_we(),
+        .o_extra_re(demo_read),
+        .o_extra_we(demo_write),
+        .o_mmio_offset(mmio_offset),
+        .o_rdata(_rdata)
+    );
 
-    always @(posedge clk_50mhz) begin
-        gpio_meta <= {i_btn1, i_sw};
-        gpio_sync <= gpio_meta;
-    end
-
-    always @(posedge clk_50mhz) begin
-        if (soc_reset) begin
-            gpio_rdata  <= 2'b00;
-            led_pattern <= 3'b000;
-        end else begin
-            if (_mem_read && peripheral_selected) begin
-                case (register_offset)
-                    SWITCH_OFFSET: gpio_rdata <= gpio_sync[1:0];
-                    BUTTON_OFFSET: gpio_rdata <= {1'b0, gpio_sync[2]};
-                    default:       gpio_rdata <= 2'b00;
-                endcase
-            end
-
-            if (_mem_write && peripheral_selected && (register_offset == LED_OFFSET))
-                led_pattern <= _wdata[2:0];
-        end
-    end
-
-    // The load holds the same address from read request to write-back.
-    assign _rdata = peripheral_selected ? {30'b0, gpio_rdata} : ram_rdata;
+    board_demo_io u_demo_io (
+        .i_clk(clk_50mhz),
+        .i_rst(soc_reset),
+        .i_sw(i_sw),
+        .i_btn1(i_btn1),
+        .i_offset(mmio_offset),
+        .i_re(demo_read),
+        .i_we(demo_write),
+        .i_led_pattern(_wdata[2:0]),
+        .o_rdata(demo_rdata),
+        .o_led(o_led[3:1])
+    );
+    assign o_led[0] = i_rst;
 
     instruction_memory #(
-        .MEM_INIT_FILE(IMEM_INIT_FILE)
+        .MEM_INIT_FILE(MEM_INIT_FILE)
     ) u_imem(
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
@@ -111,8 +121,8 @@ module soc #(
         .i_en(_en),
         .i_addr(_alu_out),
         .i_wdata(_wdata),
-        .i_re(_mem_read  && !peripheral_selected),
-        .i_we(_mem_write && !peripheral_selected),
+        .i_re(ram_read),
+        .i_we(ram_write),
         .o_rdata(ram_rdata)
     );
 
@@ -129,9 +139,5 @@ module soc #(
         .o_mem_read(_mem_read),
         .o_mem_write(_mem_write)
     );
-
-    // LD0 indicates the physical reset input.
-    assign o_led[0] = i_rst;
-    assign o_led[3:1] = led_pattern;
 
 endmodule

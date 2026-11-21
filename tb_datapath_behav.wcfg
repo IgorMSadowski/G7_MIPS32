@@ -1,160 +1,162 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <wave_config>
-   <wave_state />
+   <wave_state>
+   </wave_state>
    <db_ref_list>
       <db_ref path="tb_datapath_behav.wdb" id="1">
          <top_modules>
+            <top_module name="glbl" />
             <top_module name="tb_datapath" />
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000 ns" />
-      <ZoomEndTime time="160.000 ns" />
-      <Cursor1Time time="0.000 ns" />
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="131.001 ns"></ZoomEndTime>
+      <Cursor1Time time="113.672 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="260" />
-      <ValueColumnWidth column_width="280" />
+      <NameColumnWidth column_width="225"></NameColumnWidth>
+      <ValueColumnWidth column_width="150"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="21" />
    <wvobject fp_name="divider_TEST_AND_CLOCK" type="divider">
-      <obj_property name="label">TEST AND CLOCK</obj_property>
+      <obj_property name="label">Clock Reset</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/test_name" type="array">
-      <obj_property name="ElementShortName">test_name</obj_property>
-      <obj_property name="ObjectShortName">test_name</obj_property>
-      <obj_property name="Radix">ASCIIRADIX</obj_property>
-      <obj_property name="label">Test</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/step">
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">step[255:0]</obj_property>
+      <obj_property name="ObjectShortName">step[255:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+      <obj_property name="label">Execution Step</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/clk" type="logic">
+   <wvobject type="logic" fp_name="/tb_datapath/clk">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
       <obj_property name="label">Clock - 50 MHz</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/rst" type="logic">
+   <wvobject type="logic" fp_name="/tb_datapath/rst">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">rst</obj_property>
       <obj_property name="ObjectShortName">rst</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
       <obj_property name="label">Reset</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
    <wvobject fp_name="divider_OPERANDS_AND_RESULT" type="divider">
       <obj_property name="label">OPERANDS AND RESULT</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/dut/_pc_r" type="array">
-      <obj_property name="ElementShortName">_pc_r</obj_property>
-      <obj_property name="ObjectShortName">_pc_r</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/dut/_pc_r">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">_pc_r[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_pc_r[31:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
       <obj_property name="label">Current PC</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/dut/_src_a" type="array">
-      <obj_property name="ElementShortName">_src_a</obj_property>
-      <obj_property name="ObjectShortName">_src_a</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/dut/_src_a">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">_src_a[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_src_a[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">ALU A</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/dut/_src_b" type="array">
-      <obj_property name="ElementShortName">_src_b</obj_property>
-      <obj_property name="ObjectShortName">_src_b</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/dut/_src_b">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">_src_b[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_src_b[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">ALU B</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/alu_out" type="array">
-      <obj_property name="ElementShortName">alu_out</obj_property>
-      <obj_property name="ObjectShortName">alu_out</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/alu_out">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">alu_out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">alu_out[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">ALU result</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/dut/_wb" type="array">
-      <obj_property name="ElementShortName">_wb</obj_property>
-      <obj_property name="ObjectShortName">_wb</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/dut/_wb">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">_wb[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_wb[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">Register write value</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
    <wvobject fp_name="divider_LOAD_AND_STALL" type="divider">
       <obj_property name="label">LOAD AND STALL</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/dut/_stall" type="logic">
+   <wvobject type="logic" fp_name="/tb_datapath/dut/_stall">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">_stall</obj_property>
       <obj_property name="ObjectShortName">_stall</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
       <obj_property name="label">Load stall</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/load_issue" type="logic">
+   <wvobject type="logic" fp_name="/tb_datapath/load_issue">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">load_issue</obj_property>
       <obj_property name="ObjectShortName">load_issue</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
       <obj_property name="label">Memory read request</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/commit" type="logic">
+   <wvobject type="logic" fp_name="/tb_datapath/commit">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">commit</obj_property>
       <obj_property name="ObjectShortName">commit</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
       <obj_property name="label">Commit - update PC / RF</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/imem_en" type="logic">
+   <wvobject type="logic" fp_name="/tb_datapath/imem_en">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">imem_en</obj_property>
       <obj_property name="ObjectShortName">imem_en</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
       <obj_property name="label">ROM enable</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/rdata" type="array">
-      <obj_property name="ElementShortName">rdata</obj_property>
-      <obj_property name="ObjectShortName">rdata</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/rdata">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rdata[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">Memory response</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
    <wvobject fp_name="divider_REGISTER_RESULTS" type="divider">
       <obj_property name="label">REGISTER RESULTS</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/t0_value" type="array">
-      <obj_property name="ElementShortName">t0_value</obj_property>
-      <obj_property name="ObjectShortName">t0_value</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/t0_value">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">t0_value[31:0]</obj_property>
+      <obj_property name="ObjectShortName">t0_value[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">t0 - ADDI result = 5</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/t1_value" type="array">
-      <obj_property name="ElementShortName">t1_value</obj_property>
-      <obj_property name="ObjectShortName">t1_value</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/t1_value">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">t1_value[31:0]</obj_property>
+      <obj_property name="ObjectShortName">t1_value[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">t1 - ADD result = 10</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/t2_value" type="array">
-      <obj_property name="ElementShortName">t2_value</obj_property>
-      <obj_property name="ObjectShortName">t2_value</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/t2_value">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">t2_value[31:0]</obj_property>
+      <obj_property name="ObjectShortName">t2_value[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">t2 - LW result = 20</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_datapath/errors" type="array">
-      <obj_property name="ElementShortName">errors</obj_property>
-      <obj_property name="ObjectShortName">errors</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/errors">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">errors[31:0]</obj_property>
+      <obj_property name="ObjectShortName">errors[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       <obj_property name="label">Errors</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
 </wave_config>
