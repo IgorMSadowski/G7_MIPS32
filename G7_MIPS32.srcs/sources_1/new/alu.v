@@ -23,9 +23,13 @@ module alu(
     output wire        o_negative, // Sign bit of the result
     output wire        o_carry     // ADD carry-out / SUB borrow (1 when A < B unsigned)
     );
+
+    wire [32:0] extended_sum;
+    assign extended_sum = {1'b0, i_a} + {1'b0, i_b};
+
     always @(*) begin
         case (i_ctrl)
-            4'b0000: o_y = i_a + i_b;       // add
+            4'b0000: o_y = extended_sum[31:0]; // add
             4'b0001: o_y = i_a - i_b;       // sub
             4'b0010: o_y = i_a & i_b;       // and
             4'b0011: o_y = i_a | i_b;       // or
@@ -44,34 +48,26 @@ module alu(
     wire is_sub;
     wire add_overflow;
     wire sub_overflow;
-    wire [32:0] extended_sum;
 
     assign is_add = (i_ctrl == 4'b0000);
     assign is_sub = (i_ctrl == 4'b0001);
 
     // ADD: same operand signs, different result sign.
-    assign add_overflow =
-        (i_a[31] == i_b[31]) &&
-        (o_y[31] != i_a[31]);
+    assign add_overflow = (i_a[31] == i_b[31]) && (o_y[31] != i_a[31]);
 
     // SUB: different operand signs, result sign differs from A.
-    assign sub_overflow =
-        (i_a[31] != i_b[31]) &&
-        (o_y[31] != i_a[31]);
+    assign sub_overflow = (i_a[31] != i_b[31]) && (o_y[31] != i_a[31]);
 
-    // Overflow is only meaningful for ADD and SUB.
-    assign o_overflow =
-        (is_add && add_overflow) ||
-        (is_sub && sub_overflow);
+    // Overflow 
+    assign o_overflow = (is_add && add_overflow) || (is_sub && sub_overflow);
 
     assign o_zero = (o_y == 32'b0);
     assign o_negative = o_y[31];
 
     // ADD reports the extra sum bit. SUB reports unsigned borrow.
     // Other operations report zero. SUB does not consume a previous carry.
-    assign extended_sum = {1'b0, i_a} + {1'b0, i_b};
-    assign o_carry = is_add ? extended_sum[32] :
-                     is_sub ? (i_a < i_b) : 1'b0;
+    
+    assign o_carry = is_add ? extended_sum[32] : is_sub ? (i_a < i_b) : 1'b0;
     
 
 endmodule

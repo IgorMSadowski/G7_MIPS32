@@ -11,7 +11,7 @@
 module soc #(
     // Board bitstream: "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_board_demo.mem"
     // SoC timing test: "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_test.mem"
-    parameter MEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_test.mem"
+    parameter MEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_board_demo.mem"
 ) (
     input  wire        i_clk,       // 125 MHz board clock on K17
     input  wire        i_rst,       // Reset button on the Zybo (Btn_0)
@@ -66,9 +66,7 @@ module soc #(
     wire        demo_read, demo_write;
     wire [7:0]  mmio_offset;
 
-    data_bus #(
-        .ENABLE_EXTRA_MMIO(1'b1)
-    ) u_data_bus (
+    data_bus u_data_bus (
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
         .i_addr(_alu_out),

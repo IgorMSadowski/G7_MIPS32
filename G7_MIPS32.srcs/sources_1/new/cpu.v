@@ -98,6 +98,7 @@ module cpu(
     );
 
     // RAM writes occur only when the current store completes.
+    
     assign o_mem_write = _mem_write_raw && _commit;
 
 endmodule

@@ -157,6 +157,7 @@ module control_unit(
                 o_branch_cond = 4'b0001; // branch if not equal
             end
 
+            // REGIMM
             6'h01: begin    // bltz and bgez
                 o_branch    = 1'b1;
                 case (i_rt)
