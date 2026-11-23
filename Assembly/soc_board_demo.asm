@@ -12,7 +12,7 @@ wait_sw0:                     # 0x10
     lw   $t2, 0x00($t4)       # 0x10: Read SW0 and SW1 at 0x10000100
     and  $t2, $t2, $t0        # 0x14: Keep SW0
     beq  $t2, $zero, wait_sw0 # 0x18: Return to 0x10 while SW0 is off
-    sw   $t1, 0x08($t4)       # 0x1C: Display 010 at 0x10000108
+    sw   $t1, 0x08($t4)       # 0x1C: Display 010 at 0x10000108  
 
 wait_sw1:                     # 0x20
     lw   $t2, 0x00($t4)       # 0x20: Read SW0 and SW1 at 0x10000100
