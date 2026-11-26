@@ -12,8 +12,10 @@ module tb_bdu;
     bdu dut(
         .i_branch(branch),
         .i_branch_cond(cond),
+
         .i_rs(rs),
         .i_equal(equal),
+
         .o_branch_taken(taken)
     );
 

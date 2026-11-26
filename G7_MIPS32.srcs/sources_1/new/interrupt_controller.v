@@ -13,19 +13,28 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module interrupt_controller(
+    // Clock and reset
     input  wire        i_clk,
     input  wire        i_rst,
+
+    // Interrupt events
     input  wire [3:0]  i_events,
+
+    // CPU acknowledgement and return address
     input  wire        i_irq_ack,
     input  wire [31:0] i_return_pc,
 
+    // MMIO request and write data
     input  wire [7:0]  i_offset,
     input  wire        i_re,
     input  wire        i_we,
     input  wire [31:0] i_wdata,
 
+    // CPU interrupt request and vector
     output wire        o_irq_request,
     output reg  [31:0] o_irq_vector,
+
+    // MMIO read data
     output reg  [31:0] o_rdata
 );
 

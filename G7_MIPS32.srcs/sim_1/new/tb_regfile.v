@@ -38,11 +38,14 @@ module tb_regfile;
     register_file dut(
         .i_clk(clk),
         .i_rst(rst),
-        .i_we(we),
+
         .i_ra1(ra1),
         .i_ra2(ra2),
+
+        .i_we(we),
         .i_wa(wa),
         .i_wdata(wdata),
+
         .o_rd1(rd1),
         .o_rd2(rd2)
     );

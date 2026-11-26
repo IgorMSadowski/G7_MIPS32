@@ -29,20 +29,25 @@ module tb_data_bus;
     data_bus dut (
         .i_clk(clk),
         .i_rst(rst),
+
         .i_addr(addr),
         .i_re(read_enable),
         .i_we(write_enable),
+
         .i_ram_rdata(ram_rdata),
         .i_irq_rdata(irq_rdata),
         .i_i2s_rdata(i2s_rdata),
+
+        .o_rdata(read_data),
+
         .o_ram_re(ram_read),
         .o_ram_we(ram_write),
+
+        .o_mmio_offset(offset),
         .o_irq_re(irq_read),
         .o_irq_we(irq_write),
         .o_i2s_re(i2s_read),
-        .o_i2s_we(i2s_write),
-        .o_mmio_offset(offset),
-        .o_rdata(read_data)
+        .o_i2s_we(i2s_write)
     );
 
     task test_bus(input condition, input [255:0] description);

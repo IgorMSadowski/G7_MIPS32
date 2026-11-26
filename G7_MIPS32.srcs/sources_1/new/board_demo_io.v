@@ -50,15 +50,24 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module board_demo_io(
+    // Clock and reset
     input  wire        i_clk,
     input  wire        i_rst,
+
+    // Board inputs
     input  wire [1:0]  i_sw,
     input  wire        i_btn1,
+
+    // MMIO request and write data
     input  wire [7:0]  i_offset,
     input  wire        i_re,
     input  wire        i_we,
     input  wire [2:0]  i_led_pattern,
+
+    // MMIO read data
     output reg  [31:0] o_rdata,
+
+    // Board outputs
     output reg  [2:0]  o_led
     );
 

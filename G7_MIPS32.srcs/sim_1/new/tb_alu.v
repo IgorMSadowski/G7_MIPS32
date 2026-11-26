@@ -16,11 +16,13 @@ module tb_alu;
     alu dut(
         .i_a(a),
         .i_b(b),
+
         .i_ctrl(ctrl),
+
         .o_y(y),
         .o_zero(zero),
-        .o_overflow(overflow),
         .o_negative(negative),
+        .o_overflow(overflow),
         .o_carry(carry)
     );
 

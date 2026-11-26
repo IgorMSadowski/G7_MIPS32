@@ -25,8 +25,10 @@ module tb_memories;
     ) imem (
         .i_clk(clk),
         .i_rst(rst),
+
         .i_en(en),
         .i_addr(imem_addr),
+
         .o_instr(instr)
     );
 
@@ -34,10 +36,12 @@ module tb_memories;
         .i_clk(clk),
         .i_rst(rst),
         .i_en(en),
+
         .i_addr(dmem_addr),
-        .i_wdata(dmem_wdata),
         .i_re(dmem_re),
         .i_we(dmem_we),
+        .i_wdata(dmem_wdata),
+
         .o_rdata(dmem_rdata)
     );
 

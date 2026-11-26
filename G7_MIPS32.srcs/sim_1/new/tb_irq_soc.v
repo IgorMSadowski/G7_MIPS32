@@ -17,8 +17,10 @@ module tb_irq_soc;
     ) dut (
         .i_clk(clk),
         .i_rst(rst),
+
         .i_sw(2'b00),
         .i_btn1(btn1),
+
         .o_led()
     );
 

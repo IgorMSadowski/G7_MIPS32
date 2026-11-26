@@ -12,11 +12,16 @@
 module instruction_memory #(
     parameter MEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/imem_init.mem"
 )(
-    input  wire        i_clk,       // Clock
-    input  wire        i_rst,       // Reset
-    input  wire        i_en,        // Enable
-    input  wire [31:0] i_addr,      // Byte address from PC
-    output wire [31:0] o_instr      // Instruction word output
+    // Clock and reset
+    input  wire        i_clk,         // Clock
+    input  wire        i_rst,         // Reset
+
+    // Instruction fetch request
+    input  wire        i_en,          // Enable
+    input  wire [31:0] i_addr,        // Byte address from PC
+
+    // Instruction word
+    output wire [31:0] o_instr        // Instruction word output
     );
 
     wire [7:0] _addr_w;

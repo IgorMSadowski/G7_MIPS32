@@ -54,40 +54,40 @@
 module control_unit(
     // Clock, reset and CPU enable
     input  wire        i_clk,
-    input  wire        i_rst,           // Active-high synchronous reset
-    input  wire        i_en,            // Enables instruction execution
-
-    // Branch feedback from the datapath
-    input  wire [31:0] i_rs_value,      // Value used by branches against zero
-    input  wire        i_equal,         // rs == rt for BEQ and BNE
+    input  wire        i_rst,         // Active-high synchronous reset
+    input  wire        i_en,          // Enables instruction execution
 
     // Instruction fields
     input  wire [5:0]  i_op,
     input  wire [4:0]  i_rs,
-    input  wire [4:0]  i_shamt,
     input  wire [4:0]  i_rt,
+    input  wire [4:0]  i_shamt,
     input  wire [5:0]  i_funct,
 
-    // ALU and register controls
-    output reg         o_reg_dst,      // 0 = rt, 1 = rd
-    output reg         o_alu_src,      // ALU B: 0 = rt value, 1 = immediate
-    output reg         o_mem_to_reg,   // Write-back: 0 = ALU, 1 = memory
+    // Branch feedback from the datapath
+    input  wire [31:0] i_rs_value,    // Value used by branches against zero
+    input  wire        i_equal,       // rs == rt for BEQ and BNE
 
-    // Control flow
-    output reg         o_link,         // Select PC + 4 for write-back
+    // ALU operand and operation selects
+    output wire        o_alu_a_shamt, // ALU A: 0 = rs value, 1 = shamt
+    output reg         o_alu_src,     // ALU B: 0 = rt value, 1 = immediate
+    output reg  [3:0]  o_alu_ctrl,    // ALU operation
 
-    // ALU and datapath mux selects
-    output reg [3:0]   o_alu_ctrl,     // ALU operation
-    output wire        o_alu_a_shamt,  // ALU A: 0 = rs value, 1 = shamt
-    output wire        o_link_to_ra,   // JAL forces the write address to $ra
-    output wire [1:0]  o_pc_sel,       // 0 = PC + 4, 1 = branch, 2 = jump, 3 = rs
+    // Register file and write-back control
+    output reg         o_reg_dst,     // 0 = rt, 1 = rd
+    output reg         o_mem_to_reg,  // Write-back: 0 = ALU, 1 = memory
+    output reg         o_link,        // Select PC + 4 for write-back
+    output wire        o_link_to_ra,  // JAL forces the write address to $ra
+    output wire        o_rf_we,       // Write a register on the commit edge
 
-    // Cycle control and enables
-    output wire        o_rf_we,        // Write a register on the commit edge
-    output wire        o_load_issue,   // Start the LW read on its first edge
-    output wire        o_mem_write, // Enable the data bus write on the store edge
-    output wire        o_imem_en,      // Fetch the first or next instruction
-    output wire        o_commit        // Allow the instruction to complete
+    // Program counter and instruction fetch control
+    output wire [1:0]  o_pc_sel,      // 0 = PC + 4, 1 = branch, 2 = jump, 3 = rs
+    output wire        o_commit,      // Allow the instruction to complete
+    output wire        o_imem_en,     // Fetch the first or next instruction
+
+    // Data bus control
+    output wire        o_load_issue,  // Start the LW read on its first edge
+    output wire        o_mem_write    // Enable the data bus write on the store edge
     );
 
     // Decoder decisions used within the control unit
@@ -114,21 +114,20 @@ module control_unit(
     assign o_rf_we = o_commit && reg_write_request;
     assign o_mem_write = o_commit && mem_write_request;
 
-    assign o_alu_a_shamt = (o_alu_ctrl == 4'b0101) ||
-                          (o_alu_ctrl == 4'b0110) ||
-                          (o_alu_ctrl == 4'b1000);
+    assign o_alu_a_shamt = (o_alu_ctrl == 4'b0101) || (o_alu_ctrl == 4'b0110) || (o_alu_ctrl == 4'b1000);
                           
     assign o_link_to_ra = o_link && !jump_reg;
-    assign o_pc_sel = jump ? (jump_reg ? 2'd3 : 2'd2) :
-                       _branch_taken ? 2'd1 : 2'd0;
+    assign o_pc_sel = jump ? (jump_reg ? 2'd3 : 2'd2) : _branch_taken ? 2'd1 : 2'd0;
 
 
     // Branch decision unit instantiation
     bdu branch_decision_unit(
         .i_branch(branch),
         .i_branch_cond(branch_cond),
+
         .i_rs(i_rs_value),
         .i_equal(i_equal),
+
         .o_branch_taken(_branch_taken)
     );
 

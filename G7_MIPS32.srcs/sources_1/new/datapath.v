@@ -8,36 +8,48 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module datapath(
-    // Clock, reset and memory data
+    // Clock and reset
     input  wire        i_clk,
     input  wire        i_rst,
+
+    // Instruction ROM and data bus inputs
     input  wire [31:0] i_instr,
     input  wire [31:0] i_rdata,
 
-    // Selects and enables from the control unit
-    input  wire        i_reg_dst,
-    input  wire        i_alu_src,
+    // ALU operand and operation selects
     input  wire        i_alu_a_shamt,
+    input  wire        i_alu_src,
+    input  wire [3:0]  i_alu_ctrl,
+
+    // Register file and write-back control
+    input  wire        i_reg_dst,
     input  wire        i_mem_to_reg,
-    input  wire        i_rf_we,
     input  wire        i_link,
     input  wire        i_link_to_ra,
-    input  wire [3:0]  i_alu_ctrl,
+    input  wire        i_rf_we,
+
+    // Program counter control
     input  wire [1:0]  i_pc_sel,
     input  wire        i_commit,
 
-    // Interrupt request from the SoC controller
+    // Interrupt request and vector
     input  wire        i_irq_request,
     input  wire [31:0] i_irq_vector,
-    output wire        o_irq_ack,
-    output wire [31:0] o_return_pc,
 
-    // Memory interface and branch feedback
+    // Instruction ROM address
     output wire [31:0] o_pc,
+
+    // Data bus address and write data
     output wire [31:0] o_alu_out,
     output wire [31:0] o_wdata,
+
+    // Branch feedback to the control unit
     output wire [31:0] o_rs_value,
-    output wire        o_equal
+    output wire        o_equal,
+
+    // Interrupt acknowledgement and return address
+    output wire        o_irq_ack,
+    output wire [31:0] o_return_pc
     );
 
     // Instruction operand shared by the ALU and branch address calculation
@@ -113,8 +125,10 @@ module datapath(
     alu execution_unit(
         .i_a(_src_a),
         .i_b(_src_b),
+
         .i_ctrl(i_alu_ctrl),
-        .o_y(o_alu_out),   // ALU result or data-bus byte address
+
+        .o_y(o_alu_out),  // ALU result or data-bus byte address
         .o_zero(_zero)
     );
 
@@ -134,11 +148,14 @@ module datapath(
     register_file registers(
         .i_clk(i_clk),
         .i_rst(i_rst),
-        .i_we(i_rf_we),
+
         .i_ra1(i_instr[25:21]),
         .i_ra2(i_instr[20:16]),
+
+        .i_we(i_rf_we),
         .i_wa(_wa_final),
         .i_wdata(_wb),
+
         .o_rd1(_rd1_v),
         .o_rd2(_rd2_v)
     );
