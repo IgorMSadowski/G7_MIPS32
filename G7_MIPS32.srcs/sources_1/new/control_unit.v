@@ -52,46 +52,61 @@
 
 
 module control_unit(
-    input  wire       i_clk,
-    input  wire       i_rst,
-    input  wire       i_en,
-    input  wire [31:0] i_rs_value,
-    input  wire       i_equal,
-    input  wire [5:0] i_op,
-    input  wire [4:0] i_rs,
-    input  wire [4:0] i_shamt,
-    input  wire [4:0] i_rt,
-    input  wire [5:0] i_funct,
+    // Clock, reset and CPU enable
+    input  wire        i_clk,
+    input  wire        i_rst,           // Active-high synchronous reset
+    input  wire        i_en,            // Enables instruction execution
 
-    output reg         o_reg_dst,       // register destination select (0=rt, 1=rd)
-    output reg         o_alu_src,       // alu source select (0=reg, 1=imm)
-    output reg         o_mem_to_reg,    // memory to register select (0=ALU, 1=mem)
-    output reg         o_reg_write,     // register file write enable
-    output reg         o_mem_read,      // memory read enable
-    output reg         o_mem_write,     // memory write enable
-    output reg         o_branch,        // branch instruction flag
-    output reg         o_jump,          // jump instruction flag
-    output reg         o_jump_reg,      // jump target comes from register rs
-    output reg         o_link,          // write PC+4 to the selected destination
-    output reg [3:0]   o_branch_cond,   // branch condition code (4 bits)
-    // ALU control signals (4 bits) to the ALU block, MIPS R-types instructions-
-    // will have at most 4 bits of control, meaning 16 differents operations
-    output reg [3:0]   o_alu_ctrl,
-    output wire        o_alu_a_shamt,
-    output wire        o_link_to_ra,
-    output wire [1:0]  o_pc_sel,       // 0: PC+4, 1: branch, 2: jump, 3: rs
-    output wire        o_rf_we,
-    output wire        o_load_issue,
-    output wire        o_store_commit,
-    output wire        o_imem_en,
-    output wire        o_commit
+    // Branch feedback from the datapath
+    input  wire [31:0] i_rs_value,      // Value used by branches against zero
+    input  wire        i_equal,         // rs == rt for BEQ and BNE
+
+    // Instruction fields
+    input  wire [5:0]  i_op,
+    input  wire [4:0]  i_rs,
+    input  wire [4:0]  i_shamt,
+    input  wire [4:0]  i_rt,
+    input  wire [5:0]  i_funct,
+
+    // ALU and register controls
+    output reg         o_reg_dst,      // 0 = rt, 1 = rd
+    output reg         o_alu_src,      // ALU B: 0 = rt value, 1 = immediate
+    output reg         o_mem_to_reg,   // Write-back: 0 = ALU, 1 = memory
+    output reg         o_reg_write,    // Decoded instruction writes a register
+
+    // Decoded memory requests
+    output reg         o_mem_read,     // Instruction is LW
+    output reg         o_mem_write,    // Instruction is SW
+
+    // Control flow
+    output reg         o_branch,       // Instruction is a conditional branch
+    output reg         o_jump,         // Instruction is a jump
+    output reg         o_jump_reg,     // Jump target comes from rs
+    output reg         o_link,         // Select PC + 4 for write-back
+    output reg [3:0]   o_branch_cond,  // Comparison to perform in the BDU
+
+    // ALU and datapath mux selects
+    output reg [3:0]   o_alu_ctrl,     // ALU operation
+    output wire        o_alu_a_shamt,  // ALU A: 0 = rs value, 1 = shamt
+    output wire        o_link_to_ra,   // JAL forces the write address to $ra
+    output wire [1:0]  o_pc_sel,       // 0 = PC + 4, 1 = branch, 2 = jump, 3 = rs
+
+    // Cycle control and enables
+    output wire        o_rf_we,        // Write a register on the commit edge
+    output wire        o_load_issue,   // Start the LW read on its first edge
+    output wire        o_store_commit, // Enable the data bus write on the store edge
+    output wire        o_imem_en,      // Fetch the first or next instruction
+    output wire        o_commit        // Allow the instruction to complete
     );
 
-    reg _rom_ready;
-    reg _load_pending;
-    wire _branch_taken;
+    // Fetch and load state
+    reg _rom_ready;     // Set after the first instruction fetch
+    reg _load_pending;  // Set after the LW read so it can write back next cycle
+
+    // Branch result and cycle conditions
+    wire _branch_taken; // The BDU comparison passed for the current branch
     wire _run = i_en && !i_rst;
-    wire _stall = _rom_ready && o_mem_read && !_load_pending;
+    wire _stall = _rom_ready && o_mem_read && !_load_pending; // First cycle of LW
 
     assign o_load_issue = _run && _stall;
     assign o_commit = _run && _rom_ready && !_stall;
