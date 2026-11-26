@@ -5,7 +5,7 @@
 module tb_control_unit;
     reg [5:0] op = 0, funct = 0;
     reg [4:0] rs = 0, rt = 0, shamt = 0;
-    wire reg_dst, alu_src, mem_to_reg, reg_write, mem_read, mem_write;
+    wire reg_dst, alu_src, mem_to_reg, reg_write, mem_read, mem_write_request;
     wire branch, jump, jump_reg, link;
     wire [3:0] branch_cond, alu_ctrl;
     integer errors = 0;
@@ -20,11 +20,11 @@ module tb_control_unit;
         .i_op(op), .i_funct(funct), .i_rs(rs), .i_rt(rt), .i_shamt(shamt),
         .o_reg_dst(reg_dst), .o_alu_src(alu_src),
         .o_mem_to_reg(mem_to_reg), .o_reg_write(reg_write),
-        .o_mem_read(mem_read), .o_mem_write(mem_write),
+        .o_mem_read(mem_read), .o_mem_write_request(mem_write_request),
         .o_branch(branch), .o_branch_cond(branch_cond),
         .o_jump(jump), .o_jump_reg(jump_reg), .o_link(link),
         .o_alu_ctrl(alu_ctrl), .o_alu_a_shamt(), .o_link_to_ra(), .o_pc_sel(),
-        .o_rf_we(), .o_load_issue(), .o_store_commit(), .o_imem_en(), .o_commit()
+        .o_rf_we(), .o_load_issue(), .o_mem_write(), .o_imem_en(), .o_commit()
     );
 
     // Show the ALU operation, branch condition and source of the register write data.
@@ -133,20 +133,20 @@ module tb_control_unit;
         instruction = "LW                              ";
         op = 6'h23; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
         #1;
-        test_controls(mem_read == 1 && mem_write == 0 && reg_write == 1 && mem_to_reg == 1 && reg_dst == 0 && alu_src == 1 && alu_ctrl == 0);
+        test_controls(mem_read == 1 && mem_write_request == 0 && reg_write == 1 && mem_to_reg == 1 && reg_dst == 0 && alu_src == 1 && alu_ctrl == 0);
         #19;
 
         instruction = "SW                              ";
         op = 6'h2B; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
         #1;
-        test_controls(mem_write == 1 && mem_read == 0 && reg_write == 0 && alu_src == 1 && alu_ctrl == 0);
+        test_controls(mem_write_request == 1 && mem_read == 0 && reg_write == 0 && alu_src == 1 && alu_ctrl == 0);
         #19;
 
         // BEQ selects the equality condition. The datapath compares rs and rt.
         instruction = "BEQ                             ";
         op = 6'h04; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
         #1;
-        test_controls(branch == 1 && branch_cond == 0 && alu_ctrl == 1 && alu_src == 0 && reg_write == 0 && mem_write == 0 && mem_read == 0 && jump == 0);
+        test_controls(branch == 1 && branch_cond == 0 && alu_ctrl == 1 && alu_src == 0 && reg_write == 0 && mem_write_request == 0 && mem_read == 0 && jump == 0);
         #19;
 
         instruction = "BNE                             ";
@@ -230,14 +230,14 @@ module tb_control_unit;
         instruction = "UNSUPPORTED OPCODE              ";
         op = 6'h3F; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
         #1;
-        test_controls(reg_write == 0 && mem_read == 0 && mem_write == 0 && branch == 0 && jump == 0 && jump_reg == 0 && link == 0);
+        test_controls(reg_write == 0 && mem_read == 0 && mem_write_request == 0 && branch == 0 && jump == 0 && jump_reg == 0 && link == 0);
         #19;
 
         // Recognized R-type opcode with an unsupported funct value.
         instruction = "UNSUPPORTED R FUNCTION          ";
         op = 6'h00; funct = 6'h3F; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
         #1;
-        test_controls(reg_write == 0 && mem_read == 0 && mem_write == 0 && branch == 0 && jump == 0 && jump_reg == 0 && link == 0);
+        test_controls(reg_write == 0 && mem_read == 0 && mem_write_request == 0 && branch == 0 && jump == 0 && jump_reg == 0 && link == 0);
         #19;
 
         if (errors == 0) $display("PASS: %0d basic control-unit checks", checks);

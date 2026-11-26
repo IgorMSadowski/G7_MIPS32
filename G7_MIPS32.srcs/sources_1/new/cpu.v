@@ -15,6 +15,12 @@ module cpu(
     input  wire [31:0] i_instr,         // Instruction word from IMEM
     input  wire [31:0] i_rdata,         // Read data from DMEM
 
+    // Interrupt interface to the SoC controller
+    input  wire        i_irq_request,
+    input  wire [31:0] i_irq_vector,
+    output wire        o_irq_ack,
+    output wire [31:0] o_return_pc,
+
     // outputs
     output wire [31:0] o_wdata,         // Store data to DMEM
     output wire [31:0] o_pc,            // IMEM address
@@ -55,12 +61,12 @@ module cpu(
         .i_rs_value(_rs_value), .i_equal(_equal),
         .i_op(_op), .i_rs(_rs), .i_shamt(_shamt), .i_rt(_rt), .i_funct(_funct),
         .o_reg_dst(_reg_dst), .o_alu_src(_alu_src), .o_mem_to_reg(_mem_to_reg),
-        .o_reg_write(), .o_mem_read(), .o_mem_write(),
+        .o_reg_write(), .o_mem_read(), .o_mem_write_request(),
         .o_branch(), .o_branch_cond(), .o_jump(), .o_jump_reg(),
         .o_link(_link), .o_alu_ctrl(_alu_ctrl),
         .o_alu_a_shamt(_alu_a_shamt), .o_link_to_ra(_link_to_ra),
         .o_pc_sel(_pc_sel), .o_rf_we(_rf_we), .o_commit(_commit),
-        .o_imem_en(o_imem_en), .o_load_issue(o_mem_read), .o_store_commit(o_mem_write)
+        .o_imem_en(o_imem_en), .o_load_issue(o_mem_read), .o_mem_write(o_mem_write)
     );
 
     datapath u_dp(
@@ -69,6 +75,8 @@ module cpu(
         .i_link(_link), .i_alu_ctrl(_alu_ctrl),
         .i_alu_a_shamt(_alu_a_shamt), .i_link_to_ra(_link_to_ra),
         .i_pc_sel(_pc_sel), .i_rf_we(_rf_we), .i_commit(_commit),
+        .i_irq_request(i_irq_request), .i_irq_vector(i_irq_vector),
+        .o_irq_ack(o_irq_ack), .o_return_pc(o_return_pc),
         .o_rs_value(_rs_value), .o_equal(_equal),
         .o_pc(o_pc), .o_alu_out(o_alu_out), .o_wdata(o_wdata)
     );

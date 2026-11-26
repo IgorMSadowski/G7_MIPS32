@@ -26,15 +26,17 @@ module tb_datapath;
         .i_op(instr[31:26]), .i_rs(instr[25:21]), .i_rt(instr[20:16]),
         .i_shamt(instr[10:6]), .i_funct(instr[5:0]),
         .o_reg_dst(reg_dst), .o_alu_src(alu_src), .o_mem_to_reg(mem_to_reg),
-        .o_reg_write(reg_write), .o_mem_read(mem_read), .o_mem_write(),
+        .o_reg_write(reg_write), .o_mem_read(mem_read), .o_mem_write_request(),
         .o_branch(), .o_branch_cond(), .o_jump(), .o_jump_reg(),
         .o_link(link), .o_alu_ctrl(alu_ctrl),
         .o_alu_a_shamt(alu_a_shamt), .o_link_to_ra(link_to_ra),
         .o_pc_sel(pc_sel), .o_rf_we(rf_we), .o_commit(commit),
-        .o_imem_en(imem_en), .o_load_issue(load_issue), .o_store_commit()
+        .o_imem_en(imem_en), .o_load_issue(load_issue), .o_mem_write()
     );
 
     datapath dut (
+        .i_irq_request(1'b0), .i_irq_vector(32'b0),
+        .o_irq_ack(), .o_return_pc(),
         .i_clk(clk), .i_rst(rst), .i_instr(instr), .i_rdata(rdata),
         .i_reg_dst(reg_dst), .i_alu_src(alu_src), .i_mem_to_reg(mem_to_reg),
         .i_link(link), .i_alu_ctrl(alu_ctrl),

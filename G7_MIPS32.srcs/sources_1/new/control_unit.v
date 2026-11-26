@@ -76,7 +76,7 @@ module control_unit(
 
     // Decoded memory requests
     output reg         o_mem_read,     // Instruction is LW
-    output reg         o_mem_write,    // Instruction is SW
+    output reg         o_mem_write_request, // Instruction is SW
 
     // Control flow
     output reg         o_branch,       // Instruction is a conditional branch
@@ -94,7 +94,7 @@ module control_unit(
     // Cycle control and enables
     output wire        o_rf_we,        // Write a register on the commit edge
     output wire        o_load_issue,   // Start the LW read on its first edge
-    output wire        o_store_commit, // Enable the data bus write on the store edge
+    output wire        o_mem_write, // Enable the data bus write on the store edge
     output wire        o_imem_en,      // Fetch the first or next instruction
     output wire        o_commit        // Allow the instruction to complete
     );
@@ -112,7 +112,7 @@ module control_unit(
     assign o_commit = _run && _rom_ready && !_stall;
     assign o_imem_en = _run && (!_rom_ready || o_commit);
     assign o_rf_we = o_commit && o_reg_write;
-    assign o_store_commit = o_commit && o_mem_write;
+    assign o_mem_write = o_commit && o_mem_write_request;
 
     assign o_alu_a_shamt = (o_alu_ctrl == 4'b0101) ||
                           (o_alu_ctrl == 4'b0110) ||
@@ -146,7 +146,7 @@ module control_unit(
         o_mem_to_reg  = 1'b0;   // memory to register select (0=ALU, 1=mem)
         o_reg_write   = 1'b0;   // register file write enable 
         o_mem_read    = 1'b0;   // memory read enable
-        o_mem_write   = 1'b0;   // memory write enable
+        o_mem_write_request = 1'b0; // Decoded store request
         o_branch      = 1'b0;   // branch instruction flag
         o_jump        = 1'b0;   // jump instruction flag
         o_jump_reg    = 1'b0;   // register-target jump flag
@@ -260,7 +260,7 @@ module control_unit(
 
             6'h2B: begin    // sw    rt, imm(rs)
                 o_alu_src   = 1'b1;
-                o_mem_write = 1'b1;
+                o_mem_write_request = 1'b1;
                 o_alu_ctrl  = 4'b0000;  // effective address = rs + sign_ext(imm)
             end
 

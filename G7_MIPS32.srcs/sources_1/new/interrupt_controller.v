@@ -13,50 +13,26 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module interrupt_controller(
-    input wire i_clk,
-    input wire i_reset,
-    input wire events[3:0],
-    input wire i_irq_ack,
-    input wire i_return_pc[31:0],
+    input  wire        i_clk,
+    input  wire        i_rst,
+    input  wire [3:0]  i_events,
+    input  wire        i_irq_ack,
+    input  wire [31:0] i_return_pc,
 
-    input wire i_offset[7:0],
-    input wire i_en,
-    input wire i_we,
-    input wire i_wdata[31:0],
+    input  wire [7:0]  i_offset,
+    input  wire        i_re,
+    input  wire        i_we,
+    input  wire [31:0] i_wdata,
 
-    output wire o_irq_request,
-    output wire o_irq_vector[31:0],
-
-    output wire o_rdata[31:0],
-);
-
-    reg global_enable;
-    reg source_enable[3:0];
-    reg pending[3:0];
-    reg selected[3:0];
-
-    wire eligible[3:0] = pending & source_enable;
-    assign o_irq_request = global_enable && (|eligible);
-
-
-
-
-
-
-endmodule
-
-
-
-
-
+    output wire        o_irq_request,
     output reg  [31:0] o_irq_vector,
     output reg  [31:0] o_rdata
 );
 
-    reg        global_enable;
-    reg [3:0]  source_enable;
-    reg [3:0]  pending;
-    reg [3:0]  selected;
+    reg       global_enable;
+    reg [3:0] source_enable;
+    reg [3:0] pending;
+    reg [3:0] selected;
 
     wire [3:0] eligible = pending & source_enable;
     assign o_irq_request = global_enable && (|eligible);
@@ -96,9 +72,9 @@ endmodule
 
             // Clear the accepted source. A new event on this edge stays pending.
             if (i_irq_ack)
-                pending <= (pending & ~selected) | events;
+                pending <= (pending & ~selected) | i_events;
             else
-                pending <= pending | events;
+                pending <= pending | i_events;
 
             // Capture the reply on the read edge and hold it for LW write-back.
             if (i_re) begin
@@ -111,31 +87,4 @@ endmodule
             end
         end
     end
-
 endmodule
-
-
-
-datapath
-reg        irq_active;
-reg [31:0] saved_pc;
-
-// jr_k1 is high when the current instruction is JR $k1.
-wire return_irq = o_commit && irq_active && jr_k1;
-wire take_irq = !i_rst && o_commit && irq_request && !irq_active;
-
-assign irq_ack = take_irq;  // Sampled on the same edge as interrupt entry
-
-wire [31:0] committed_next_pc = take_irq ? irq_vector : _pc_next;
-
-always @(posedge i_clk) begin
-    if (i_rst) begin
-        irq_active <= 1'b0;
-        saved_pc   <= 32'b0;
-    end else if (return_irq) begin
-        irq_active <= 1'b0;
-    end else if (take_irq) begin
-        irq_active <= 1'b1;
-        saved_pc   <= _pc_next;
-    end
-end

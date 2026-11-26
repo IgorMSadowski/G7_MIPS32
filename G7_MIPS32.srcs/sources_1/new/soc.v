@@ -66,6 +66,27 @@ module soc #(
     wire        demo_read, demo_write;
     wire [7:0]  mmio_offset;
 
+    wire        irq_read, irq_write;
+    wire [31:0] irq_rdata;
+    wire        irq_request, irq_ack;
+    wire [31:0] irq_vector, irq_return_pc;
+
+    // Synchronize BTN1 before producing a rising-edge event for IRQ0.
+    (* ASYNC_REG = "TRUE" *) reg irq_btn_meta, irq_btn_sync;
+    reg irq_btn_prev;
+    always @(posedge clk_50mhz) begin
+        if (soc_reset) begin
+            irq_btn_meta <= 1'b0;
+            irq_btn_sync <= 1'b0;
+            irq_btn_prev <= 1'b0;
+        end else begin
+            irq_btn_meta <= i_btn1;
+            irq_btn_sync <= irq_btn_meta;
+            irq_btn_prev <= irq_btn_sync;
+        end
+    end
+    wire irq_btn_event = irq_btn_sync && !irq_btn_prev;
+
     data_bus u_data_bus (
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
@@ -73,20 +94,35 @@ module soc #(
         .i_re(_mem_read),
         .i_we(_mem_write),
         .i_ram_rdata(ram_rdata),
-        // Reserved pages until the I2S and IRQ register interfaces are connected.
+        // The I2S page is reserved until the peripheral is connected.
         .i_i2s_rdata(32'b0),
-        .i_irq_rdata(32'b0),
+        .i_irq_rdata(irq_rdata),
         .i_extra_rdata(demo_rdata),
         .o_ram_re(ram_read),
         .o_ram_we(ram_write),
         .o_i2s_re(),
         .o_i2s_we(),
-        .o_irq_re(),
-        .o_irq_we(),
+        .o_irq_re(irq_read),
+        .o_irq_we(irq_write),
         .o_extra_re(demo_read),
         .o_extra_we(demo_write),
         .o_mmio_offset(mmio_offset),
         .o_rdata(_rdata)
+    );
+
+    interrupt_controller u_irq (
+        .i_clk(clk_50mhz),
+        .i_rst(soc_reset),
+        .i_events({3'b000, irq_btn_event}),
+        .i_irq_ack(irq_ack),
+        .i_return_pc(irq_return_pc),
+        .i_offset(mmio_offset),
+        .i_re(irq_read),
+        .i_we(irq_write),
+        .i_wdata(_wdata),
+        .o_irq_request(irq_request),
+        .o_irq_vector(irq_vector),
+        .o_rdata(irq_rdata)
     );
 
     board_demo_io u_demo_io (
@@ -130,6 +166,10 @@ module soc #(
         .i_en(_en),
         .i_instr(_instr),
         .i_rdata(_rdata),
+        .i_irq_request(irq_request),
+        .i_irq_vector(irq_vector),
+        .o_irq_ack(irq_ack),
+        .o_return_pc(irq_return_pc),
         .o_pc(_pc),
         .o_imem_en(_imem_en),
         .o_alu_out(_alu_out),
