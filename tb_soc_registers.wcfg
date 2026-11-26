@@ -100,7 +100,7 @@
       <obj_property name="ObjectShortName">_imem_en</obj_property>
       <obj_property name="label">ROM Enable</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_soc/dut/u_cpu/u_dp/_stall" type="logic">
+   <wvobject fp_name="/tb_soc/dut/u_cpu/u_cu/_stall" type="logic">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">_stall</obj_property>
       <obj_property name="ObjectShortName">_stall</obj_property>

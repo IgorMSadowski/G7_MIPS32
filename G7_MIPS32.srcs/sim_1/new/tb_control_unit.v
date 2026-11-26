@@ -15,13 +15,16 @@ module tb_control_unit;
     reg [63:0] alu_operation, writeback_source, branch_name;
 
     control_unit dut (
+        .i_clk(1'b0), .i_rst(1'b1), .i_en(1'b0),
+        .i_rs_value(32'b0), .i_equal(1'b0),
         .i_op(op), .i_funct(funct), .i_rs(rs), .i_rt(rt), .i_shamt(shamt),
         .o_reg_dst(reg_dst), .o_alu_src(alu_src),
         .o_mem_to_reg(mem_to_reg), .o_reg_write(reg_write),
         .o_mem_read(mem_read), .o_mem_write(mem_write),
         .o_branch(branch), .o_branch_cond(branch_cond),
         .o_jump(jump), .o_jump_reg(jump_reg), .o_link(link),
-        .o_alu_ctrl(alu_ctrl)
+        .o_alu_ctrl(alu_ctrl), .o_alu_a_shamt(), .o_link_to_ra(), .o_pc_sel(),
+        .o_rf_we(), .o_load_issue(), .o_store_commit(), .o_imem_en(), .o_commit()
     );
 
     // Show the ALU operation, branch condition and source of the register write data.

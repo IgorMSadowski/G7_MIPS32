@@ -52,6 +52,11 @@
 
 
 module control_unit(
+    input  wire       i_clk,
+    input  wire       i_rst,
+    input  wire       i_en,
+    input  wire [31:0] i_rs_value,
+    input  wire       i_equal,
     input  wire [5:0] i_op,
     input  wire [4:0] i_rs,
     input  wire [4:0] i_shamt,
@@ -71,8 +76,53 @@ module control_unit(
     output reg [3:0]   o_branch_cond,   // branch condition code (4 bits)
     // ALU control signals (4 bits) to the ALU block, MIPS R-types instructions-
     // will have at most 4 bits of control, meaning 16 differents operations
-    output reg [3:0]   o_alu_ctrl   
+    output reg [3:0]   o_alu_ctrl,
+    output wire        o_alu_a_shamt,
+    output wire        o_link_to_ra,
+    output wire [1:0]  o_pc_sel,       // 0: PC+4, 1: branch, 2: jump, 3: rs
+    output wire        o_rf_we,
+    output wire        o_load_issue,
+    output wire        o_store_commit,
+    output wire        o_imem_en,
+    output wire        o_commit
     );
+
+    reg _rom_ready;
+    reg _load_pending;
+    wire _branch_taken;
+    wire _run = i_en && !i_rst;
+    wire _stall = _rom_ready && o_mem_read && !_load_pending;
+
+    assign o_load_issue = _run && _stall;
+    assign o_commit = _run && _rom_ready && !_stall;
+    assign o_imem_en = _run && (!_rom_ready || o_commit);
+    assign o_rf_we = o_commit && o_reg_write;
+    assign o_store_commit = o_commit && o_mem_write;
+
+    assign o_alu_a_shamt = (o_alu_ctrl == 4'b0101) ||
+                          (o_alu_ctrl == 4'b0110) ||
+                          (o_alu_ctrl == 4'b1000);
+    assign o_link_to_ra = o_link && !o_jump_reg;
+    assign o_pc_sel = o_jump ? (o_jump_reg ? 2'd3 : 2'd2) :
+                       _branch_taken ? 2'd1 : 2'd0;
+
+    bdu branch_decision_unit(
+        .i_branch(o_branch),
+        .i_branch_cond(o_branch_cond),
+        .i_rs(i_rs_value),
+        .i_equal(i_equal),
+        .o_branch_taken(_branch_taken)
+    );
+
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _rom_ready <= 1'b0;
+            _load_pending <= 1'b0;
+        end else if (i_en) begin
+            _rom_ready <= 1'b1;
+            _load_pending <= o_load_issue;
+        end
+    end
 
     always @(*) begin
         // Default values for control signals

@@ -10,6 +10,11 @@
 // Target Devices: 
 // Tool Versions: 
 // Description: Arithmetic Logic Unit for MIPS processor
+//
+//  Shifts and Rotates were modified so we do not use the shift barrel, the shift amount was fixed to 1 and the Rotate to 16
+//  It is only changed on the ALU so the control unit continues decoding the correct way, so in the future if we want to change it back after implementing our own
+//  shift and rotate units, we can do it easily.
+//
 //////////////////////////////////////////////////////////////////////////////////
 
 // ALU - arithmetic and logic
@@ -34,10 +39,13 @@ module alu(
             4'b0010: o_y = i_a & i_b;       // and
             4'b0011: o_y = i_a | i_b;       // or
             4'b0100: o_y = {i_b[15:0], 16'b0}; // lui: immediate in upper 16 bits
-            4'b0101: o_y = i_b << i_a;      // sll: shift left logical
-            4'b0110: o_y = i_b >> i_a;      // srl: shift right logical
+            //4'b0101: o_y = i_b << i_a;      // sll: shift left logical
+            4'b0101: o_y = {i_b[30:0], 1'b0};      // sll: shift left by 1 bit [MODIFIED]       
+            //4'b0110: o_y = i_b >> i_a;      // srl: shift right logical
+            4'b0110: o_y = {1'b0, i_b[31:1]};      // srl: shift right by 1 bit [MODIFIED]
             4'b0111: o_y = i_a ^ i_b;       // xor
-            4'b1000: o_y = (i_b >> i_a) | (i_b << (32 - i_a)); // rotr: rotate right
+            //4'b1000: o_y = (i_b >> i_a) | (i_b << (32 - i_a)); // rotr: rotate right
+            4'b1000: o_y = {i_b[15:0], i_b[31:16]}; // rotr: rotate right by 16 bits [MODIFIED]
             4'b1001: o_y = {i_b[23:16], i_b[31:24], i_b[7:0], i_b[15:8]}; // wsbh
             4'b1010: o_y = ($signed(i_a) < $signed(i_b)) ? 32'd1 : 32'd0; // slt (signed) set less than
             default: o_y = 32'b0;

@@ -91,7 +91,7 @@
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_datapath/dut/_stall">
+   <wvobject type="logic" fp_name="/tb_datapath/control/_stall">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">_stall</obj_property>
       <obj_property name="ObjectShortName">_stall</obj_property>
