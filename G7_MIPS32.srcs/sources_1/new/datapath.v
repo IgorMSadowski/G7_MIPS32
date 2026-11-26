@@ -56,6 +56,7 @@ module datapath(
     assign _pc_next = (i_pc_sel == 2'd3) ? _rd1_v :
                       (i_pc_sel == 2'd2) ? _jmp_tgt :
                       (i_pc_sel == 2'd1) ? _br_tgt : _pc4;
+                      
     assign o_pc = i_commit ? _pc_next : _pc_r;
 
     assign _src_a = i_alu_a_shamt ? {27'b0, i_instr[10:6]} : _rd1_v;

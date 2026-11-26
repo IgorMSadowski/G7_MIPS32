@@ -11,26 +11,24 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="131.001 ns"></ZoomEndTime>
-      <Cursor1Time time="113.672 ns"></Cursor1Time>
+      <ZoomStartTime time="18.500 ns"></ZoomStartTime>
+      <ZoomEndTime time="129.501 ns"></ZoomEndTime>
+      <Cursor1Time time="111.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="225"></NameColumnWidth>
-      <ValueColumnWidth column_width="150"></ValueColumnWidth>
+      <ValueColumnWidth column_width="146"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="21" />
+   <WVObjectSize size="18" />
    <wvobject fp_name="divider_TEST_AND_CLOCK" type="divider">
       <obj_property name="label">Clock Reset</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_datapath/step">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">step[255:0]</obj_property>
-      <obj_property name="ObjectShortName">step[255:0]</obj_property>
+   <wvobject type="array" fp_name="/tb_datapath/execution_step">
+      <obj_property name="ElementShortName">execution_step[255:0]</obj_property>
+      <obj_property name="ObjectShortName">execution_step[255:0]</obj_property>
       <obj_property name="Radix">ASCIIRADIX</obj_property>
-      <obj_property name="label">Execution Step</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_datapath/clk">
       <obj_property name="DisplayName">label</obj_property>
@@ -91,33 +89,12 @@
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="BkColor">#E0FFFF</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_datapath/control/_stall">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">_stall</obj_property>
-      <obj_property name="ObjectShortName">_stall</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
-      <obj_property name="label">Load stall</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_datapath/load_issue">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">load_issue</obj_property>
-      <obj_property name="ObjectShortName">load_issue</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
-      <obj_property name="label">Memory read request</obj_property>
-   </wvobject>
    <wvobject type="logic" fp_name="/tb_datapath/commit">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">commit</obj_property>
       <obj_property name="ObjectShortName">commit</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
       <obj_property name="label">Commit - update PC / RF</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_datapath/imem_en">
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">imem_en</obj_property>
-      <obj_property name="ObjectShortName">imem_en</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
-      <obj_property name="label">ROM enable</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_datapath/rdata">
       <obj_property name="DisplayName">label</obj_property>

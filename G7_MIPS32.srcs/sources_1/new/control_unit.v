@@ -117,10 +117,13 @@ module control_unit(
     assign o_alu_a_shamt = (o_alu_ctrl == 4'b0101) ||
                           (o_alu_ctrl == 4'b0110) ||
                           (o_alu_ctrl == 4'b1000);
+                          
     assign o_link_to_ra = o_link && !o_jump_reg;
     assign o_pc_sel = o_jump ? (o_jump_reg ? 2'd3 : 2'd2) :
                        _branch_taken ? 2'd1 : 2'd0;
 
+
+    // Branch decision unit instantiation
     bdu branch_decision_unit(
         .i_branch(o_branch),
         .i_branch_cond(o_branch_cond),
@@ -129,6 +132,7 @@ module control_unit(
         .o_branch_taken(_branch_taken)
     );
 
+    //update the _rom_ready and _load_pending flags on each clock cycle
     always @(posedge i_clk) begin
         if (i_rst) begin
             _rom_ready <= 1'b0;
