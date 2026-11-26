@@ -63,16 +63,21 @@ module soc #(
     wire ram_read;
     (* KEEP = "TRUE" *) wire        ram_write;
     wire [31:0] demo_rdata;
-    wire        demo_read, demo_write;
+    wire        demo_read;
+    wire        demo_write;
     wire [7:0]  mmio_offset;
 
-    wire        irq_read, irq_write;
+    wire        irq_read;
+    wire        irq_write;
     wire [31:0] irq_rdata;
-    wire        irq_request, irq_ack;
-    wire [31:0] irq_vector, irq_return_pc;
+    wire        irq_request;
+    wire        irq_ack;
+    wire [31:0] irq_vector;
+    wire [31:0] irq_return_pc;
 
     // Synchronize BTN1 before producing a rising-edge event for IRQ0.
-    (* ASYNC_REG = "TRUE" *) reg irq_btn_meta, irq_btn_sync;
+    (* ASYNC_REG = "TRUE" *) reg irq_btn_meta;
+    (* ASYNC_REG = "TRUE" *) reg irq_btn_sync;
     reg irq_btn_prev;
     always @(posedge clk_50mhz) begin
         if (soc_reset) begin

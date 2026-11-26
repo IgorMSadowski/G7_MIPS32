@@ -1,4 +1,17 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: Igor Sadowski
+// 
+// Create Date:
+// Design Name: 
+// Module Name: Data Bus
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: Data Bus for MIPS processor
+//
+//////////////////////////////////////////////////////////////////////////////////
 
 module data_bus (
     input  wire        i_clk,
@@ -62,7 +75,10 @@ module data_bus (
     // select an internal register when its own enable is asserted.
     assign o_mmio_offset = i_addr[7:0];
 
-    reg read_from_ram, read_from_i2s, read_from_irq, read_from_extra;
+    reg read_from_ram;
+    reg read_from_i2s;
+    reg read_from_irq;
+    reg read_from_extra;
 
     // Save the read destination at the rising edge while i_re is high.
     // With i_re low, keep that destination selected during CPU write-back.

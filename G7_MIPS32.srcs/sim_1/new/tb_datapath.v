@@ -34,15 +34,29 @@ module tb_datapath;
     always #10 clk = ~clk;
 
     datapath dut (
-        .i_irq_request(1'b0), .i_irq_vector(32'b0),
-        .o_irq_ack(), .o_return_pc(),
-        .i_clk(clk), .i_rst(rst), .i_instr(instr), .i_rdata(rdata),
-        .i_reg_dst(reg_dst), .i_alu_src(alu_src),
-        .i_alu_a_shamt(alu_a_shamt), .i_mem_to_reg(mem_to_reg),
-        .i_rf_we(rf_we), .i_link(link), .i_link_to_ra(link_to_ra),
-        .i_alu_ctrl(alu_ctrl), .i_pc_sel(pc_sel), .i_commit(commit),
-        .o_pc(pc), .o_alu_out(alu_out), .o_wdata(wdata),
-        .o_rs_value(rs_value), .o_equal(equal)
+        .i_irq_request(1'b0),
+        .i_irq_vector(32'b0),
+        .o_irq_ack(),
+        .o_return_pc(),
+        .i_clk(clk),
+        .i_rst(rst),
+        .i_instr(instr),
+        .i_rdata(rdata),
+        .i_reg_dst(reg_dst),
+        .i_alu_src(alu_src),
+        .i_alu_a_shamt(alu_a_shamt),
+        .i_mem_to_reg(mem_to_reg),
+        .i_rf_we(rf_we),
+        .i_link(link),
+        .i_link_to_ra(link_to_ra),
+        .i_alu_ctrl(alu_ctrl),
+        .i_pc_sel(pc_sel),
+        .i_commit(commit),
+        .o_pc(pc),
+        .o_alu_out(alu_out),
+        .o_wdata(wdata),
+        .o_rs_value(rs_value),
+        .o_equal(equal)
     );
 
     // Read the registers used in the test for checks and the waveform.
