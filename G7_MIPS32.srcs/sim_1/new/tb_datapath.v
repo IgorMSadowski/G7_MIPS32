@@ -65,6 +65,7 @@ module tb_datapath;
         .o_equal(equal),
 
         .o_irq_ack(),
+        .o_irq_return(),
         .o_return_pc()
     );
 

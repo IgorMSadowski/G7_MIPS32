@@ -18,6 +18,7 @@ module tb_soc;
 
         .i_sw(2'b00),
         .i_btn1(1'b0),
+        .i_btn3(1'b0),
 
         .o_led()
     );

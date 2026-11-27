@@ -47,8 +47,9 @@ module datapath(
     output wire [31:0] o_rs_value,
     output wire        o_equal,
 
-    // Interrupt acknowledgement and return address
+    // Interrupt acceptance, return and saved address for MMIO reads
     output wire        o_irq_ack,
+    output wire        o_irq_return,
     output wire [31:0] o_return_pc
     );
 
@@ -80,30 +81,33 @@ module datapath(
 
     // Present the next address to the synchronous ROM on the commit edge.
     // Before the first commit or during a stall, keep the current address.
-    // IRQ entry overrides the normal next address at an instruction boundary.
-    reg        irq_active;
+    // IRQ entry selects the vector. Software stacks the saved addresses.
+    reg [1:0]  irq_depth;
     reg [31:0] saved_pc;
+    wire irq_active = (irq_depth != 2'd0);
 
-    // A committed JR $k1 ends the active handler.
+    // JR $k1 uses the normal jump target and also ends one IRQ level.
     wire jr_k1 = (i_instr[31:26] == 6'h00) &&
                  (i_instr[25:21] == 5'd27) && (i_instr[5:0] == 6'h08);
     wire return_irq = i_commit && irq_active && jr_k1;
-    wire take_irq = !i_rst && i_commit && i_irq_request && !irq_active;
+    wire take_irq = !i_rst && i_commit && i_irq_request &&
+                    !return_irq && (irq_depth < 2'd2);
     wire [31:0] committed_next_pc = take_irq ? i_irq_vector : _pc_next;
 
     assign o_irq_ack = take_irq;
+    assign o_irq_return = return_irq;
     assign o_return_pc = saved_pc;
     assign o_pc = i_commit ? committed_next_pc : _pc_r;
 
     always @(posedge i_clk) begin
         if (i_rst) begin
-            irq_active <= 1'b0;
-            saved_pc   <= 32'b0;
+            irq_depth <= 2'd0;
+            saved_pc  <= 32'b0;
         end else if (return_irq) begin
-            irq_active <= 1'b0;
+            irq_depth <= irq_depth - 2'd1;
         end else if (take_irq) begin
-            irq_active <= 1'b1;
-            saved_pc   <= _pc_next;  // Resume at the normal next address.
+            irq_depth <= irq_depth + 2'd1;
+            saved_pc  <= _pc_next;  // The ISR reads this before enabling IRQs.
         end
     end
 

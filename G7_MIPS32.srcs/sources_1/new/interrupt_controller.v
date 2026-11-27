@@ -20,8 +20,9 @@ module interrupt_controller(
     // Interrupt events
     input  wire [3:0]  i_events,
 
-    // CPU acknowledgement and return address
+    // CPU interrupt entry, return and saved address
     input  wire        i_irq_ack,
+    input  wire        i_irq_return,
     input  wire [31:0] i_return_pc,
 
     // MMIO request and write data
@@ -44,7 +45,10 @@ module interrupt_controller(
     reg [3:0] selected;
 
     wire [3:0] eligible = pending & source_enable;
-    assign o_irq_request = global_enable && (|eligible);
+    wire write_enable_register = i_we && (i_offset == 8'h00);
+
+    // Apply a mask write before accepting another interrupt.
+    assign o_irq_request = global_enable && !write_enable_register && (|eligible);
 
     always @(*) begin
         selected = 4'b0000;
@@ -74,10 +78,17 @@ module interrupt_controller(
             pending       <= 4'b0000;
             o_rdata       <= 32'b0;
         end else begin
-            if (i_we && i_offset == 8'h00) begin
+            // Protect the ISR until it saves its return address.
+            if (i_irq_ack)
+                global_enable <= 1'b0;
+            // Each accepted IRQ interrupted a context with global enable set.
+            else if (i_irq_return)
+                global_enable <= 1'b1;
+            else if (write_enable_register)
                 global_enable <= i_wdata[4];
+
+            if (write_enable_register)
                 source_enable <= i_wdata[3:0];
-            end
 
             // Clear the accepted source. A new event on this edge stays pending.
             if (i_irq_ack)
@@ -90,7 +101,7 @@ module interrupt_controller(
                 case (i_offset)
                     8'h00:   o_rdata <= {27'b0, global_enable, source_enable};
                     8'h04:   o_rdata <= {28'b0, pending};
-                    8'h08:   o_rdata <= i_return_pc;
+                    8'h08:   o_rdata <= i_return_pc;  // Read-only saved PC
                     default: o_rdata <= 32'b0;
                 endcase
             end

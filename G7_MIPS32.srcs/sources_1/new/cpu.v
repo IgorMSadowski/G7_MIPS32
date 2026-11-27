@@ -31,8 +31,9 @@ module cpu(
     output wire        o_mem_read,    // DMEM read enable (lw)
     output wire        o_mem_write,   // DMEM write enable (sw)
 
-    // Interrupt acknowledgement and return address
+    // Interrupt acceptance, return and saved address for MMIO reads
     output wire        o_irq_ack,
+    output wire        o_irq_return,
     output wire [31:0] o_return_pc
     );
 
@@ -126,6 +127,7 @@ module cpu(
         .o_equal(_equal),
 
         .o_irq_ack(o_irq_ack),
+        .o_irq_return(o_irq_return),
         .o_return_pc(o_return_pc)
     );
 

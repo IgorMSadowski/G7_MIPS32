@@ -19,7 +19,8 @@ module soc #(
 
     // Board inputs
     input  wire [1:0]  i_sw,          // SW0 and SW1
-    input  wire        i_btn1,        // BTN1
+    input  wire        i_btn1,        // Polled by the board demo
+    input  wire        i_btn3,        // IRQ source 3
 
     // Board outputs
     output wire [3:0]  o_led          // LD0 reset, LD3-LD1 program output
@@ -77,10 +78,11 @@ module soc #(
     wire [31:0] irq_rdata;
     wire        irq_request;
     wire        irq_ack;
+    wire        irq_return;
     wire [31:0] irq_vector;
     wire [31:0] irq_return_pc;
 
-    // Synchronize BTN1 before producing a rising-edge event for IRQ0.
+    // Synchronize BTN3 before producing a rising-edge event for IRQ3.
     (* ASYNC_REG = "TRUE" *) reg irq_btn_meta;
     (* ASYNC_REG = "TRUE" *) reg irq_btn_sync;
     reg irq_btn_prev;
@@ -90,7 +92,7 @@ module soc #(
             irq_btn_sync <= 1'b0;
             irq_btn_prev <= 1'b0;
         end else begin
-            irq_btn_meta <= i_btn1;
+            irq_btn_meta <= i_btn3;
             irq_btn_sync <= irq_btn_meta;
             irq_btn_prev <= irq_btn_sync;
         end
@@ -129,9 +131,10 @@ module soc #(
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
 
-        .i_events({3'b000, irq_btn_event}),
+        .i_events({irq_btn_event, 3'b000}),  // Sources 0 and 1 reserved for I2S
 
         .i_irq_ack(irq_ack),
+        .i_irq_return(irq_return),
         .i_return_pc(irq_return_pc),
 
         .i_offset(mmio_offset),
@@ -208,6 +211,7 @@ module soc #(
         .o_mem_write(_mem_write),
 
         .o_irq_ack(irq_ack),
+        .o_irq_return(irq_return),
         .o_return_pc(irq_return_pc)
     );
 
