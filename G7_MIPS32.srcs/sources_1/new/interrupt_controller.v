@@ -12,6 +12,44 @@
 // Description: Interrupt Controller for MIPS processor
 //////////////////////////////////////////////////////////////////////////////////
 
+// Interrupt conventions
+//
+// i_events[n] sets pending[n]. The lowest numbered enabled source wins.
+// Each source has one pending bit, so repeated events can merge. ACK clears
+// the accepted bit and retains any new events on the same clock edge.
+//
+// IRQ0, IRQ1, IRQ2 and IRQ3 enter at ROM byte addresses 0x04, 0x08, 0x0C and
+// 0x10. Each slot holds a jump to its ISR. The SoC connects BTN3 to IRQ3.
+//
+// MMIO registers
+// 0x10000000  ENABLE     R/W   Bit 4 is global enable, bits [3:0] enable sources.
+// 0x10000004  PENDING    R/O   Bits [3:0] show the pending sources.
+// 0x10000008  RETURN_PC  R/O   The saved_pc register in the CPU datapath.
+// For example, writing 0x18 enables IRQ3 and sets the global enable bit.
+//
+// On entry, the CPU finishes the current instruction, saves its normal next
+// PC and sends ACK. ACK clears global enable so the ISR can save that address
+// before a nested IRQ can overwrite saved_pc. The controller exposes the
+// address over MMIO. The ISR saves and restores it using the RAM stack.
+//
+// With $t0 holding 0x10000000 and $sp pointing to the current stack top:
+//     lw   $k1, 8($t0)      Read RETURN_PC while interrupts are masked.
+//     addi $sp, $sp, -4    Allocate one word on the stack.
+//     sw   $k1, 0($sp)     Push this ISR's return address.
+//
+// Save any other registers the ISR modifies before re-enabling interrupts.
+// The CPU allows two active ISR levels. At depth 2, further requests wait
+// in pending until a level is available.
+//
+// Before returning, mask new IRQs and restore the registers saved by the ISR.
+//     lw   $k1, 0($sp)     Pop this ISR's return address into $k1.
+//     addi $sp, $sp, 4     Free the stack word.
+//     jr   $k1             Jump to $k1 and finish the current IRQ level.
+//
+// On that JR's commit edge, the CPU decrements irq_depth and sends
+// i_irq_return to the controller. The controller restores global enable
+// without changing the individual source enables.
+
 module interrupt_controller(
     // Clock and reset
     input  wire        i_clk,
