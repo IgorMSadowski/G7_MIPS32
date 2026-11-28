@@ -82,23 +82,6 @@ module soc #(
     wire [31:0] irq_vector;
     wire [31:0] irq_return_pc;
 
-    // Synchronize BTN3 before producing a rising-edge event for IRQ3.
-    (* ASYNC_REG = "TRUE" *) reg irq_btn_meta;
-    (* ASYNC_REG = "TRUE" *) reg irq_btn_sync;
-    reg irq_btn_prev;
-    always @(posedge clk_50mhz) begin
-        if (soc_reset) begin
-            irq_btn_meta <= 1'b0;
-            irq_btn_sync <= 1'b0;
-            irq_btn_prev <= 1'b0;
-        end else begin
-            irq_btn_meta <= i_btn3;
-            irq_btn_sync <= irq_btn_meta;
-            irq_btn_prev <= irq_btn_sync;
-        end
-    end
-    wire irq_btn_event = irq_btn_sync && !irq_btn_prev;
-
     data_bus u_data_bus (
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
@@ -127,11 +110,40 @@ module soc #(
         .o_extra_we(demo_write)
     );
 
+    // Synchronize the physical button to the SoC clock before detecting a press.
+    wire btn3_synchronized;
+    reg btn3_previous;
+
+    xpm_cdc_single #(
+        .DEST_SYNC_FF(2),
+        .SRC_INPUT_REG(0),
+        .INIT_SYNC_FF(1),
+        .SIM_ASSERT_CHK(0)
+    ) u_btn3_sync (
+        .src_clk(1'b0),
+        .src_in(i_btn3 && !soc_reset),
+        .dest_clk(clk_50mhz),
+        .dest_out(btn3_synchronized)
+    );
+
+    // Keep the synchronized button value from the previous clock cycle.
+    always @(posedge clk_50mhz) begin
+        if (soc_reset)
+            btn3_previous <= 1'b0;
+        else
+            btn3_previous <= btn3_synchronized;
+    end
+
+    // Send a one-cycle IRQ3 event when the synchronized button goes high.
+    wire btn3_pressed_pulse = !soc_reset && btn3_synchronized && !btn3_previous;
+
     interrupt_controller u_irq (
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
 
-        .i_events({irq_btn_event, 3'b000}),  // Sources 0 and 1 reserved for I2S
+        // Bit 3 carries the BTN3 press pulse to IRQ3.
+        // Bit 2 is unused. Bits 1 and 0 are reserved for I2S and held at 0.
+        .i_events({btn3_pressed_pulse, 3'b000}),
 
         .i_irq_ack(irq_ack),
         .i_irq_return(irq_return),

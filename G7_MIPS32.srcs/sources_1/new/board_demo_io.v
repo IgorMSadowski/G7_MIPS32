@@ -98,17 +98,63 @@ module board_demo_io(
     output reg  [2:0]  o_led
     );
 
+    // Address bits: MMIO region [31:12] | device page [11:8] | byte offset [7:0]
+
+    // 0x10000100 Switch address (read only)
+    // Address: 0001_0000_0000_0000_0000 | 0001 | 0000_0000
+    // Read data: [31:2] = 0, [1] = SW1, [0] = SW0
     localparam [7:0] SWITCH_OFFSET = 8'h00;
+
+    // 0x10000104 Button address (read only)
+    // Address: 0001_0000_0000_0000_0000 | 0001 | 0000_0100
+    // Read data: [31:1] = 0, [0] = BTN1
     localparam [7:0] BUTTON_OFFSET = 8'h04;
+
+    // 0x10000108 LED address (read/write)
+    // Address: 0001_0000_0000_0000_0000 | 0001 | 0000_1000
+    // Data: [2] = LD3, [1] = LD2, [0] = LD1
+    // Bits [31:3] read as zero and are ignored on writes. LD0 shows reset.
     localparam [7:0] LED_OFFSET    = 8'h08;
 
-    (* ASYNC_REG = "TRUE" *) reg [2:0] inputs_meta;
-    (* ASYNC_REG = "TRUE" *) reg [2:0] inputs_sync;
+    // BTN1 and the switches are independent inputs with no source clock.
+    wire btn1_synchronized;
+    wire [1:0] switches_synchronized;
 
-    always @(posedge i_clk) begin
-        inputs_meta <= {i_btn1, i_sw};
-        inputs_sync <= inputs_meta;
-    end
+    xpm_cdc_single #(
+        .DEST_SYNC_FF(2),
+        .SRC_INPUT_REG(0),
+        .INIT_SYNC_FF(1),
+        .SIM_ASSERT_CHK(0)
+    ) u_btn1_sync (
+        .src_clk(1'b0),
+        .src_in(i_btn1),
+        .dest_clk(i_clk),
+        .dest_out(btn1_synchronized)
+    );
+
+    xpm_cdc_single #(
+        .DEST_SYNC_FF(2),
+        .SRC_INPUT_REG(0),
+        .INIT_SYNC_FF(1),
+        .SIM_ASSERT_CHK(0)
+    ) u_sw0_sync (
+        .src_clk(1'b0),
+        .src_in(i_sw[0]),
+        .dest_clk(i_clk),
+        .dest_out(switches_synchronized[0])
+    );
+
+    xpm_cdc_single #(
+        .DEST_SYNC_FF(2),
+        .SRC_INPUT_REG(0),
+        .INIT_SYNC_FF(1),
+        .SIM_ASSERT_CHK(0)
+    ) u_sw1_sync (
+        .src_clk(1'b0),
+        .src_in(i_sw[1]),
+        .dest_clk(i_clk),
+        .dest_out(switches_synchronized[1])
+    );
 
     always @(posedge i_clk) begin
         if (i_rst) begin
@@ -117,8 +163,8 @@ module board_demo_io(
         end else begin
             if (i_re) begin
                 case (i_offset)
-                    SWITCH_OFFSET: o_rdata <= {30'b0, inputs_sync[1:0]};
-                    BUTTON_OFFSET: o_rdata <= {31'b0, inputs_sync[2]};
+                    SWITCH_OFFSET: o_rdata <= {30'b0, switches_synchronized};
+                    BUTTON_OFFSET: o_rdata <= {31'b0, btn1_synchronized};
                     LED_OFFSET:    o_rdata <= {29'b0, o_led};
                     default:       o_rdata <= 32'b0;
                 endcase
