@@ -11,15 +11,28 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="520.001 ns"></ZoomEndTime>
-      <Cursor1Time time="0.000 ns"></Cursor1Time>
+      <ZoomStartTime time="364.570 ns"></ZoomStartTime>
+      <ZoomEndTime time="612.286 ns"></ZoomEndTime>
+      <Cursor1Time time="571.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="193"></NameColumnWidth>
-      <ValueColumnWidth column_width="72"></ValueColumnWidth>
+      <NameColumnWidth column_width="191"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="24" />
+   <WVObjectSize size="31" />
+   <wvobject fp_name="divider_control_basic_1" type="divider">
+      <obj_property name="label">CLOCK RESET</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#E0FFFF</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_control_unit/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_control_unit/rst">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
    <wvobject fp_name="divider_control_basic_1" type="divider">
       <obj_property name="label">TEST STATUS</obj_property>
       <obj_property name="DisplayName">label</obj_property>
@@ -117,6 +130,22 @@
       <obj_property name="ObjectShortName">reg_write</obj_property>
       <obj_property name="label">Register Write</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_control_unit/rf_we">
+      <obj_property name="ElementShortName">rf_we</obj_property>
+      <obj_property name="ObjectShortName">rf_we</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_control_unit/load_issue">
+      <obj_property name="ElementShortName">load_issue</obj_property>
+      <obj_property name="ObjectShortName">load_issue</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_control_unit/commit">
+      <obj_property name="ElementShortName">commit</obj_property>
+      <obj_property name="ObjectShortName">commit</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_control_unit/store_commit">
+      <obj_property name="ElementShortName">store_commit</obj_property>
+      <obj_property name="ObjectShortName">store_commit</obj_property>
    </wvobject>
    <wvobject fp_name="divider_control_basic_4" type="divider">
       <obj_property name="label">MEMORY CONTROL</obj_property>
