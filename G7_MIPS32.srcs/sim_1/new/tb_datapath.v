@@ -96,9 +96,7 @@ module tb_datapath;
         set_execution_step("RESET");
         @(posedge clk);
         #1;
-        test_result(dut._pc_r == 0 && t0_value == 0 &&
-                    t1_value == 0 && t2_value == 0,
-                    "reset clears PC and registers");
+        test_result(dut._pc_r == 0 && t0_value == 0 && t1_value == 0 && t2_value == 0,"reset clears PC and registers");
 
         // Drive controls just after a rising edge. The DUT samples them at
         // the next rising edge; the testbench does not use the falling edge.
