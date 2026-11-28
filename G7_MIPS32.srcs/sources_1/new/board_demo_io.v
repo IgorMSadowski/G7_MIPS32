@@ -98,24 +98,6 @@ module board_demo_io(
     output reg  [2:0]  o_led
     );
 
-    // Address bits: MMIO region [31:12] | device page [11:8] | byte offset [7:0]
-
-    // 0x10000100 Switch address (read only)
-    // Address: 0001_0000_0000_0000_0000 | 0001 | 0000_0000
-    // Read data: [31:2] = 0, [1] = SW1, [0] = SW0
-    localparam [7:0] SWITCH_OFFSET = 8'h00;
-
-    // 0x10000104 Button address (read only)
-    // Address: 0001_0000_0000_0000_0000 | 0001 | 0000_0100
-    // Read data: [31:1] = 0, [0] = BTN1
-    localparam [7:0] BUTTON_OFFSET = 8'h04;
-
-    // 0x10000108 LED address (read/write)
-    // Address: 0001_0000_0000_0000_0000 | 0001 | 0000_1000
-    // Data: [2] = LD3, [1] = LD2, [0] = LD1
-    // Bits [31:3] read as zero and are ignored on writes. LD0 shows reset.
-    localparam [7:0] LED_OFFSET    = 8'h08;
-
     // BTN1 and the switches are independent inputs with no source clock.
     wire btn1_synchronized;
     wire [1:0] switches_synchronized;
@@ -155,6 +137,24 @@ module board_demo_io(
         .dest_clk(i_clk),
         .dest_out(switches_synchronized[1])
     );
+
+    // Address bits: MMIO region [31:12] | device page [11:8] | byte offset [7:0]
+
+    // 0x10000100 Switch address (read only)
+    // Address: 0001_0000_0000_0000_0000 | 0001 | 0000_0000
+    // Read data: [31:2] = 0, [1] = SW1, [0] = SW0
+    localparam [7:0] SWITCH_OFFSET = 8'h00;
+
+    // 0x10000104 Button address (read only)
+    // Address: 0001_0000_0000_0000_0000 | 0001 | 0000_0100
+    // Read data: [31:1] = 0, [0] = BTN1
+    localparam [7:0] BUTTON_OFFSET = 8'h04;
+
+    // 0x10000108 LED address (read/write)
+    // Address: 0001_0000_0000_0000_0000 | 0001 | 0000_1000
+    // Data: [2] = LD3, [1] = LD2, [0] = LD1
+    // Bits [31:3] read as zero and are ignored on writes. LD0 shows reset.
+    localparam [7:0] LED_OFFSET    = 8'h08;
 
     always @(posedge i_clk) begin
         if (i_rst) begin

@@ -77,17 +77,27 @@ module interrupt_controller(
     output reg  [31:0] o_rdata
 );
 
+    // Global enable gates delivery to the CPU. The per-source mask selects
+    // which IRQs may be delivered. Events can still set pending while masked.
     reg       global_enable;
     reg [3:0] source_enable;
+    // One bit per source remembers an event until the CPU accepts it.
+    // Only the chosen IRQ bit is set in selected, so ACK clears that pending bit.
     reg [3:0] pending;
     reg [3:0] selected;
 
+    // A source can compete for priority only when it is pending and enabled.
     wire [3:0] eligible = pending & source_enable;
+    // Offset 0x00 is ENABLE. Its bit 4 is global and bits [3:0] mask IRQ3..IRQ0.
     wire write_enable_register = i_we && (i_offset == 8'h00);
 
-    // Apply a mask write before accepting another interrupt.
+    // The reduction OR is high when any eligible bit is high.
+    // Pause delivery during an ENABLE write so the new mask takes effect first.
     assign o_irq_request = global_enable && !write_enable_register && (|eligible);
 
+    // Pick the lowest numbered eligible source and send its ROM byte address.
+    // For example, IRQ3 gives selected = 1000 and vector = 0x00000010.
+    // When there is no request, both outputs of this block are zero.
     always @(*) begin
         selected = 4'b0000;
         o_irq_vector = 32'b0;
@@ -109,6 +119,8 @@ module interrupt_controller(
         end
     end
 
+    // On a rising edge, reset clears the masks, pending bits and read data.
+    // Otherwise this block handles CPU events and MMIO accesses.
     always @(posedge i_clk) begin
         if (i_rst) begin
             global_enable <= 1'b0;
@@ -116,25 +128,31 @@ module interrupt_controller(
             pending       <= 4'b0000;
             o_rdata       <= 32'b0;
         end else begin
-            // Protect the ISR until it saves its return address.
+            // A software write to ENABLE updates both fields.
+            if (write_enable_register) begin
+                global_enable <= i_wdata[4];
+                source_enable <= i_wdata[3:0];
+            end
+
+            // ACK wins over an ENABLE write. An ENABLE write wins over IRQ return.
+            // ACK masks IRQs on entry so the ISR can save its return address.
             if (i_irq_ack)
                 global_enable <= 1'b0;
-            // Each accepted IRQ interrupted a context with global enable set.
-            else if (i_irq_return)
+            else if (i_irq_return && !write_enable_register)
                 global_enable <= 1'b1;
-            else if (write_enable_register)
-                global_enable <= i_wdata[4];
 
-            if (write_enable_register)
-                source_enable <= i_wdata[3:0];
-
-            // Clear the accepted source. A new event on this edge stays pending.
+            // ACK clears just the bit in selected. OR in i_events afterwards
+            // so a new event on the same edge is preserved, even for that source.
+            // Without ACK, keep all pending bits and add any new events.
             if (i_irq_ack)
                 pending <= (pending & ~selected) | i_events;
             else
                 pending <= pending | i_events;
 
             // Capture the reply on the read edge and hold it for LW write-back.
+            // 0x00 returns the enable bits, 0x04 returns pending, and 0x08
+            // forwards the return address from the CPU datapath. Other offsets
+            // return zero. Without a read, o_rdata keeps its last value.
             if (i_re) begin
                 case (i_offset)
                     8'h00:   o_rdata <= {27'b0, global_enable, source_enable};
