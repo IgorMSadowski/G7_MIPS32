@@ -1,30 +1,49 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: Igor Sadowski
+// 
+// Create Date:
+// Design Name: 
+// Module Name: Data Bus
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: Data Bus for MIPS processor
+//
+//////////////////////////////////////////////////////////////////////////////////
 
 module data_bus (
+    // Clock and reset
     input  wire        i_clk,
     input  wire        i_rst,
+
+    // CPU access request
     input  wire [31:0] i_addr,
     input  wire        i_re,
     input  wire        i_we,
 
+    // Read data from RAM and MMIO devices
     input  wire [31:0] i_ram_rdata,
-    input  wire [31:0] i_i2s_rdata,
     input  wire [31:0] i_irq_rdata,
-    
+    input  wire [31:0] i_i2s_rdata,
     input  wire [31:0] i_extra_rdata,
 
+    // Read data to the CPU
+    output reg  [31:0] o_rdata,
+
+    // RAM access control
     output wire        o_ram_re,
     output wire        o_ram_we,
-    output wire        o_i2s_re,
-    output wire        o_i2s_we,
+
+    // MMIO offset and device access control
+    output wire [7:0]  o_mmio_offset,
     output wire        o_irq_re,
     output wire        o_irq_we,
-    
+    output wire        o_i2s_re,
+    output wire        o_i2s_we,
     output wire        o_extra_re,
-    output wire        o_extra_we,
-    
-    output wire [7:0]  o_mmio_offset,
-    output reg  [31:0] o_rdata
+    output wire        o_extra_we
     );
 
     // The CPU supplies a 32-bit byte address.
@@ -62,7 +81,10 @@ module data_bus (
     // select an internal register when its own enable is asserted.
     assign o_mmio_offset = i_addr[7:0];
 
-    reg read_from_ram, read_from_i2s, read_from_irq, read_from_extra;
+    reg read_from_ram;
+    reg read_from_i2s;
+    reg read_from_irq;
+    reg read_from_extra;
 
     // Save the read destination at the rising edge while i_re is high.
     // With i_re low, keep that destination selected during CPU write-back.

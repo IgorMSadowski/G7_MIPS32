@@ -16,12 +16,18 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module bdu(
-    input wire        i_branch,         // 1 = branch instruction
-    input wire [3:0]  i_branch_cond,    // Condition code from CU
-    input wire [31:0] i_rs,             // rs value (for sign test in bltz/bgez)
-    input wire        i_equal,          // rs and rt hold the same value
-    output reg        o_branch_taken    // 1 = take the branch
+    // Branch control from the control unit
+    input  wire        i_branch,      // 1 = branch instruction
+    input  wire [3:0]  i_branch_cond, // Condition code from CU
+
+    // Operand and comparison from the datapath
+    input  wire [31:0] i_rs,          // rs value (for sign test in bltz/bgez)
+    input  wire        i_equal,       // rs and rt hold the same value
+
+    // Branch decision
+    output reg         o_branch_taken // 1 = take the branch
     );
+    
     always @(*) begin
         if (i_branch) begin
             case (i_branch_cond)

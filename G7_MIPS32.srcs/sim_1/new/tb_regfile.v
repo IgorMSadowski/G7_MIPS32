@@ -3,10 +3,15 @@
 // Check reset, writes, and the two register read ports.
 module tb_regfile;
 
-    reg clk, rst, we;
-    reg [4:0] ra1, ra2, wa;
+    reg clk;
+    reg rst;
+    reg we;
+    reg [4:0] ra1;
+    reg [4:0] ra2;
+    reg [4:0] wa;
     reg [31:0] wdata;
-    wire [31:0] rd1, rd2;
+    wire [31:0] rd1;
+    wire [31:0] rd2;
 
     // Show the state of the write port in the waveform.
     reg [127:0] write_action;
@@ -31,9 +36,18 @@ module tb_regfile;
     end
 
     register_file dut(
-        .i_clk(clk), .i_rst(rst), .i_we(we),
-        .i_ra1(ra1), .i_ra2(ra2), .i_wa(wa),
-        .i_wdata(wdata), .o_rd1(rd1), .o_rd2(rd2)
+        .i_clk(clk),
+        .i_rst(rst),
+
+        .i_ra1(ra1),
+        .i_ra2(ra2),
+
+        .i_we(we),
+        .i_wa(wa),
+        .i_wdata(wdata),
+
+        .o_rd1(rd1),
+        .o_rd2(rd2)
     );
 
     always #10 clk = ~clk;
@@ -55,7 +69,13 @@ module tb_regfile;
     initial begin
         // rst = 1, we = 0
         // Rising edge clears all registers.
-        clk=0; rst=1; we=0; ra1=0; ra2=0; wa=0; wdata=0;
+        clk=0;
+        rst=1;
+        we=0;
+        ra1=0;
+        ra2=0;
+        wa=0;
+        wdata=0;
         // Release reset 1 ns after the first rising edge.
         @(posedge clk);
         #1;
@@ -69,7 +89,9 @@ module tb_regfile;
         // Write r5, read back
         // we = 1, wa = 5, wdata = 0x12345678
         // ra1 = 5 -> rd1 = 0x12345678
-        wa = 5'd5; wdata = 32'h1234_5678; we = 1;
+        wa = 5'd5;
+        wdata = 32'h1234_5678;
+        we = 1;
         @(posedge clk);
         #1;
         we = 0;
@@ -78,7 +100,9 @@ module tb_regfile;
         // Try writing all ones to r0. It should still read zero.
         // we = 1, wa = 0, wdata = 0xFFFFFFFF
         // ra1 = 0 -> rd1 = 0x00000000
-        wa = 5'd0; wdata = 32'hFFFF_FFFF; we = 1;
+        wa = 5'd0;
+        wdata = 32'hFFFF_FFFF;
+        we = 1;
         @(posedge clk);
         #1;
         we = 0;
@@ -87,13 +111,17 @@ module tb_regfile;
         // Write r7 twice. Its final value should be the second one.
         // we = 1, wa = 7, wdata = 0x11111111
         // Rising edge stores 0x11111111 in R7.
-        wa = 5'd7; wdata = 32'h1111_1111; we = 1;
+        wa = 5'd7;
+        wdata = 32'h1111_1111;
+        we = 1;
         @(posedge clk);
         #1;
         we = 0;
         // we = 1, wa = 7, wdata = 0x22222222
         // ra1 = 7 -> rd1 = 0x22222222
-        wa = 5'd7; wdata = 32'h2222_2222; we = 1;
+        wa = 5'd7;
+        wdata = 32'h2222_2222;
+        we = 1;
         @(posedge clk);
         #1;
         we = 0;
@@ -103,7 +131,8 @@ module tb_regfile;
         // we = 0
         // ra1 = 5 -> rd1 = 0x12345678
         // ra2 = 7 -> rd2 = 0x22222222
-        ra1 = 5'd5; ra2 = 5'd7;
+        ra1 = 5'd5;
+        ra2 = 5'd7;
         #1;
         if (rd1 !== 32'h1234_5678 || rd2 !== 32'h2222_2222) begin
             $display("FAIL simultaneous reads: rd1=%h rd2=%h", rd1, rd2);
@@ -114,7 +143,8 @@ module tb_regfile;
         // we = 0
         // ra1 = 7 -> rd1 = 0x22222222
         // ra2 = 5 -> rd2 = 0x12345678
-        ra1 = 5'd7; ra2 = 5'd5;
+        ra1 = 5'd7;
+        ra2 = 5'd5;
         #1;
         if (rd1 !== 32'h2222_2222 || rd2 !== 32'h1234_5678) begin
             $display("FAIL swapped reads: rd1=%h rd2=%h", rd1, rd2);
@@ -124,13 +154,18 @@ module tb_regfile;
         // Present a value with we = 0. R8 should stay zero.
         // we = 0, wa = 8, wdata = 0xAAAAAAAA
         // ra1 = 8 -> rd1 = 0x00000000
-        wa=8; wdata=32'hAAAA_AAAA; we=0;
+        wa=8;
+        wdata=32'hAAAA_AAAA;
+        we=0;
         @(posedge clk);
         #1;
         test_register(8, 32'd0, "we=0 no write");
 
         $display("--- %0d errors ---", errors);
-        if (errors==0) $display("PASS"); else $display("FAILED");
+        if (errors==0)
+            $display("PASS");
+        else
+            $display("FAILED");
         $finish;
     end
 endmodule

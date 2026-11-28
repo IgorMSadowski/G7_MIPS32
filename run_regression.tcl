@@ -102,6 +102,7 @@ foreach {simset tb} {
     datapath     tb_datapath
     data_bus     tb_data_bus
     soc          tb_soc
+    irq_soc      tb_irq_soc
 } {
     if {[catch {run_one $tb $simset} message]} {
         incr regression_failed

@@ -8,15 +8,22 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module register_file(
-    input  wire        i_clk,       
-    input  wire        i_rst,       
-    input  wire        i_we,        // Write enable
-    input  wire [4:0]  i_ra1,       // Read address 1
-    input  wire [4:0]  i_ra2,       // Read address 2
-    input  wire [4:0]  i_wa,        // Write address
-    input  wire [31:0] i_wdata,     // Write data
-    output wire [31:0] o_rd1,       // Read data 1
-    output wire [31:0] o_rd2        // Read data 2
+    // Clock and reset
+    input  wire        i_clk,
+    input  wire        i_rst,
+
+    // Read addresses
+    input  wire [4:0]  i_ra1,         // Read address 1
+    input  wire [4:0]  i_ra2,         // Read address 2
+
+    // Write port
+    input  wire        i_we,          // Write enable
+    input  wire [4:0]  i_wa,          // Write address
+    input  wire [31:0] i_wdata,       // Write data
+
+    // Read data
+    output wire [31:0] o_rd1,         // Read data 1
+    output wire [31:0] o_rd2          // Read data 2
     );
 
     reg [31:0] _rf [0:31];          // 32 registers × 32 bits

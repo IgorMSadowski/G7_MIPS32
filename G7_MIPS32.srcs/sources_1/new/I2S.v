@@ -5,13 +5,20 @@ module I2S #(
     // At 50 MHz, 8 gives 3.125 MHz BCK and a 48.828125 kHz sample rate.
     parameter integer CLOCKS_PER_HALF_BIT = 8
 )(
+    // Clock and reset
     input  wire        i_clk,
     input  wire        i_rst,
-    input  wire [31:0] i_sample,        // Left [31:16], right [15:0]
-    input  wire        i_sample_valid,  // Submit when o_sample_ready is high
-    output wire        o_sample_ready,  // A frame can be queued
+
+    // Sample input
+    input  wire [31:0] i_sample,      // Left [31:16], right [15:0]
+    input  wire        i_sample_valid, // Submit when o_sample_ready is high
+
+    // Sample handshake
+    output wire        o_sample_ready, // A frame can be queued
+
+    // I2S serial interface
     output reg         o_bck,
-    output reg         o_lrck,         // 0 = left, 1 = right
+    output reg         o_lrck,        // 0 = left, 1 = right
     output reg         o_din
 );
 

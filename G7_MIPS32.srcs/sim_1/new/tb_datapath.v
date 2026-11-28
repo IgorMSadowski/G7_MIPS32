@@ -34,13 +34,39 @@ module tb_datapath;
     always #10 clk = ~clk;
 
     datapath dut (
-        .i_clk(clk), .i_rst(rst), .i_instr(instr), .i_rdata(rdata),
-        .i_reg_dst(reg_dst), .i_alu_src(alu_src),
-        .i_alu_a_shamt(alu_a_shamt), .i_mem_to_reg(mem_to_reg),
-        .i_rf_we(rf_we), .i_link(link), .i_link_to_ra(link_to_ra),
-        .i_alu_ctrl(alu_ctrl), .i_pc_sel(pc_sel), .i_commit(commit),
-        .o_pc(pc), .o_alu_out(alu_out), .o_wdata(wdata),
-        .o_rs_value(rs_value), .o_equal(equal)
+        .i_clk(clk),
+        .i_rst(rst),
+
+        .i_instr(instr),
+        .i_rdata(rdata),
+
+        .i_alu_a_shamt(alu_a_shamt),
+        .i_alu_src(alu_src),
+        .i_alu_ctrl(alu_ctrl),
+
+        .i_reg_dst(reg_dst),
+        .i_mem_to_reg(mem_to_reg),
+        .i_link(link),
+        .i_link_to_ra(link_to_ra),
+        .i_rf_we(rf_we),
+
+        .i_pc_sel(pc_sel),
+        .i_commit(commit),
+
+        .i_irq_request(1'b0),
+        .i_irq_vector(32'b0),
+
+        .o_pc(pc),
+
+        .o_alu_out(alu_out),
+        .o_wdata(wdata),
+
+        .o_rs_value(rs_value),
+        .o_equal(equal),
+
+        .o_irq_ack(),
+        .o_irq_return(),
+        .o_return_pc()
     );
 
     // Read the registers used in the test for checks and the waveform.
@@ -121,14 +147,13 @@ module tb_datapath;
         #1;
         test_result(pc == 8 && t2_value == 0,"commit low holds PC and prevents register write");
 
-        // The simulated RAM returns 20 on the first rising edge of LW 
-        //and activate commit and register file write enable.
-        @(posedge clk); 
+        // Let the DUT sample the load-wait controls before driving write-back.
+        @(posedge clk);
+        #1;
+        test_result(dut._pc_r == 8 && t2_value == 0,"datapath remains held during the load wait");
         rdata = 32'd20;
         rf_we = 1'b1;
         commit = 1'b1;
-        #1;
-        test_result(dut._pc_r == 8 && t2_value == 0,"datapath remains held during the load wait");
 
         // Write back in the register file
         set_execution_step("LW - write-back and commit");
@@ -140,7 +165,7 @@ module tb_datapath;
         rf_we = 1'b0;
         commit = 1'b0;
         #20;
-        
+
         if (errors == 0)
             $display("PASS: %0d datapath checks", checks);
         else

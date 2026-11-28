@@ -107,3 +107,31 @@ A saída `o_carry` tem dois significados conforme a operação:
 do 8051. Não foi acrescentado um registo de flags nem uma exceção.
 Exemplos: `20 - 10` dá C=0; `10 - 20` dá C=1; `5 - 5` dá C=0.
 Overflow continua independente: em ADD/SUB indica resultado com sinal fora do intervalo.
+
+## Para o relatório — Endereço da ALU e acesso à memória
+
+A arquitetura atual usa diretamente `o_alu_out` como endereço de byte da RAM
+e do Data Bus. Em `LW` e `SW`, a ALU calcula `rs + offset`. A RAM síncrona usa
+esse endereço no flanco em que recebe um pedido válido. O `LW` segura o PC e
+a instrução durante a leitura e faz write-back no flanco seguinte. O `SW`
+escreve no flanco de commit.
+
+**Decisão de design.** Manter o caminho direto. Um registo entre a ALU e a
+memória acrescentaria uma etapa ao acesso e exigiria preservar juntos o
+endereço, o dado do `SW` e os sinais de controlo. É uma opção para separar as
+etapas EX e MEM num pipeline ou para dividir um caminho crítico medido. Um
+mux de endereço só se justifica se houver duas fontes a selecionar.
+
+**Branches e efeitos na memória.** `o_alu_out` pode mudar durante um branch e o
+decodificador de endereços pode reconhecer uma região válida. O acesso requer
+`o_load_issue` para leitura ou `o_mem_write` para escrita. Ambos ficam a zero
+durante o branch, tal como `o_rf_we`, que protege o banco de registos. O
+`o_commit` permite avançar o PC e fazer o próximo fetch. A decisão do branch
+vem da BDU.
+
+**Verificação.** O XSim passou 48 casos que cruzam os seis tipos de branch,
+tomados e não tomados, com as regiões RAM, IRQ, I²S e I/O de demonstração.
+Os enables de leitura e escrita e a escrita no banco de registos ficaram
+desativados. Um `SW` de controlo ativou a escrita da RAM. Esta verificação
+cobre o comportamento funcional. O caminho físico deve ser avaliado com
+timing pós-implementação.

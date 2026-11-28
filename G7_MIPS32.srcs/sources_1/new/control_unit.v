@@ -54,50 +54,50 @@
 module control_unit(
     // Clock, reset and CPU enable
     input  wire        i_clk,
-    input  wire        i_rst,           // Active-high synchronous reset
-    input  wire        i_en,            // Enables instruction execution
-
-    // Branch feedback from the datapath
-    input  wire [31:0] i_rs_value,      // Value used by branches against zero
-    input  wire        i_equal,         // rs == rt for BEQ and BNE
+    input  wire        i_rst,         // Active-high synchronous reset
+    input  wire        i_en,          // Enables instruction execution
 
     // Instruction fields
     input  wire [5:0]  i_op,
     input  wire [4:0]  i_rs,
-    input  wire [4:0]  i_shamt,
     input  wire [4:0]  i_rt,
+    input  wire [4:0]  i_shamt,
     input  wire [5:0]  i_funct,
 
-    // ALU and register controls
-    output reg         o_reg_dst,      // 0 = rt, 1 = rd
-    output reg         o_alu_src,      // ALU B: 0 = rt value, 1 = immediate
-    output reg         o_mem_to_reg,   // Write-back: 0 = ALU, 1 = memory
-    output reg         o_reg_write,    // Decoded instruction writes a register
+    // Branch feedback from the datapath
+    input  wire [31:0] i_rs_value,    // Value used by branches against zero
+    input  wire        i_equal,       // rs == rt for BEQ and BNE
 
-    // Decoded memory requests
-    output reg         o_mem_read,     // Instruction is LW
-    output reg         o_mem_write,    // Instruction is SW
+    // ALU operand and operation selects
+    output wire        o_alu_a_shamt, // ALU A: 0 = rs value, 1 = shamt
+    output reg         o_alu_src,     // ALU B: 0 = rt value, 1 = immediate
+    output reg  [3:0]  o_alu_ctrl,    // ALU operation
 
-    // Control flow
-    output reg         o_branch,       // Instruction is a conditional branch
-    output reg         o_jump,         // Instruction is a jump
-    output reg         o_jump_reg,     // Jump target comes from rs
-    output reg         o_link,         // Select PC + 4 for write-back
-    output reg [3:0]   o_branch_cond,  // Comparison to perform in the BDU
+    // Register file and write-back control
+    output reg         o_reg_dst,     // 0 = rt, 1 = rd
+    output reg         o_mem_to_reg,  // Write-back: 0 = ALU, 1 = memory
+    output reg         o_link,        // Select PC + 4 for write-back
+    output wire        o_link_to_ra,  // JAL forces the write address to $ra
+    output wire        o_rf_we,       // Write a register on the commit edge
 
-    // ALU and datapath mux selects
-    output reg [3:0]   o_alu_ctrl,     // ALU operation
-    output wire        o_alu_a_shamt,  // ALU A: 0 = rs value, 1 = shamt
-    output wire        o_link_to_ra,   // JAL forces the write address to $ra
-    output wire [1:0]  o_pc_sel,       // 0 = PC + 4, 1 = branch, 2 = jump, 3 = rs
+    // Program counter and instruction fetch control
+    output wire [1:0]  o_pc_sel,      // 0 = PC + 4, 1 = branch, 2 = jump, 3 = rs
+    output wire        o_commit,      // Allow the instruction to complete
+    output wire        o_imem_en,     // Fetch the first or next instruction
 
-    // Cycle control and enables
-    output wire        o_rf_we,        // Write a register on the commit edge
-    output wire        o_load_issue,   // Start the LW read on its first edge
-    output wire        o_store_commit, // Enable the data bus write on the store edge
-    output wire        o_imem_en,      // Fetch the first or next instruction
-    output wire        o_commit        // Allow the instruction to complete
+    // Data bus control
+    output wire        o_load_issue,  // Start the LW read on its first edge
+    output wire        o_mem_write    // Enable the data bus write on the store edge
     );
+
+    // Decoder decisions used within the control unit
+    reg reg_write_request;
+    reg mem_read_request;
+    reg mem_write_request;
+    reg branch;
+    reg [3:0] branch_cond;
+    reg jump;
+    reg jump_reg;
 
     // Fetch and load state
     reg _rom_ready;     // Set after the first instruction fetch
@@ -106,29 +106,28 @@ module control_unit(
     // Branch result and cycle conditions
     wire _branch_taken; // The BDU comparison passed for the current branch
     wire _run = i_en && !i_rst;
-    wire _stall = _rom_ready && o_mem_read && !_load_pending; // First cycle of LW
+    wire _stall = _rom_ready && mem_read_request && !_load_pending; // First cycle of LW
 
     assign o_load_issue = _run && _stall;
     assign o_commit = _run && _rom_ready && !_stall;
     assign o_imem_en = _run && (!_rom_ready || o_commit);
-    assign o_rf_we = o_commit && o_reg_write;
-    assign o_store_commit = o_commit && o_mem_write;
+    assign o_rf_we = o_commit && reg_write_request;
+    assign o_mem_write = o_commit && mem_write_request;
 
-    assign o_alu_a_shamt = (o_alu_ctrl == 4'b0101) ||
-                          (o_alu_ctrl == 4'b0110) ||
-                          (o_alu_ctrl == 4'b1000);
+    assign o_alu_a_shamt = (o_alu_ctrl == 4'b0101) || (o_alu_ctrl == 4'b0110) || (o_alu_ctrl == 4'b1000);
                           
-    assign o_link_to_ra = o_link && !o_jump_reg;
-    assign o_pc_sel = o_jump ? (o_jump_reg ? 2'd3 : 2'd2) :
-                       _branch_taken ? 2'd1 : 2'd0;
+    assign o_link_to_ra = o_link && !jump_reg;
+    assign o_pc_sel = jump ? (jump_reg ? 2'd3 : 2'd2) : _branch_taken ? 2'd1 : 2'd0;
 
 
     // Branch decision unit instantiation
     bdu branch_decision_unit(
-        .i_branch(o_branch),
-        .i_branch_cond(o_branch_cond),
+        .i_branch(branch),
+        .i_branch_cond(branch_cond),
+
         .i_rs(i_rs_value),
         .i_equal(i_equal),
+
         .o_branch_taken(_branch_taken)
     );
 
@@ -148,14 +147,14 @@ module control_unit(
         o_reg_dst     = 1'b0;   // register destination select (0=rt, 1=rd)
         o_alu_src     = 1'b0;   // alu source select (0=reg, 1=imm)
         o_mem_to_reg  = 1'b0;   // memory to register select (0=ALU, 1=mem)
-        o_reg_write   = 1'b0;   // register file write enable 
-        o_mem_read    = 1'b0;   // memory read enable
-        o_mem_write   = 1'b0;   // memory write enable
-        o_branch      = 1'b0;   // branch instruction flag
-        o_jump        = 1'b0;   // jump instruction flag
-        o_jump_reg    = 1'b0;   // register-target jump flag
+        reg_write_request = 1'b0; // decoded register write
+        mem_read_request = 1'b0; // decoded load request
+        mem_write_request = 1'b0; // Decoded store request
+        branch      = 1'b0;   // branch instruction flag
+        jump        = 1'b0;   // jump instruction flag
+        jump_reg    = 1'b0;   // register-target jump flag
         o_link        = 1'b0;   // link flag
-        o_branch_cond = 4'b0000; // branch condition code (4 bits)
+        branch_cond = 4'b0000; // branch condition code (4 bits)
         o_alu_ctrl    = 4'b0000;// alu function control (default to add)
 
         // Decode table by instruction format
@@ -169,7 +168,7 @@ module control_unit(
             // Here, the funct field selects the ALU operation.
             6'b000000: begin
                 o_reg_dst   = 1'b1;     // Write result to rd
-                o_reg_write = 1'b1;     // General register write enable
+                reg_write_request = 1'b1;     // General register write enable
 
                 case (i_funct)
                     6'h20: o_alu_ctrl = 4'b0000;    // add
@@ -184,28 +183,28 @@ module control_unit(
                         case (i_rs)
                             5'b00000: o_alu_ctrl = 4'b0110; // SRL
                             5'b00001: o_alu_ctrl = 4'b1000; // ROTR
-                            default: o_reg_write = 1'b0; // unsupported encoding
+                            default: reg_write_request = 1'b0; // unsupported encoding
                         endcase
                     end
                     6'h08: begin                       // jr
-                        o_jump = 1'b1;              // jump to address in rs
-                        o_jump_reg = 1'b1;
-                        o_reg_write = 1'b0;         // no register write for jr
+                        jump = 1'b1;              // jump to address in rs
+                        jump_reg = 1'b1;
+                        reg_write_request = 1'b0;         // no register write for jr
                     end
                     6'h09: begin                       // jalr
-                        o_jump = 1'b1;              // jump to address in rs
-                        o_jump_reg = 1'b1;          // jump target comes from register rs
+                        jump = 1'b1;              // jump to address in rs
+                        jump_reg = 1'b1;          // jump target comes from register rs
                         o_link = 1'b1;              // link: write return address to rd
-                        o_reg_write = 1'b1;         // write return address to rd
+                        reg_write_request = 1'b1;         // write return address to rd
                     end
-                    default: o_reg_write = 1'b0; // unsupported funct has no state effect
+                    default: reg_write_request = 1'b0; // unsupported funct has no state effect
                 endcase
             end
 
             6'h1F: begin // SPECIAL3
                 if (i_funct == 6'h20 && i_shamt == 5'd2 && i_rs == 5'd0) begin
                     o_reg_dst   = 1'b1;
-                    o_reg_write = 1'b1;
+                    reg_write_request = 1'b1;
                     o_alu_ctrl  = 4'b1001; // wsbh
                 end
             end
@@ -215,62 +214,62 @@ module control_unit(
             // The operation is determined by the opcode, while the lower bits
             // carry the sign-extended immediate value.
             6'h04: begin    // beq   rs, rt, offset
-                o_branch    = 1'b1;
+                branch    = 1'b1;
                 o_alu_ctrl  = 4'b0001;  // ALU subtraction result for debug
-                o_branch_cond = 4'b0000; // branch if equal
+                branch_cond = 4'b0000; // branch if equal
             end
 
             6'h05: begin    // bne   rs, rt, offset
-                o_branch    = 1'b1;
+                branch    = 1'b1;
                 o_alu_ctrl  = 4'b0001;  // ALU subtraction result for debug
-                o_branch_cond = 4'b0001; // branch if not equal
+                branch_cond = 4'b0001; // branch if not equal
             end
 
             // REGIMM
             6'h01: begin    // bltz and bgez
-                o_branch    = 1'b1;
+                branch    = 1'b1;
                 case (i_rt)
-                    5'b00000: o_branch_cond = 4'b0010; // bltz
-                    5'b00001: o_branch_cond = 4'b0011; // bgez
-                    default: o_branch = 1'b0; // unsupported REGIMM selector: no branch
+                    5'b00000: branch_cond = 4'b0010; // bltz
+                    5'b00001: branch_cond = 4'b0011; // bgez
+                    default: branch = 1'b0; // unsupported REGIMM selector: no branch
                 endcase
             end
 
             6'h07: begin    // bgtz  rs, offset
-                o_branch    = 1'b1;
+                branch    = 1'b1;
                 o_alu_ctrl  = 4'b0001;  // subtract to compare rs - 0
-                o_branch_cond = 4'b0101; // branch if greater than zero
+                branch_cond = 4'b0101; // branch if greater than zero
             end
 
             6'h06: begin    // blez  rs, offset
-                o_branch    = 1'b1;
+                branch    = 1'b1;
                 o_alu_ctrl  = 4'b0001;  // subtract to compare rs - 0
-                o_branch_cond = 4'b0100; // branch if less than or equal to zero
+                branch_cond = 4'b0100; // branch if less than or equal to zero
             end
 
             6'h08: begin    // addi  rt, rs, imm
                 o_alu_src   = 1'b1;
-                o_reg_write = 1'b1;
+                reg_write_request = 1'b1;
                 o_alu_ctrl  = 4'b0000;  // ADD
             end
 
             6'h23: begin    // lw    rt, imm(rs)
                 o_alu_src    = 1'b1;
                 o_mem_to_reg = 1'b1;
-                o_reg_write  = 1'b1;
-                o_mem_read   = 1'b1;
+                reg_write_request  = 1'b1;
+                mem_read_request   = 1'b1;
                 o_alu_ctrl   = 4'b0000;  // effective address = rs + sign_ext(imm)
             end
 
             6'h2B: begin    // sw    rt, imm(rs)
                 o_alu_src   = 1'b1;
-                o_mem_write = 1'b1;
+                mem_write_request = 1'b1;
                 o_alu_ctrl  = 4'b0000;  // effective address = rs + sign_ext(imm)
             end
 
             6'h0F: begin    // lui   rt, imm
                 o_alu_src   = 1'b1;
-                o_reg_write = 1'b1;
+                reg_write_request = 1'b1;
                 o_alu_ctrl  = 4'b0100;  // LUI operation (shift left by 16)
             end
 
@@ -280,13 +279,13 @@ module control_unit(
             // the 26-bit jump field, shifted left by 2 bits to keep word alignment.
             // This gives a jump region of 256 MB in the MIPS address space.
             6'h02: begin    // j    target
-                o_jump = 1'b1;
+                jump = 1'b1;
             end
 
             6'h03: begin    // jal  target
-                o_jump    = 1'b1;
+                jump    = 1'b1;
                 o_link    = 1'b1; 
-                o_reg_write = 1'b1;
+                reg_write_request = 1'b1;
             end
 
             // Unsupported or not-yet-implemented instruction opcodes

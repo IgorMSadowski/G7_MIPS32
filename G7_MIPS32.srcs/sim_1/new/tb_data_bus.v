@@ -6,14 +6,18 @@ module tb_data_bus;
     reg clk = 1'b0;
     reg rst = 1'b1;
     reg [31:0] addr = 32'b0;
-    reg read_enable = 1'b0, write_enable = 1'b0;
+    reg read_enable = 1'b0;
+    reg write_enable = 1'b0;
     reg [31:0] ram_rdata = 0;
     reg [31:0] irq_rdata = 0;
     reg [31:0] i2s_rdata = 0;
-    wire ram_read, ram_write;
+    wire ram_read;
+    wire ram_write;
     // These enables route CPU reads and writes to each MMIO page.
-    wire irq_read, irq_write;  // Interrupt controller at 0x100000xx.
-    wire i2s_read, i2s_write;  // I2S peripheral at 0x100003xx.
+    wire irq_read;
+    wire irq_write;  // Interrupt controller at 0x100000xx.
+    wire i2s_read;
+    wire i2s_write;  // I2S peripheral at 0x100003xx.
     wire [7:0] offset;
     wire [31:0] read_data;
     integer errors = 0;
@@ -23,14 +27,27 @@ module tb_data_bus;
     always #10 clk = ~clk;
 
     data_bus dut (
-        .i_clk(clk), .i_rst(rst),
-        .i_addr(addr), .i_re(read_enable), .i_we(write_enable),
-        .i_ram_rdata(ram_rdata), .i_irq_rdata(irq_rdata),
+        .i_clk(clk),
+        .i_rst(rst),
+
+        .i_addr(addr),
+        .i_re(read_enable),
+        .i_we(write_enable),
+
+        .i_ram_rdata(ram_rdata),
+        .i_irq_rdata(irq_rdata),
         .i_i2s_rdata(i2s_rdata),
-        .o_ram_re(ram_read), .o_ram_we(ram_write),
-        .o_irq_re(irq_read), .o_irq_we(irq_write),
-        .o_i2s_re(i2s_read), .o_i2s_we(i2s_write),
-        .o_mmio_offset(offset), .o_rdata(read_data)
+
+        .o_rdata(read_data),
+
+        .o_ram_re(ram_read),
+        .o_ram_we(ram_write),
+
+        .o_mmio_offset(offset),
+        .o_irq_re(irq_read),
+        .o_irq_we(irq_write),
+        .o_i2s_re(i2s_read),
+        .o_i2s_we(i2s_write)
     );
 
     task test_bus(input condition, input [255:0] description);
@@ -53,7 +70,9 @@ module tb_data_bus;
         // Read the first RAM word at byte address 0x00000000.
         // Address = 0x00000000
         // Region [31:10] = 0x000000 (RAM), low bits [9:0] = 0x000
-        addr = 32'h0000_0000; read_enable = 1; write_enable = 0;
+        addr = 32'h0000_0000;
+        read_enable = 1;
+        write_enable = 0;
         ram_rdata = 32'h1111_1111;
         @(posedge clk);
         #1;
@@ -62,7 +81,9 @@ module tb_data_bus;
         // The last aligned word of the 1 KiB RAM is at 0x000003FC.
         // Address = 0x000003FC
         // Region [31:10] = 0x000000 (RAM), low bits [9:0] = 0x3FC
-        addr = 32'h0000_03FC; read_enable = 1; write_enable = 0;
+        addr = 32'h0000_03FC;
+        read_enable = 1;
+        write_enable = 0;
         ram_rdata = 32'h1111_1111;
         @(posedge clk);
         #1;
@@ -71,7 +92,9 @@ module tb_data_bus;
         // IRQ read at offset 0x04. The enable changes before the read mux does.
         // Address = 0x10000004
         // MMIO [31:12] = 0x10000, page [11:8] = 0x0 (IRQ), byte offset [7:0] = 0x04
-        addr = 32'h1000_0004; read_enable = 1; write_enable = 0;
+        addr = 32'h1000_0004;
+        read_enable = 1;
+        write_enable = 0;
         irq_rdata = 32'h2222_2222;
         #1;
         test_bus(ram_read == 0 && irq_read == 1 && i2s_read == 0 && offset == 8'h04 && read_data == 32'h1111_1111, "before edge: RAM data holds");
@@ -82,7 +105,9 @@ module tb_data_bus;
         // With both enables low, the old read data stays selected for write-back.
         // Address = 0x10000004
         // MMIO [31:12] = 0x10000, page [11:8] = 0x0 (IRQ), byte offset [7:0] = 0x04
-        addr = 32'h1000_0004; read_enable = 0; write_enable = 0;
+        addr = 32'h1000_0004;
+        read_enable = 0;
+        write_enable = 0;
         @(posedge clk);
         #1;
         test_bus(ram_read == 0 && irq_read == 0 && i2s_read == 0 && ram_write == 0 && irq_write == 0 && i2s_write == 0 && read_data == 32'h2222_2222, "read data held for write-back");
@@ -90,7 +115,9 @@ module tb_data_bus;
         // A write selects RAM but leaves the registered read selection alone.
         // Address = 0x00000000
         // Region [31:10] = 0x000000 (RAM), low bits [9:0] = 0x000
-        addr = 32'h0000_0000; read_enable = 0; write_enable = 1;
+        addr = 32'h0000_0000;
+        read_enable = 0;
+        write_enable = 1;
         @(posedge clk);
         #1;
         test_bus(ram_read == 0 && irq_read == 0 && i2s_read == 0 && ram_write == 1 && irq_write == 0 && i2s_write == 0 && read_data == 32'h2222_2222, "RAM write keeps last read");
@@ -98,7 +125,9 @@ module tb_data_bus;
         // Route a write to the interrupt controller page.
         // Address = 0x10000004
         // MMIO [31:12] = 0x10000, page [11:8] = 0x0 (IRQ), byte offset [7:0] = 0x04
-        addr = 32'h1000_0004; read_enable = 0; write_enable = 1;
+        addr = 32'h1000_0004;
+        read_enable = 0;
+        write_enable = 1;
         @(posedge clk);
         #1;
         test_bus(ram_read == 0 && irq_read == 0 && i2s_read == 0 && ram_write == 0 && irq_write == 1 && i2s_write == 0 && offset == 8'h04, "IRQ write");
@@ -106,7 +135,9 @@ module tb_data_bus;
         // Read and then write the I2S page at byte offset 0x08.
         // Address = 0x10000308
         // MMIO [31:12] = 0x10000, page [11:8] = 0x3 (I2S), byte offset [7:0] = 0x08
-        addr = 32'h1000_0308; read_enable = 1; write_enable = 0;
+        addr = 32'h1000_0308;
+        read_enable = 1;
+        write_enable = 0;
         i2s_rdata = 32'h3333_3333;
         @(posedge clk);
         #1;
@@ -114,7 +145,9 @@ module tb_data_bus;
 
         // Address = 0x10000308
         // MMIO [31:12] = 0x10000, page [11:8] = 0x3 (I2S), byte offset [7:0] = 0x08
-        addr = 32'h1000_0308; read_enable = 0; write_enable = 1;
+        addr = 32'h1000_0308;
+        read_enable = 0;
+        write_enable = 1;
         @(posedge clk);
         #1;
         test_bus(ram_read == 0 && irq_read == 0 && i2s_read == 0 && ram_write == 0 && irq_write == 0 && i2s_write == 1, "I2S write");
@@ -122,7 +155,9 @@ module tb_data_bus;
         // An address just outside RAM selects no device.
         // Address = 0x00000400
         // Region [31:10] = 0x000001 (outside RAM), low bits [9:0] = 0x000
-        addr = 32'h0000_0400; read_enable = 1; write_enable = 0;
+        addr = 32'h0000_0400;
+        read_enable = 1;
+        write_enable = 0;
         @(posedge clk);
         #1;
         test_bus(ram_read == 0 && irq_read == 0 && i2s_read == 0 && ram_write == 0 && irq_write == 0 && i2s_write == 0 && read_data == 0, "address outside RAM");
@@ -130,14 +165,18 @@ module tb_data_bus;
         // An unmapped MMIO page returns zero on a read and ignores a write.
         // Address = 0x10000200
         // MMIO [31:12] = 0x10000, page [11:8] = 0x2 (unmapped), byte offset [7:0] = 0x00
-        addr = 32'h1000_0200; read_enable = 1; write_enable = 0;
+        addr = 32'h1000_0200;
+        read_enable = 1;
+        write_enable = 0;
         @(posedge clk);
         #1;
         test_bus(ram_read == 0 && irq_read == 0 && i2s_read == 0 && ram_write == 0 && irq_write == 0 && i2s_write == 0 && read_data == 0, "unmapped MMIO read");
 
         // Address = 0x10000200
         // MMIO [31:12] = 0x10000, page [11:8] = 0x2 (unmapped), byte offset [7:0] = 0x00
-        addr = 32'h1000_0200; read_enable = 0; write_enable = 1;
+        addr = 32'h1000_0200;
+        read_enable = 0;
+        write_enable = 1;
         @(posedge clk);
         #1;
         test_bus(ram_read == 0 && irq_read == 0 && i2s_read == 0 && ram_write == 0 && irq_write == 0 && i2s_write == 0, "unmapped MMIO write");

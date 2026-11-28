@@ -4,8 +4,8 @@
 -- Tool Version: Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
 -- Date        : Sat Nov  7 22:02:15 2026
 -- Host        : igor-ThinkPad-E14-Gen-5 running 64-bit Ubuntu 22.04.5 LTS
--- Command     : write_vhdl -force -mode synth_stub
---               /home/igor/Documents/Vivado_Projects/G7_MIPS32/G7_MIPS32.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub -rename_top clk_wiz_0 -prefix
+--               clk_wiz_0_ clk_wiz_0_stub.vhdl
 -- Design      : clk_wiz_0
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7z010clg400-1

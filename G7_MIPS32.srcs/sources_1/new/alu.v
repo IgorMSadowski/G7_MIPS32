@@ -19,14 +19,19 @@
 
 // ALU - arithmetic and logic
 module alu(
-    input  wire [31:0] i_a,     // Operand A
-    input  wire [31:0] i_b,     // Operand B
-    input  wire [3:0]  i_ctrl,  // Operation select
-    output reg  [31:0] o_y,     // Result
-    output wire        o_zero,   // 1 when result == 0
-    output wire        o_overflow, // 1 when overflow occurs (for add/sub)
-    output wire        o_negative, // Sign bit of the result
-    output wire        o_carry     // ADD carry-out / SUB borrow (1 when A < B unsigned)
+    // Operands
+    input  wire [31:0] i_a,           // Operand A
+    input  wire [31:0] i_b,           // Operand B
+
+    // Operation select
+    input  wire [3:0]  i_ctrl,        // Operation select
+
+    // Result and status flags
+    output reg  [31:0] o_y,           // Result
+    output wire        o_zero,        // 1 when result == 0
+    output wire        o_negative,    // Sign bit of the result
+    output wire        o_overflow,    // 1 when overflow occurs (for add/sub)
+    output wire        o_carry        // ADD carry-out / SUB borrow (1 when A < B unsigned)
     );
 
     wire [32:0] extended_sum;

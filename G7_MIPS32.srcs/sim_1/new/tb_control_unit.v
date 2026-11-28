@@ -114,7 +114,11 @@ module tb_control_unit;
 
         // Register arithmetic: destination rd, two register operands.
         instruction = "ADD                             ";
-        op = 6'h00; funct = 6'h20; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h20;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(imem_en == 1 && commit == 0 && load_issue == 0);
         @(posedge clk); #1;
@@ -122,57 +126,93 @@ module tb_control_unit;
         @(posedge clk); #1;
 
         instruction = "SUB                             ";
-        op = 6'h00; funct = 6'h22; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h22;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 1);
         @(posedge clk); #1;
 
         instruction = "AND                             ";
-        op = 6'h00; funct = 6'h24; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h24;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 2);
         @(posedge clk); #1;
 
         instruction = "OR                              ";
-        op = 6'h00; funct = 6'h25; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h25;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 3);
         @(posedge clk); #1;
 
         instruction = "XOR                             ";
-        op = 6'h00; funct = 6'h26; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h26;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 7);
         @(posedge clk); #1;
 
         instruction = "SLT                             ";
-        op = 6'h00; funct = 6'h2A; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h2A;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 10);
         @(posedge clk); #1;
 
         instruction = "SLL                             ";
-        op = 6'h00; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_dst == 1 && reg_write == 1 && alu_ctrl == 5 && alu_a_shamt == 1);
         @(posedge clk); #1;
 
         // Immediate arithmetic: destination rt, immediate operand.
         instruction = "ADDI                            ";
-        op = 6'h08; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h08;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_dst == 0 && reg_write == 1 && alu_src == 1 && alu_ctrl == 0);
         @(posedge clk); #1;
 
         instruction = "LUI                             ";
-        op = 6'h0F; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h0F;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_dst == 0 && reg_write == 1 && alu_src == 1 && alu_ctrl == 4 && mem_to_reg == 0);
         @(posedge clk); #1;
 
         // Load writes RAM data to a register; store only writes memory.
         instruction = "LW                              ";
-        op = 6'h23; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h23;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(mem_read == 1 && mem_write == 0 && reg_write == 1 && mem_to_reg == 1 && reg_dst == 0 && alu_src == 1 && alu_ctrl == 0);
         @(posedge clk); #1;
@@ -180,7 +220,11 @@ module tb_control_unit;
         @(posedge clk); #1;
 
         instruction = "SW                              ";
-        op = 6'h2B; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h2B;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(mem_write == 1 && mem_read == 0 && reg_write == 0 && alu_src == 1 && alu_ctrl == 0);
         @(posedge clk); #1;
@@ -200,32 +244,52 @@ module tb_control_unit;
         @(posedge clk); #1;
 
         instruction = "BNE                             ";
-        op = 6'h05; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h05;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(branch == 1 && branch_cond == 1 && alu_ctrl == 1 && reg_write == 0 && jump == 0);
         @(posedge clk); #1;
 
         // REGIMM uses rt to distinguish BLTZ from BGEZ.
         instruction = "BLTZ                            ";
-        op = 6'h01; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h01;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(branch == 1 && branch_cond == 2 && reg_write == 0 && jump == 0);
         @(posedge clk); #1;
 
         instruction = "BGEZ                            ";
-        op = 6'h01; funct = 6'h00; rs = 5'd0; rt = 5'd1; shamt = 5'd0;
+        op = 6'h01;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd1;
+        shamt = 5'd0;
         #1;
         test_controls(branch == 1 && branch_cond == 3 && reg_write == 0 && jump == 0);
         @(posedge clk); #1;
 
         instruction = "BLEZ                            ";
-        op = 6'h06; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h06;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(branch == 1 && branch_cond == 4 && alu_ctrl == 1 && reg_write == 0 && jump == 0);
         @(posedge clk); #1;
 
         instruction = "BGTZ                            ";
-        op = 6'h07; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h07;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(branch == 1 && branch_cond == 5 && alu_ctrl == 1 && reg_write == 0 && jump == 0);
         @(posedge clk); #1;
@@ -233,59 +297,95 @@ module tb_control_unit;
         // J/JAL use the instruction target. JR/JALR use rs.
         // JAL and JALR also set link to write PC + 4.
         instruction = "J                               ";
-        op = 6'h02; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h02;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(jump == 1 && jump_reg == 0 && link == 0 && reg_write == 0 && branch == 0 && pc_sel == 2'd2 && link_to_ra == 0);
         @(posedge clk); #1;
 
         instruction = "JAL                             ";
-        op = 6'h03; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h03;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(jump == 1 && jump_reg == 0 && link == 1 && reg_write == 1 && mem_to_reg == 0 && pc_sel == 2'd2 && link_to_ra == 1);
         @(posedge clk); #1;
 
         instruction = "JR                              ";
-        op = 6'h00; funct = 6'h08; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h08;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(jump == 1 && jump_reg == 1 && link == 0 && reg_write == 0 && pc_sel == 2'd3 && link_to_ra == 0);
         @(posedge clk); #1;
 
         instruction = "JALR                            ";
-        op = 6'h00; funct = 6'h09; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h09;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(jump == 1 && jump_reg == 1 && link == 1 && reg_write == 1 && reg_dst == 1 && pc_sel == 2'd3 && link_to_ra == 0);
         @(posedge clk); #1;
 
         // SRL and ROTR share funct=2; rs selects the operation.
         instruction = "SRL                             ";
-        op = 6'h00; funct = 6'h02; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h02;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(alu_ctrl == 6 && reg_write == 1 && reg_dst == 1 && jump == 0 && jump_reg == 0 && alu_a_shamt == 1);
         @(posedge clk); #1;
 
         instruction = "ROTR                            ";
-        op = 6'h00; funct = 6'h02; rs = 5'd1; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h02;
+        rs = 5'd1;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(alu_ctrl == 8 && reg_write == 1 && alu_a_shamt == 1);
         @(posedge clk); #1;
 
         // One valid WSBH encoding: opcode=1F, funct=20, shamt=2, rs=0.
         instruction = "WSBH                            ";
-        op = 6'h1F; funct = 6'h20; rs = 5'd0; rt = 5'd0; shamt = 5'd2;
+        op = 6'h1F;
+        funct = 6'h20;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd2;
         #1;
         test_controls(alu_ctrl == 9 && reg_dst == 1 && reg_write == 1 && alu_a_shamt == 0);
         @(posedge clk); #1;
 
         // One unsupported opcode: no writes, memory requests or control transfer.
         instruction = "UNSUPPORTED OPCODE              ";
-        op = 6'h3F; funct = 6'h00; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h3F;
+        funct = 6'h00;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_write == 0 && mem_read == 0 && mem_write == 0 && branch == 0 && jump == 0 && jump_reg == 0 && link == 0);
         @(posedge clk); #1;
 
         // Recognized R-type opcode with an unsupported funct value.
         instruction = "UNSUPPORTED R FUNCTION          ";
-        op = 6'h00; funct = 6'h3F; rs = 5'd0; rt = 5'd0; shamt = 5'd0;
+        op = 6'h00;
+        funct = 6'h3F;
+        rs = 5'd0;
+        rt = 5'd0;
+        shamt = 5'd0;
         #1;
         test_controls(reg_write == 0 && mem_read == 0 && mem_write == 0 && branch == 0 && jump == 0 && jump_reg == 0 && link == 0);
         @(posedge clk); #1;

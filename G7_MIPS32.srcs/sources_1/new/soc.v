@@ -13,11 +13,17 @@ module soc #(
     // SoC timing test: "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_test.mem"
     parameter MEM_INIT_FILE = "/home/igor/Documents/Vivado_Projects/G7_MIPS32/Assembly/soc_board_demo.mem"
 ) (
-    input  wire        i_clk,       // 125 MHz board clock on K17
-    input  wire        i_rst,       // Reset button on the Zybo (Btn_0)
-    input  wire [1:0]  i_sw,        // SW0 and SW1
-    input  wire        i_btn1,      // BTN1
-    output wire [3:0]  o_led        // LD0 reset, LD3-LD1 program output
+    // Board clock and reset
+    input  wire        i_clk,         // 125 MHz board clock on K17
+    input  wire        i_rst,         // Reset button on the Zybo (Btn_0)
+
+    // Board inputs
+    input  wire [1:0]  i_sw,          // SW0 and SW1
+    input  wire        i_btn1,        // Polled by the board demo
+    input  wire        i_btn3,        // IRQ source 3
+
+    // Board outputs
+    output wire [3:0]  o_led          // LD0 reset, LD3-LD1 program output
     );
 
     wire clk_50mhz;
@@ -63,42 +69,99 @@ module soc #(
     wire ram_read;
     (* KEEP = "TRUE" *) wire        ram_write;
     wire [31:0] demo_rdata;
-    wire        demo_read, demo_write;
+    wire        demo_read;
+    wire        demo_write;
     wire [7:0]  mmio_offset;
+
+    wire        irq_read;
+    wire        irq_write;
+    wire [31:0] irq_rdata;
+    wire        irq_request;
+    wire        irq_ack;
+    wire        irq_return;
+    wire [31:0] irq_vector;
+    wire [31:0] irq_return_pc;
+
+    // Synchronize BTN3 before producing a rising-edge event for IRQ3.
+    (* ASYNC_REG = "TRUE" *) reg irq_btn_meta;
+    (* ASYNC_REG = "TRUE" *) reg irq_btn_sync;
+    reg irq_btn_prev;
+    always @(posedge clk_50mhz) begin
+        if (soc_reset) begin
+            irq_btn_meta <= 1'b0;
+            irq_btn_sync <= 1'b0;
+            irq_btn_prev <= 1'b0;
+        end else begin
+            irq_btn_meta <= i_btn3;
+            irq_btn_sync <= irq_btn_meta;
+            irq_btn_prev <= irq_btn_sync;
+        end
+    end
+    wire irq_btn_event = irq_btn_sync && !irq_btn_prev;
 
     data_bus u_data_bus (
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
+
         .i_addr(_alu_out),
         .i_re(_mem_read),
         .i_we(_mem_write),
+
         .i_ram_rdata(ram_rdata),
-        // Reserved pages until the I2S and IRQ register interfaces are connected.
+        .i_irq_rdata(irq_rdata),
+        // The I2S page is reserved until the peripheral is connected.
         .i_i2s_rdata(32'b0),
-        .i_irq_rdata(32'b0),
         .i_extra_rdata(demo_rdata),
+
+        .o_rdata(_rdata),
+
         .o_ram_re(ram_read),
         .o_ram_we(ram_write),
+
+        .o_mmio_offset(mmio_offset),
+        .o_irq_re(irq_read),
+        .o_irq_we(irq_write),
         .o_i2s_re(),
         .o_i2s_we(),
-        .o_irq_re(),
-        .o_irq_we(),
         .o_extra_re(demo_read),
-        .o_extra_we(demo_write),
-        .o_mmio_offset(mmio_offset),
-        .o_rdata(_rdata)
+        .o_extra_we(demo_write)
+    );
+
+    interrupt_controller u_irq (
+        .i_clk(clk_50mhz),
+        .i_rst(soc_reset),
+
+        .i_events({irq_btn_event, 3'b000}),  // Sources 0 and 1 reserved for I2S
+
+        .i_irq_ack(irq_ack),
+        .i_irq_return(irq_return),
+        .i_return_pc(irq_return_pc),
+
+        .i_offset(mmio_offset),
+        .i_re(irq_read),
+        .i_we(irq_write),
+        .i_wdata(_wdata),
+
+        .o_irq_request(irq_request),
+        .o_irq_vector(irq_vector),
+
+        .o_rdata(irq_rdata)
     );
 
     board_demo_io u_demo_io (
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
+
         .i_sw(i_sw),
         .i_btn1(i_btn1),
+
         .i_offset(mmio_offset),
         .i_re(demo_read),
         .i_we(demo_write),
         .i_led_pattern(_wdata[2:0]),
+
         .o_rdata(demo_rdata),
+
         .o_led(o_led[3:1])
     );
     assign o_led[0] = i_rst;
@@ -108,8 +171,10 @@ module soc #(
     ) u_imem(
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
+
         .i_en(_imem_en),
-        .i_addr(_pc),           // Instruction Memory address (current PC)
+        .i_addr(_pc),           // Instruction Memory address (current PC),
+
         .o_instr(_instr)        // Instruction word returned (valid one cycle later)
     );
 
@@ -117,10 +182,12 @@ module soc #(
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
         .i_en(_en),
+
         .i_addr(_alu_out),
-        .i_wdata(_wdata),
         .i_re(ram_read),
         .i_we(ram_write),
+        .i_wdata(_wdata),
+
         .o_rdata(ram_rdata)
     );
 
@@ -128,14 +195,24 @@ module soc #(
         .i_clk(clk_50mhz),
         .i_rst(soc_reset),
         .i_en(_en),
+
         .i_instr(_instr),
         .i_rdata(_rdata),
+
+        .i_irq_request(irq_request),
+        .i_irq_vector(irq_vector),
+
         .o_pc(_pc),
         .o_imem_en(_imem_en),
+
         .o_alu_out(_alu_out),
         .o_wdata(_wdata),
         .o_mem_read(_mem_read),
-        .o_mem_write(_mem_write)
+        .o_mem_write(_mem_write),
+
+        .o_irq_ack(irq_ack),
+        .o_irq_return(irq_return),
+        .o_return_pc(irq_return_pc)
     );
 
 endmodule

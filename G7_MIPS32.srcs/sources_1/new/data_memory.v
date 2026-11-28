@@ -10,14 +10,19 @@
 // Data memory (RAM) - BRAM, latency 1
 
 module data_memory(
-    input  wire        i_clk,       // Clock
-    input  wire        i_rst,       // Reset
-    input  wire        i_en,        // Global enable
-    input  wire [31:0] i_addr,      // Byte address (ALU result)
-    input  wire [31:0] i_wdata,     // Write data (rt value for sw)
-    input  wire        i_re,        // Read enable (lw)
-    input  wire        i_we,        // Write enable (sw)
-    output wire [31:0] o_rdata      // Read data output
+    // Clock, reset and memory enable
+    input  wire        i_clk,         // Clock
+    input  wire        i_rst,         // Reset
+    input  wire        i_en,          // Global enable
+
+    // Data bus request and write data
+    input  wire [31:0] i_addr,        // Byte address (ALU result)
+    input  wire        i_re,          // Read enable (lw)
+    input  wire        i_we,          // Write enable (sw)
+    input  wire [31:0] i_wdata,       // Write data (rt value for sw)
+
+    // Data bus read data
+    output wire [31:0] o_rdata        // Read data output
     );
 
     wire [7:0] _addr_w;             // Word address to XPM

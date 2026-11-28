@@ -159,11 +159,11 @@
       <obj_property name="label">Memory Read</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_control_unit/mem_write">
+   <wvobject type="logic" fp_name="/tb_control_unit/mem_write_request">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="ElementShortName">mem_write</obj_property>
-      <obj_property name="ObjectShortName">mem_write</obj_property>
-      <obj_property name="label">Memory Write</obj_property>
+      <obj_property name="ElementShortName">mem_write_request</obj_property>
+      <obj_property name="ObjectShortName">mem_write_request</obj_property>
+      <obj_property name="label">Memory Write Request</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="divider_control_basic_5" type="divider">
